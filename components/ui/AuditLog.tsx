@@ -1,3 +1,5 @@
+import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+
 const actionLabels: Record<string, string> = {
   create: "Aangemaakt",
   update: "Bijgewerkt",
@@ -13,26 +15,22 @@ interface AuditData {
   reason: string | null;
   createdAt: Date;
   actorUser: { name: string | null; email: string } | null;
-  beforeJson?: Record<string, unknown> | null;
-  afterJson?: Record<string, unknown> | null;
+  beforeJson?: unknown;
+  afterJson?: unknown;
 }
 
 export function AuditLog({ events }: { events: AuditData[] }) {
   return (
     <section>
-      <h2 className="utrecht-heading-2" style={{ marginBottom: "1rem" }}>Wijzigingshistorie</h2>
+      <Heading level={2} style={{ marginBottom: "1rem" }}>Wijzigingshistorie</Heading>
       {events.length === 0 && (
-        <p className="utrecht-paragraph" style={{ color: "var(--rvo-color-grijs-600)", fontStyle: "italic" }}>
+        <Paragraph style={{ color: "var(--rvo-color-grijs-600)", fontStyle: "italic" }}>
           Geen wijzigingen vastgelegd.
-        </p>
+        </Paragraph>
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {events.map((ev) => (
-          <div key={ev.id} style={{
-            borderLeft: "3px solid var(--rvo-color-grijs-300, #c4c4c4)",
-            paddingLeft: "1rem",
-            fontSize: "0.875rem",
-          }}>
+          <div key={ev.id} style={{ borderLeft: "3px solid var(--rvo-color-grijs-300)", paddingLeft: "1rem", fontSize: "0.875rem" }}>
             <div style={{ fontWeight: 600, marginBottom: "0.125rem" }}>
               {actionLabels[ev.action] ?? ev.action}
               <span style={{ fontWeight: 400, color: "var(--rvo-color-grijs-600)", marginLeft: "0.5rem" }}>

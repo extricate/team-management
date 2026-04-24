@@ -1,32 +1,34 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
+  const cards = [
+    { href: "/organisaties", title: "Organisaties",  desc: "Beheer organisaties en hun structuur." },
+    { href: "/teams",        title: "Teams",          desc: "Beheer teams en teamleden." },
+    { href: "/medewerkers",  title: "Medewerkers",    desc: "Bekijk en beheer medewerkers." },
+    { href: "/financiering", title: "Financiering",   desc: "Beheer financieringsbronnen en allocaties." },
+  ];
+
   return (
     <div>
-      <h1 className="utrecht-heading-1">Dashboard</h1>
-      <p className="utrecht-paragraph">
+      <Heading level={1}>Dashboard</Heading>
+      <Paragraph>
         Welkom terug, <strong>{session.user.name ?? session.user.email}</strong>.
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", marginTop: "2rem" }}>
-        <div className="utrecht-card" style={{ padding: "1.5rem" }}>
-          <h2 className="utrecht-heading-2" style={{ fontSize: "1.125rem" }}>Teams</h2>
-          <p className="utrecht-paragraph">Beheer uw teams en teamleden.</p>
-          <a href="/teams" className="utrecht-link">Naar teams →</a>
-        </div>
-        <div className="utrecht-card" style={{ padding: "1.5rem" }}>
-          <h2 className="utrecht-heading-2" style={{ fontSize: "1.125rem" }}>Medewerkers</h2>
-          <p className="utrecht-paragraph">Bekijk en beheer medewerkers.</p>
-          <a href="/medewerkers" className="utrecht-link">Naar medewerkers →</a>
-        </div>
-        <div className="utrecht-card" style={{ padding: "1.5rem" }}>
-          <h2 className="utrecht-heading-2" style={{ fontSize: "1.125rem" }}>Instellingen</h2>
-          <p className="utrecht-paragraph">Applicatie-instellingen beheren.</p>
-          <a href="/instellingen" className="utrecht-link">Naar instellingen →</a>
-        </div>
+      </Paragraph>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1.5rem", marginTop: "2rem" }}>
+        {cards.map(({ href, title, desc }) => (
+          <div key={href} className="utrecht-card">
+            <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "0.5rem" }}>{title}</Heading>
+            <Paragraph style={{ marginBottom: "1rem" }}>{desc}</Paragraph>
+            <Link href={href} className="utrecht-link">Naar {title.toLowerCase()} →</Link>
+          </div>
+        ))}
       </div>
     </div>
   );

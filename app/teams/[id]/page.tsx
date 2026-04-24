@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
+import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { teams, comments, auditEvents, positions } from "@/lib/db/schema";
@@ -22,10 +24,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
           fundingAllocations: { with: { financialSourceAmount: { with: { financialSource: true } } } },
         },
       },
-      memberships: {
-        with: { employee: true },
-        orderBy: (m, { desc }) => [desc(m.startDate)],
-      },
+      memberships: { with: { employee: true }, orderBy: (m, { desc }) => [desc(m.startDate)] },
     },
   });
 
@@ -44,38 +43,40 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
     limit: 50,
   });
 
-  const activeMembers = team.memberships.filter(m => m.status === "active" && !m.endDate);
-  const totalPositions = team.positions.length;
-  const filledPositions = team.positions.filter(p => p.status === "filled").length;
-  const openPositions = team.positions.filter(p => p.status === "open").length;
-  const fundedPositions = team.positions.filter(p => p.fundingAllocations.some(fa => fa.status === "active")).length;
+  const activeMembers    = team.memberships.filter(m => m.status === "active" && !m.endDate);
+  const totalPositions   = team.positions.length;
+  const filledPositions  = team.positions.filter(p => p.status === "filled").length;
+  const openPositions    = team.positions.filter(p => p.status === "open").length;
+  const fundedPositions  = team.positions.filter(p => p.fundingAllocations.some(fa => fa.status === "active")).length;
 
   return (
     <div>
       {/* Header */}
       <div style={{ marginBottom: "2rem" }}>
-        <a href="/teams" className="utrecht-link" style={{ fontSize: "0.875rem" }}>← Terug naar teams</a>
+        <Link href="/teams" className="utrecht-link" style={{ fontSize: "0.875rem" }}>← Terug naar teams</Link>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.75rem" }}>
           <div>
-            <h1 className="utrecht-heading-1" style={{ margin: "0 0 0.25rem 0" }}>{team.name}</h1>
-            <p className="utrecht-paragraph" style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
+            <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{team.name}</Heading>
+            <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
               {team.organisation.name} · {team.organisation.type}
-            </p>
+            </Paragraph>
           </div>
-          <a href={`/teams/${team.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</a>
+          <Link href={`/teams/${team.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
+            Bewerken
+          </Link>
         </div>
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
         {[
-          { label: "Actieve leden", value: activeMembers.length },
+          { label: "Actieve leden",   value: activeMembers.length },
           { label: "Totaal posities", value: totalPositions },
-          { label: "Bezette posities", value: filledPositions },
-          { label: "Open posities", value: openPositions },
-          { label: "Gefinancierd", value: fundedPositions },
+          { label: "Bezet",           value: filledPositions },
+          { label: "Open",            value: openPositions },
+          { label: "Gefinancierd",    value: fundedPositions },
         ].map(({ label, value }) => (
-          <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50, #eef4fb)", borderRadius: "4px", padding: "1rem", textAlign: "center" }}>
+          <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50)", borderRadius: "4px", padding: "1rem", textAlign: "center" }}>
             <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--rvo-color-hemelblauw-700)" }}>{value}</div>
             <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
           </div>
@@ -85,10 +86,12 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
       {/* Positions */}
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <h2 className="utrecht-heading-2">Posities</h2>
-          <a href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Positie toevoegen</a>
+          <Heading level={2}>Posities</Heading>
+          <Link href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+            + Positie toevoegen
+          </Link>
         </div>
-        <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table className="utrecht-table">
           <thead className="utrecht-table__header">
             <tr className="utrecht-table__row">
               <th className="utrecht-table__header-cell">Type</th>
@@ -102,24 +105,34 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
           <tbody className="utrecht-table__body">
             {team.positions.length === 0 && (
               <tr className="utrecht-table__row">
-                <td className="utrecht-table__cell" colSpan={6} style={{ textAlign: "center", padding: "1.5rem", color: "var(--rvo-color-grijs-600)" }}>Geen posities gevonden.</td>
+                <td className="utrecht-table__cell" colSpan={6} style={{ textAlign: "center", padding: "1.5rem", color: "var(--rvo-color-grijs-600)" }}>
+                  Geen posities gevonden.
+                </td>
               </tr>
             )}
             {team.positions.map((pos) => {
-              const activeAssignment = pos.assignments.find(a => a.status === "active");
-              const activeFunding = pos.fundingAllocations.find(fa => fa.status === "active");
+              const active  = pos.assignments.find(a => a.status === "active");
+              const funding = pos.fundingAllocations.find(fa => fa.status === "active");
               return (
                 <tr key={pos.id} className="utrecht-table__row">
                   <td className="utrecht-table__cell"><strong>{pos.type}</strong></td>
                   <td className="utrecht-table__cell">{pos.positionCode ?? "—"}</td>
-                  <td className="utrecht-table__cell"><StatusBadge label={pos.status} color={pos.status === "filled" ? "green" : pos.status === "open" ? "orange" : "grey"} /></td>
                   <td className="utrecht-table__cell">
-                    {activeAssignment ? `${activeAssignment.employee.firstName} ${activeAssignment.employee.lastName}` : <span style={{ color: "var(--rvo-color-grijs-500)" }}>Onbezet</span>}
+                    <StatusBadge label={pos.status} color={pos.status === "filled" ? "green" : pos.status === "open" ? "orange" : "grey"} />
                   </td>
                   <td className="utrecht-table__cell">
-                    {activeFunding ? <span style={{ color: "var(--rvo-color-groen-700)" }}>✓ {activeFunding.financialSourceAmount.financialSource.name}</span> : <span style={{ color: "var(--rvo-color-grijs-500)" }}>Geen</span>}
+                    {active
+                      ? <Link href={`/medewerkers/${active.employee.id}`} className="utrecht-link">{active.employee.firstName} {active.employee.lastName}</Link>
+                      : <span style={{ color: "var(--rvo-color-grijs-500)" }}>Onbezet</span>}
                   </td>
-                  <td className="utrecht-table__cell">{pos.expectedStart ? new Date(pos.expectedStart).toLocaleDateString("nl-NL") : "—"}</td>
+                  <td className="utrecht-table__cell">
+                    {funding
+                      ? <span style={{ color: "var(--rvo-color-groen-700)" }}>✓ {funding.financialSourceAmount.financialSource.name}</span>
+                      : <span style={{ color: "var(--rvo-color-grijs-500)" }}>Geen</span>}
+                  </td>
+                  <td className="utrecht-table__cell">
+                    {pos.expectedStart ? new Date(pos.expectedStart).toLocaleDateString("nl-NL") : "—"}
+                  </td>
                 </tr>
               );
             })}
@@ -130,10 +143,12 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
       {/* Members */}
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <h2 className="utrecht-heading-2">Teamleden</h2>
-          <a href={`/teams/${team.id}/leden/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Lid toevoegen</a>
+          <Heading level={2}>Teamleden</Heading>
+          <Link href={`/teams/${team.id}/leden/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+            + Lid toevoegen
+          </Link>
         </div>
-        <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table className="utrecht-table">
           <thead className="utrecht-table__header">
             <tr className="utrecht-table__row">
               <th className="utrecht-table__header-cell">Naam</th>
@@ -145,15 +160,17 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
           <tbody className="utrecht-table__body">
             {activeMembers.length === 0 && (
               <tr className="utrecht-table__row">
-                <td className="utrecht-table__cell" colSpan={4} style={{ textAlign: "center", padding: "1.5rem", color: "var(--rvo-color-grijs-600)" }}>Geen actieve leden.</td>
+                <td className="utrecht-table__cell" colSpan={4} style={{ textAlign: "center", padding: "1.5rem", color: "var(--rvo-color-grijs-600)" }}>
+                  Geen actieve leden.
+                </td>
               </tr>
             )}
             {team.memberships.map((m) => (
               <tr key={m.id} className="utrecht-table__row">
                 <td className="utrecht-table__cell">
-                  <a href={`/medewerkers/${m.employee.id}`} className="utrecht-link">
+                  <Link href={`/medewerkers/${m.employee.id}`} className="utrecht-link">
                     {m.employee.prefixName ? `${m.employee.firstName} ${m.employee.prefixName} ${m.employee.lastName}` : `${m.employee.firstName} ${m.employee.lastName}`}
-                  </a>
+                  </Link>
                 </td>
                 <td className="utrecht-table__cell"><StatusBadge label={m.status} color={m.status === "active" ? "green" : "grey"} /></td>
                 <td className="utrecht-table__cell">{new Date(m.startDate).toLocaleDateString("nl-NL")}</td>
@@ -164,14 +181,8 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
         </table>
       </section>
 
-      {/* Comments & Audit */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-        <CommentSection
-          comments={teamComments}
-          commentableType="team"
-          commentableId={team.id}
-          currentUserId={session.user.id!}
-        />
+        <CommentSection comments={teamComments} commentableType="team" commentableId={team.id} currentUserId={session.user.id!} />
         <AuditLog events={audit} />
       </div>
     </div>

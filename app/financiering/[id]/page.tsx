@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import { Heading1, Heading2, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { financialSources, comments, auditEvents } from "@/lib/db/schema";
@@ -66,7 +66,7 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
         <Link href="/financiering" className="utrecht-link" style={{ fontSize: "0.875rem" }}>← Terug naar financieringsbronnen</Link>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.75rem" }}>
           <div>
-            <Heading1 style={{ margin: "0 0 0.25rem 0" }}>{source.name}</Heading1>
+            <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{source.name}</Heading>
             <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
               Project: <code>{source.projectId}</code> · {source.organisation.name}
             </Paragraph>
@@ -93,7 +93,7 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
       {/* Financial types by year */}
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <Heading2>Financiële types</Heading2>
+          <Heading level={2}>Financiële types</Heading>
           <Link href={`/financiering/${source.id}/types/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Type toevoegen</Link>
         </div>
         {source.types.length === 0
@@ -112,7 +112,7 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
       {/* Amounts */}
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <Heading2>Bedragen</Heading2>
+          <Heading level={2}>Bedragen</Heading>
           <Link href={`/financiering/${source.id}/bedragen/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Bedrag toevoegen</Link>
         </div>
         <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -148,7 +148,7 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
 
       {/* Allocations */}
       <section style={{ marginBottom: "2.5rem" }}>
-        <Heading2>Allocaties</Heading2>
+        <Heading level={2}>Allocaties</Heading>
         <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead className="utrecht-table__header">
             <tr className="utrecht-table__row">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heading2, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import type { CommentableType } from "@/lib/db/schema";
 
 interface CommentData {
@@ -45,7 +45,7 @@ export function CommentSection({ comments: initial, commentableType, commentable
 
   return (
     <section>
-      <Heading2 style={{ marginBottom: "1rem" }}>Opmerkingen</Heading2>
+      <Heading level={2} style={{ marginBottom: "1rem" }}>Opmerkingen</Heading>
 
       <form onSubmit={submit} style={{ marginBottom: "1.5rem" }}>
         <textarea

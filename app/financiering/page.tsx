@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Heading1 } from "@rijkshuisstijl-community/components-react";
+import { Heading } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { financialSources } from "@/lib/db/schema";
@@ -29,7 +29,7 @@ export default async function FinancieringPage() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <Heading1 style={{ margin: 0 }}>Financieringsbronnen</Heading1>
+        <Heading level={1} style={{ margin: 0 }}>Financieringsbronnen</Heading>
         <Link href="/financiering/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuwe bron</Link>
       </div>
 

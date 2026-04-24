@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 
 export default async function HomePage() {
@@ -6,15 +7,12 @@ export default async function HomePage() {
 
   return (
     <div>
-      <h1 className="utrecht-heading-1">Welkom bij Teambeheer</h1>
-      <p className="utrecht-paragraph">
-        Beheer uw teams, medewerkers en rollen op één centrale plek.
-      </p>
+      <Heading level={1}>Welkom bij Teambeheer</Heading>
+      <Paragraph>Beheer uw teams, medewerkers en rollen op één centrale plek.</Paragraph>
+
       {session?.user ? (
         <div style={{ marginTop: "2rem" }}>
-          <p className="utrecht-paragraph">
-            Ingelogd als <strong>{session.user.email}</strong>.
-          </p>
+          <Paragraph>Ingelogd als <strong>{session.user.email}</strong>.</Paragraph>
           <Link href="/dashboard" className="utrecht-button utrecht-button--primary-action">
             Ga naar dashboard
           </Link>
