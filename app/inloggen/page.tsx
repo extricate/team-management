@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Button, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth, signIn } from "@/lib/auth";
+import DevLoginButton from "./dev-login-button";
 
 interface SearchParams { error?: string; callbackUrl?: string; }
 
@@ -47,14 +48,14 @@ export default async function InloggenPage({ searchParams }: { searchParams: Sea
         </button>
       </form>
 
-      <div style={{ borderTop: "1px solid var(--rvo-color-grijs-300)", paddingTop: "1.5rem" }}>
-        <Paragraph style={{ marginBottom: "1rem" }}>Of log in via:</Paragraph>
-        <form action={async () => { "use server"; await signIn("github", { redirectTo: searchParams.callbackUrl ?? "/dashboard" }); }}>
-          <button type="submit" className="utrecht-button utrecht-button--secondary-action">
-            Inloggen met GitHub
-          </button>
-        </form>
-      </div>
+      {process.env.NODE_ENV === "development" && (
+        <div style={{ borderTop: "1px solid var(--rvo-color-grijs-300)", paddingTop: "1.5rem", marginTop: "1.5rem" }}>
+          <Paragraph style={{ marginBottom: "1rem", fontSize: "0.875rem", color: "var(--rvo-color-grijs-600)" }}>
+            
+          </Paragraph>
+          <DevLoginButton callbackUrl={searchParams.callbackUrl}>⚠️ Dev mode</DevLoginButton>
+        </div>
+      )}
     </div>
   );
 }

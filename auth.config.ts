@@ -10,6 +10,12 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      
+      // Allow dev routes in development
+      if (process.env.NODE_ENV === "development" && nextUrl.pathname.startsWith("/dev")) {
+        return true;
+      }
+      
       const isProtectedRoute =
         nextUrl.pathname.startsWith("/dashboard") ||
         nextUrl.pathname.startsWith("/organisaties") ||
