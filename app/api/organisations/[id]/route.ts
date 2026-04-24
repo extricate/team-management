@@ -32,7 +32,7 @@ export const PATCH = withErrorHandling(async (req: unknown, ctx: unknown) => {
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [after] = await db.update(organisations).set({ ...parsed.data, updatedAt: new Date() }).where(eq(organisations.id, id)).returning();
-  await logAudit({ actorUserId: session.user.id, entityType: "organisation", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
+  await logAudit({ actorUserId: session.user?.id, entityType: "organisation", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
   return ok(after);
 }) as (req: Request, ctx: Ctx) => Promise<Response>;
 
@@ -43,6 +43,6 @@ export const DELETE = withErrorHandling(async (_req: unknown, ctx: unknown) => {
   if (!before || before.deletedAt) return notFound();
 
   const [after] = await db.update(organisations).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(organisations.id, id)).returning();
-  await logAudit({ actorUserId: session.user.id, entityType: "organisation", entityId: id, action: "archive", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
+  await logAudit({ actorUserId: session.user?.id, entityType: "organisation", entityId: id, action: "archive", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
   return ok({ message: "Gearchiveerd" });
 }) as (_req: Request, ctx: Ctx) => Promise<Response>;

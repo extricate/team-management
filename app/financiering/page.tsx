@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Heading1 } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { financialSources } from "@/lib/db/schema";
@@ -27,8 +29,8 @@ export default async function FinancieringPage() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <h1 className="utrecht-heading-1" style={{ margin: 0 }}>Financieringsbronnen</h1>
-        <a href="/financiering/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuwe bron</a>
+        <Heading1 style={{ margin: 0 }}>Financieringsbronnen</Heading1>
+        <Link href="/financiering/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuwe bron</Link>
       </div>
 
       <div style={{ overflowX: "auto" }}>
@@ -60,16 +62,16 @@ export default async function FinancieringPage() {
               return (
                 <tr key={source.id} className="utrecht-table__row">
                   <td className="utrecht-table__cell">
-                    <a href={`/financiering/${source.id}`} className="utrecht-link" style={{ fontWeight: 600 }}>{source.name}</a>
+                    <Link href={`/financiering/${source.id}`} className="utrecht-link" style={{ fontWeight: 600 }}>{source.name}</Link>
                   </td>
                   <td className="utrecht-table__cell"><code>{source.projectId}</code></td>
                   <td className="utrecht-table__cell">{source.organisation.name}</td>
                   <td className="utrecht-table__cell">{formatCurrency(String(totalBudget))}</td>
                   <td className="utrecht-table__cell">{formatCurrency(String(releasedBudget))}</td>
                   <td className="utrecht-table__cell">{formatCurrency(String(allocatedBudget))}</td>
-                  <td className="utrecht-table__cell">
-                    <a href={`/financiering/${source.id}`} className="utrecht-link" style={{ marginRight: "1rem" }}>Bekijken</a>
-                    <a href={`/financiering/${source.id}/bewerken`} className="utrecht-link">Bewerken</a>
+                  <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem" }}>
+                    <Link href={`/financiering/${source.id}`} className="utrecht-link">Bekijken</Link>
+                    <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-link">Bewerken</Link>
                   </td>
                 </tr>
               );

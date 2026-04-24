@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { comments } from "@/lib/db/schema";
-import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
+import { ok, created, badRequest, unauthorized, requireAuth, withErrorHandling } from "@/lib/api";
 import { and, eq } from "drizzle-orm";
 
 const Schema = z.object({
@@ -29,10 +29,13 @@ export const GET = withErrorHandling(async (req: unknown) => {
 
 export const POST = withErrorHandling(async (req: unknown) => {
   const session = await requireAuth();
+  const userId = session.user?.id;
+  if (!userId) return unauthorized();
+
   const body = await (req as NextRequest).json();
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
-  const [row] = await db.insert(comments).values({ ...parsed.data, createdBy: session.user.id! }).returning();
+  const [row] = await db.insert(comments).values({ ...parsed.data, createdBy: userId }).returning();
   return created(row);
 }) as (req: Request) => Promise<Response>;

@@ -23,9 +23,9 @@ export const POST = withErrorHandling(async (req: unknown) => {
     ...parsed.data,
     startDate: new Date(parsed.data.startDate),
     endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : undefined,
-    createdBy: session.user.id,
+    createdBy: session.user?.id,
   }).returning();
 
-  await logAudit({ actorUserId: session.user.id, entityType: "positionAssignment", entityId: row.id, action: "assign", after: row as Record<string, unknown>, reason: parsed.data.reason });
+  await logAudit({ actorUserId: session.user?.id, entityType: "positionAssignment", entityId: row.id, action: "assign", after: row as Record<string, unknown>, reason: parsed.data.reason });
   return created(row);
 }) as (req: Request) => Promise<Response>;

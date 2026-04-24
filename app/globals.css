@@ -1,7 +1,3 @@
-@import "@rijkshuisstijl-community/design-tokens/dist/index.css";
-@import "@rijkshuisstijl-community/font/dist/index.css";
-@import "@rijkshuisstijl-community/components-react/dist/index.css";
-
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body {

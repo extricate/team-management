@@ -36,6 +36,6 @@ export const POST = withErrorHandling(async (req: unknown) => {
     expectedEnd: parsed.data.expectedEnd ? new Date(parsed.data.expectedEnd) : undefined,
   };
   const [row] = await db.insert(positions).values(data).returning();
-  await logAudit({ actorUserId: session.user.id, entityType: "position", entityId: row.id, action: "create", after: row as Record<string, unknown> });
+  await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: row.id, action: "create", after: row as Record<string, unknown> });
   return created(row);
 }) as (req: Request) => Promise<Response>;

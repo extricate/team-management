@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Heading2, Paragraph } from "@rijkshuisstijl-community/components-react";
 import type { CommentableType } from "@/lib/db/schema";
 
 interface CommentData {
@@ -44,7 +45,7 @@ export function CommentSection({ comments: initial, commentableType, commentable
 
   return (
     <section>
-      <h2 className="utrecht-heading-2" style={{ marginBottom: "1rem" }}>Opmerkingen</h2>
+      <Heading2 style={{ marginBottom: "1rem" }}>Opmerkingen</Heading2>
 
       <form onSubmit={submit} style={{ marginBottom: "1.5rem" }}>
         <textarea
@@ -67,9 +68,9 @@ export function CommentSection({ comments: initial, commentableType, commentable
 
       <div>
         {comments.length === 0 && (
-          <p className="utrecht-paragraph" style={{ color: "var(--rvo-color-grijs-600)", fontStyle: "italic" }}>
+          <Paragraph style={{ color: "var(--rvo-color-grijs-600)", fontStyle: "italic" }}>
             Nog geen opmerkingen.
-          </p>
+          </Paragraph>
         )}
         {comments.map((c) => (
           <div key={c.id} style={{
@@ -82,7 +83,7 @@ export function CommentSection({ comments: initial, commentableType, commentable
               {" · "}
               {new Date(c.createdAt).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" })}
             </div>
-            <p className="utrecht-paragraph" style={{ margin: 0, whiteSpace: "pre-wrap" }}>{c.body}</p>
+            <Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>{c.body}</Paragraph>
           </div>
         ))}
       </div>

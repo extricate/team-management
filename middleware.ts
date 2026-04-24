@@ -1,19 +1,8 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth?.user;
-  const isProtectedRoute =
-    req.nextUrl.pathname.startsWith("/dashboard") ||
-    req.nextUrl.pathname.startsWith("/teams") ||
-    req.nextUrl.pathname.startsWith("/medewerkers") ||
-    req.nextUrl.pathname.startsWith("/instellingen");
-
-  if (isProtectedRoute && !isLoggedIn) {
-    const loginUrl = new URL("/inloggen", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
-    return Response.redirect(loginUrl);
-  }
-});
+// Use only the edge-safe config here — no DB, no Node.js APIs.
+export default NextAuth(authConfig).auth;
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],

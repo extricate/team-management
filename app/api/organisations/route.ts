@@ -24,6 +24,6 @@ export const POST = withErrorHandling(async (req: unknown) => {
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [row] = await db.insert(organisations).values(parsed.data).returning();
-  await logAudit({ actorUserId: session.user.id, entityType: "organisation", entityId: row.id, action: "create", after: row as Record<string, unknown> });
+  await logAudit({ actorUserId: session.user?.id, entityType: "organisation", entityId: row.id, action: "create", after: row as Record<string, unknown> });
   return created(row);
 }) as (req: Request) => Promise<Response>;
