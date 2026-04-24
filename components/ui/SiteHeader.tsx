@@ -5,9 +5,11 @@ import styles from "./SiteHeader.module.css";
 interface SiteHeaderProps { userName?: string; }
 
 const navLinks = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/teams", label: "Teams" },
-  { href: "/medewerkers", label: "Medewerkers" },
+  { href: "/dashboard",    label: "Dashboard" },
+  { href: "/organisaties", label: "Organisaties" },
+  { href: "/teams",        label: "Teams" },
+  { href: "/medewerkers",  label: "Medewerkers" },
+  { href: "/financiering", label: "Financiering" },
 ];
 
 export function SiteHeader({ userName }: SiteHeaderProps) {
