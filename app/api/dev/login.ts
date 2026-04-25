@@ -3,11 +3,12 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { withErrorHandling, requireAuth, unauthorized, badRequest, created } from "@/lib/api";
+import { log } from "console";
 
 export const POST = withErrorHandling(async (req: unknown) => {
-  const session = await requireAuth();
-  const userId = session.user?.id;
-  if (!userId) return unauthorized();
+  //const session = await requireAuth();
+  //const userId = session.user?.id;
+  //if (!userId) return unauthorized();
 
   if (process.env.NODE_ENV !== "development") {
     return unauthorized();
