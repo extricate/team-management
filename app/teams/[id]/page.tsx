@@ -8,6 +8,7 @@ import { eq, isNull, desc, and } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
+import { formatFullName, formatDate } from "@/lib/utils";
 
 export default async function TeamDetailPage({ params }: { params: { id: string } }) {
   const session = await auth();
@@ -131,7 +132,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
                       : <span style={{ color: "var(--rvo-color-grijs-500)" }}>Geen</span>}
                   </td>
                   <td className="utrecht-table__cell">
-                    {pos.expectedStart ? new Date(pos.expectedStart).toLocaleDateString("nl-NL") : "—"}
+                    {formatDate(pos.expectedStart)}
                   </td>
                 </tr>
               );
@@ -169,12 +170,12 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
               <tr key={m.id} className="utrecht-table__row">
                 <td className="utrecht-table__cell">
                   <Link href={`/medewerkers/${m.employee.id}`} className="utrecht-link">
-                    {m.employee.prefixName ? `${m.employee.firstName} ${m.employee.prefixName} ${m.employee.lastName}` : `${m.employee.firstName} ${m.employee.lastName}`}
+                    {formatFullName(m.employee)}
                   </Link>
                 </td>
                 <td className="utrecht-table__cell"><StatusBadge label={m.status} color={m.status === "active" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell">{new Date(m.startDate).toLocaleDateString("nl-NL")}</td>
-                <td className="utrecht-table__cell">{m.endDate ? new Date(m.endDate).toLocaleDateString("nl-NL") : "—"}</td>
+                <td className="utrecht-table__cell">{formatDate(m.startDate)}</td>
+                <td className="utrecht-table__cell">{formatDate(m.endDate)}</td>
               </tr>
             ))}
           </tbody>

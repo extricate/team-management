@@ -6,11 +6,7 @@ import { db } from "@/lib/db";
 import { financialSources } from "@/lib/db/schema";
 import { isNull } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-
-function formatCurrency(value: string | null | undefined) {
-  if (!value) return "—";
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(Number(value));
-}
+import { formatCurrency } from "@/lib/utils";
 
 export default async function FinancieringPage() {
   const session = await auth();

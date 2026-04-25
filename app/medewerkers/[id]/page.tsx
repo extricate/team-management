@@ -8,6 +8,7 @@ import { eq, isNull, desc, and } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
+import { formatFullName, formatDate } from "@/lib/utils";
 
 export default async function MedewerkerDetailPage({ params }: { params: { id: string } }) {
   const session = await auth();
@@ -37,7 +38,7 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
     limit: 50,
   });
 
-  const fullName      = emp.prefixName ? `${emp.firstName} ${emp.prefixName} ${emp.lastName}` : `${emp.firstName} ${emp.lastName}`;
+  const fullName      = formatFullName(emp);
   const activeTeams   = emp.memberships.filter(m => m.status === "active" && !m.endDate);
   const activePos     = emp.positionAssignments.find(a => a.status === "active");
 
@@ -67,7 +68,7 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
               <div key={m.id} style={{ marginBottom: "0.5rem" }}>
                 <Link href={`/teams/${m.team.id}`} className="utrecht-link">{m.team.name}</Link>
                 <span style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginLeft: "0.5rem" }}>
-                  vanaf {new Date(m.startDate).toLocaleDateString("nl-NL")}
+                  vanaf {formatDate(m.startDate)}
                 </span>
               </div>
             ))}
@@ -79,7 +80,7 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
                 <strong>{activePos.position.type}</strong>
                 {activePos.position.positionCode && <span style={{ marginLeft: "0.5rem", color: "var(--rvo-color-grijs-600)" }}>({activePos.position.positionCode})</span>}
                 <Paragraph style={{ margin: "0.25rem 0 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
-                  Team: {activePos.position.team.name} · Sinds {new Date(activePos.startDate).toLocaleDateString("nl-NL")}
+                  Team: {activePos.position.team.name} · Sinds {formatDate(activePos.startDate)}
                 </Paragraph>
               </div>
             : <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve positie</Paragraph>}
@@ -117,8 +118,8 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
                 <td className="utrecht-table__cell"><strong>{pa.position.type}</strong></td>
                 <td className="utrecht-table__cell"><Link href={`/teams/${pa.position.team.id}`} className="utrecht-link">{pa.position.team.name}</Link></td>
                 <td className="utrecht-table__cell"><StatusBadge label={pa.status} color={pa.status === "active" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell">{new Date(pa.startDate).toLocaleDateString("nl-NL")}</td>
-                <td className="utrecht-table__cell">{pa.endDate ? new Date(pa.endDate).toLocaleDateString("nl-NL") : "—"}</td>
+                <td className="utrecht-table__cell">{formatDate(pa.startDate)}</td>
+                <td className="utrecht-table__cell">{formatDate(pa.endDate)}</td>
                 <td className="utrecht-table__cell">{pa.reason ?? "—"}</td>
                 <td className="utrecht-table__cell">{pa.createdByUser?.name ?? "—"}</td>
               </tr>
@@ -150,8 +151,8 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
               <tr key={m.id} className="utrecht-table__row">
                 <td className="utrecht-table__cell"><Link href={`/teams/${m.team.id}`} className="utrecht-link">{m.team.name}</Link></td>
                 <td className="utrecht-table__cell"><StatusBadge label={m.status} color={m.status === "active" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell">{new Date(m.startDate).toLocaleDateString("nl-NL")}</td>
-                <td className="utrecht-table__cell">{m.endDate ? new Date(m.endDate).toLocaleDateString("nl-NL") : "—"}</td>
+                <td className="utrecht-table__cell">{formatDate(m.startDate)}</td>
+                <td className="utrecht-table__cell">{formatDate(m.endDate)}</td>
                 <td className="utrecht-table__cell">{m.reason ?? "—"}</td>
               </tr>
             ))}

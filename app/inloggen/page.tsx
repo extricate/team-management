@@ -11,9 +11,14 @@ const errorMessages: Record<string, string> = {
   Default:            "Er is een onbekende fout opgetreden.",
 };
 
+function sanitizeRedirect(url?: string): string {
+  if (url && url.startsWith("/") && !url.startsWith("//")) return url;
+  return "/dashboard";
+}
+
 export default async function InloggenPage({ searchParams }: { searchParams: SearchParams }) {
   const session = await auth();
-  if (session?.user) redirect(searchParams.callbackUrl ?? "/dashboard");
+  if (session?.user) redirect(sanitizeRedirect(searchParams.callbackUrl));
 
   const errorMessage = searchParams.error
     ? (errorMessages[searchParams.error] ?? errorMessages.Default)
@@ -33,7 +38,7 @@ export default async function InloggenPage({ searchParams }: { searchParams: Sea
       <form
         action={async (formData: FormData) => {
           "use server";
-          await signIn("resend", { email: formData.get("email") as string, redirectTo: searchParams.callbackUrl ?? "/dashboard" });
+          await signIn("resend", { email: formData.get("email") as string, redirectTo: sanitizeRedirect(searchParams.callbackUrl) });
         }}
         style={{ marginBottom: "2rem" }}
       >

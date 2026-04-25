@@ -1,8 +1,7 @@
-import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { positionAssignments } from "@/lib/db/schema";
-import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
+import { created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 
 const Schema = z.object({
@@ -13,9 +12,9 @@ const Schema = z.object({
   reason: z.string().optional(),
 });
 
-export const POST = withErrorHandling(async (req: unknown) => {
+export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
-  const body = await (req as NextRequest).json();
+  const body = await req.json();
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
@@ -28,4 +27,4 @@ export const POST = withErrorHandling(async (req: unknown) => {
 
   await logAudit({ actorUserId: session.user?.id, entityType: "positionAssignment", entityId: row.id, action: "assign", after: row as Record<string, unknown>, reason: parsed.data.reason });
   return created(row);
-}) as (req: Request) => Promise<Response>;
+});

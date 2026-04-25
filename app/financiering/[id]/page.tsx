@@ -8,11 +8,7 @@ import { eq, isNull, desc, and } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
-
-function formatCurrency(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return "—";
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(Number(value));
-}
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default async function FinancieringDetailPage({ params }: { params: { id: string } }) {
   const session = await auth();
@@ -137,8 +133,8 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
                 <td className="utrecht-table__cell">{amount.financialType ? `${amount.financialType.type} ${amount.financialType.year}` : "—"}</td>
                 <td className="utrecht-table__cell"><strong>{formatCurrency(amount.amount)}</strong></td>
                 <td className="utrecht-table__cell"><StatusBadge label={amount.status} color={amount.status === "released" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell">{amount.effectiveDate ? new Date(amount.effectiveDate).toLocaleDateString("nl-NL") : "—"}</td>
-                <td className="utrecht-table__cell">{amount.releaseDate ? new Date(amount.releaseDate).toLocaleDateString("nl-NL") : "—"}</td>
+                <td className="utrecht-table__cell">{formatDate(amount.effectiveDate)}</td>
+                <td className="utrecht-table__cell">{formatDate(amount.releaseDate)}</td>
                 <td className="utrecht-table__cell">{amount.allocations.length}</td>
               </tr>
             ))}
@@ -181,8 +177,8 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
                 <td className="utrecht-table__cell">
                   <StatusBadge label={al.status} color={al.status === "active" ? "green" : al.status === "reallocated" ? "orange" : "grey"} />
                 </td>
-                <td className="utrecht-table__cell">{al.startDate ? new Date(al.startDate).toLocaleDateString("nl-NL") : "—"}</td>
-                <td className="utrecht-table__cell">{al.endDate ? new Date(al.endDate).toLocaleDateString("nl-NL") : "—"}</td>
+                <td className="utrecht-table__cell">{formatDate(al.startDate)}</td>
+                <td className="utrecht-table__cell">{formatDate(al.endDate)}</td>
                 <td className="utrecht-table__cell">{al.reason ?? "—"}</td>
               </tr>
             ))}

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { employees } from "@/lib/db/schema";
 import { isNull } from "drizzle-orm";
+import { formatFullName } from "@/lib/utils";
 
 export default async function MedewerkersPage() {
   const session = await auth();
@@ -48,7 +49,7 @@ export default async function MedewerkersPage() {
             </tr>
           )}
           {allEmployees.map((emp) => {
-            const fullName      = emp.prefixName ? `${emp.firstName} ${emp.prefixName} ${emp.lastName}` : `${emp.firstName} ${emp.lastName}`;
+            const fullName      = formatFullName(emp);
             const activeTeams   = emp.memberships.filter(m => m.status === "active" && !m.endDate);
             const activePos     = emp.positionAssignments.find(a => a.status === "active");
 

@@ -7,10 +7,25 @@ import {
   primaryKey,
   numeric,
   jsonb,
-  boolean,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import type { AdapterAccountType } from "next-auth/adapters";
+
+// ── Domain type aliases ────────────────────────────────────────────────────────
+// Defined before the tables so $type<> narrowing below can reference them.
+export type UserRole = "admin" | "manager" | "viewer";
+export type OrganisationType = "OS1" | "OS2";
+export type PositionStatus = "planned" | "open" | "filled" | "closed";
+export type MembershipStatus = "active" | "ended";
+export type AllocationStatus = "active" | "reallocated" | "expired";
+export type AmountStatus = "concept" | "released";
+export type FinancialTypeCategory = "PERSEX" | "MATEX" | "Investeringen";
+export type CommentableType =
+  | "team"
+  | "employee"
+  | "position"
+  | "financialSource"
+  | "fundingAllocation";
 
 // ── Users ──────────────────────────────────────────────────────────────────────
 export const users = pgTable("users", {
@@ -19,8 +34,8 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
-  role: text("role").notNull().default("viewer"), // admin | manager | viewer
-  organisationId: uuid("organisation_id"),
+  role: text("role").$type<UserRole>().notNull().default("viewer"),
+  organisationId: uuid("organisation_id").references(() => organisations.id),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
@@ -64,7 +79,7 @@ export const verificationTokens = pgTable(
 export const organisations = pgTable("organisations", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  type: text("type").notNull(), // OS1 | OS2
+  type: text("type").$type<OrganisationType>().notNull(),
   deletedAt: timestamp("deleted_at", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
@@ -97,9 +112,9 @@ export const employees = pgTable("employees", {
 export const positions = pgTable("positions", {
   id: uuid("id").primaryKey().defaultRandom(),
   teamId: uuid("team_id").notNull().references(() => teams.id),
-  type: text("type").notNull(), // e.g. OPF1, OPF2, OPF3
+  type: text("type").notNull(), // e.g. OPF1, OPF2 — open-ended per organisation
   positionCode: text("position_code"),
-  status: text("status").notNull().default("planned"), // planned | open | filled | closed
+  status: text("status").$type<PositionStatus>().notNull().default("planned"),
   expectedStart: timestamp("expected_start", { mode: "date" }),
   expectedEnd: timestamp("expected_end", { mode: "date" }),
   deletedAt: timestamp("deleted_at", { mode: "date" }),
@@ -114,7 +129,7 @@ export const teamMemberships = pgTable("team_memberships", {
   employeeId: uuid("employee_id").notNull().references(() => employees.id),
   startDate: timestamp("start_date", { mode: "date" }).notNull(),
   endDate: timestamp("end_date", { mode: "date" }),
-  status: text("status").notNull().default("active"), // active | ended
+  status: text("status").$type<MembershipStatus>().notNull().default("active"),
   reason: text("reason"),
   createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -128,7 +143,7 @@ export const positionAssignments = pgTable("position_assignments", {
   employeeId: uuid("employee_id").notNull().references(() => employees.id),
   startDate: timestamp("start_date", { mode: "date" }).notNull(),
   endDate: timestamp("end_date", { mode: "date" }),
-  status: text("status").notNull().default("active"), // active | ended
+  status: text("status").$type<MembershipStatus>().notNull().default("active"),
   reason: text("reason"),
   createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -150,7 +165,7 @@ export const financialSources = pgTable("financial_sources", {
 export const financialTypes = pgTable("financial_types", {
   id: uuid("id").primaryKey().defaultRandom(),
   financialSourceId: uuid("financial_source_id").notNull().references(() => financialSources.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // PERSEX | MATEX | Investeringen
+  type: text("type").$type<FinancialTypeCategory>().notNull(),
   year: integer("year").notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
@@ -162,7 +177,7 @@ export const financialSourceAmounts = pgTable("financial_source_amounts", {
   financialSourceId: uuid("financial_source_id").notNull().references(() => financialSources.id, { onDelete: "cascade" }),
   financialTypeId: uuid("financial_type_id").references(() => financialTypes.id),
   amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
-  status: text("status").notNull().default("concept"), // concept | released
+  status: text("status").$type<AmountStatus>().notNull().default("concept"),
   effectiveDate: timestamp("effective_date", { mode: "date" }),
   releaseDate: timestamp("release_date", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -179,7 +194,7 @@ export const fundingAllocations = pgTable("funding_allocations", {
   percentage: numeric("percentage", { precision: 5, scale: 2 }),
   startDate: timestamp("start_date", { mode: "date" }),
   endDate: timestamp("end_date", { mode: "date" }),
-  status: text("status").notNull().default("active"), // active | reallocated | expired
+  status: text("status").$type<AllocationStatus>().notNull().default("active"),
   reason: text("reason"),
   createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -190,7 +205,7 @@ export const fundingAllocations = pgTable("funding_allocations", {
 export const comments = pgTable("comments", {
   id: uuid("id").primaryKey().defaultRandom(),
   body: text("body").notNull(),
-  commentableType: text("commentable_type").notNull(), // team | employee | position | financialSource | fundingAllocation
+  commentableType: text("commentable_type").$type<CommentableType>().notNull(),
   commentableId: uuid("commentable_id").notNull(),
   createdBy: uuid("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -201,9 +216,9 @@ export const comments = pgTable("comments", {
 export const auditEvents = pgTable("audit_events", {
   id: uuid("id").primaryKey().defaultRandom(),
   actorUserId: uuid("actor_user_id").references(() => users.id),
-  entityType: text("entity_type").notNull(), // organisation | team | employee | position | ...
+  entityType: text("entity_type").notNull(),
   entityId: uuid("entity_id").notNull(),
-  action: text("action").notNull(), // create | update | delete | archive | assign | reallocate
+  action: text("action").notNull(),
   beforeJson: jsonb("before_json"),
   afterJson: jsonb("after_json"),
   reason: text("reason"),
@@ -280,7 +295,11 @@ export const fundingAllocationsRelations = relations(fundingAllocations, ({ one 
   createdByUser: one(users, { fields: [fundingAllocations.createdBy], references: [users.id] }),
 }));
 
-// ── TypeScript Types ───────────────────────────────────────────────────────────
+export const usersRelations = relations(users, ({ one }) => ({
+  organisation: one(organisations, { fields: [users.organisationId], references: [organisations.id] }),
+}));
+
+// ── TypeScript row types ───────────────────────────────────────────────────────
 export type Organisation = typeof organisations.$inferSelect;
 export type NewOrganisation = typeof organisations.$inferInsert;
 export type Team = typeof teams.$inferSelect;
@@ -299,10 +318,5 @@ export type Comment = typeof comments.$inferSelect;
 export type AuditEvent = typeof auditEvents.$inferSelect;
 export type User = typeof users.$inferSelect;
 
-export type CommentableType = "team" | "employee" | "position" | "financialSource" | "fundingAllocation";
-export type PositionStatus = "planned" | "open" | "filled" | "closed";
-export type AllocationStatus = "active" | "reallocated" | "expired";
-export type AmountStatus = "concept" | "released";
-export type FinancialTypeEnum = "PERSEX" | "MATEX" | "Investeringen";
-export type OrganisationType = "OS1" | "OS2";
-export type UserRole = "admin" | "manager" | "viewer";
+// FinancialTypeEnum kept as alias for the renamed FinancialTypeCategory (backwards compat)
+export type FinancialTypeEnum = FinancialTypeCategory;

@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { positions } from "@/lib/db/schema";
@@ -22,11 +21,11 @@ export const GET = withErrorHandling(async () => {
     with: { team: { with: { organisation: true } }, assignments: { with: { employee: true } } },
   });
   return ok(rows);
-}) as () => Promise<Response>;
+});
 
-export const POST = withErrorHandling(async (req: unknown) => {
+export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
-  const body = await (req as NextRequest).json();
+  const body = await req.json();
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
@@ -38,4 +37,4 @@ export const POST = withErrorHandling(async (req: unknown) => {
   const [row] = await db.insert(positions).values(data).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: row.id, action: "create", after: row as Record<string, unknown> });
   return created(row);
-}) as (req: Request) => Promise<Response>;
+});

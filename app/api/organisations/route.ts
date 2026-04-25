@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { organisations } from "@/lib/db/schema";
@@ -15,15 +14,15 @@ export const GET = withErrorHandling(async () => {
   await requireAuth();
   const rows = await db.select().from(organisations).where(isNull(organisations.deletedAt));
   return ok(rows);
-}) as () => Promise<Response>;
+});
 
-export const POST = withErrorHandling(async (req: unknown) => {
+export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
-  const body = await (req as NextRequest).json();
+  const body = await req.json();
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [row] = await db.insert(organisations).values(parsed.data).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "organisation", entityId: row.id, action: "create", after: row as Record<string, unknown> });
   return created(row);
-}) as (req: Request) => Promise<Response>;
+});

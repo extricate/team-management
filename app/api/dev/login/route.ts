@@ -1,15 +1,9 @@
-import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { withErrorHandling, requireAuth, unauthorized, badRequest, created } from "@/lib/api";
-import { log } from "console";
+import { withErrorHandling, unauthorized, created } from "@/lib/api";
 
-export const POST = withErrorHandling(async (req: unknown) => {
-  //const session = await requireAuth();
-  //const userId = session.user?.id;
-  //if (!userId) return unauthorized();
-
+export const POST = withErrorHandling(async () => {
   if (process.env.NODE_ENV !== "development") {
     return unauthorized();
   }
@@ -44,4 +38,4 @@ export const POST = withErrorHandling(async (req: unknown) => {
   }
 
   return created({ success: true, user });
-}) as (req: Request) => Promise<Response>;
+});
