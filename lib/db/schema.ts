@@ -114,6 +114,8 @@ export const positions = pgTable("positions", {
   teamId: uuid("team_id").notNull().references(() => teams.id),
   type: text("type").notNull(), // e.g. OPF1, OPF2 — open-ended per organisation
   positionCode: text("position_code"),
+  schaal: text("schaal"),
+  annualCost: numeric("annual_cost", { precision: 15, scale: 2 }),
   status: text("status").$type<PositionStatus>().notNull().default("planned"),
   expectedStart: timestamp("expected_start", { mode: "date" }),
   expectedEnd: timestamp("expected_end", { mode: "date" }),

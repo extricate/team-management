@@ -104,12 +104,13 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
               <th className="utrecht-table__header-cell">Tot</th>
               <th className="utrecht-table__header-cell">Reden</th>
               <th className="utrecht-table__header-cell">Door</th>
+              <th className="utrecht-table__header-cell"></th>
             </tr>
           </thead>
           <tbody className="utrecht-table__body">
             {emp.positionAssignments.length === 0 && (
               <tr className="utrecht-table__row">
-                <td className="utrecht-table__cell" colSpan={7} style={{ textAlign: "center", padding: "1.5rem", color: "var(--rvo-color-grijs-600)" }}>Geen positietoewijzingen.</td>
+                <td className="utrecht-table__cell" colSpan={8} style={{ textAlign: "center", padding: "1.5rem", color: "var(--rvo-color-grijs-600)" }}>Geen positietoewijzingen.</td>
               </tr>
             )}
             {emp.positionAssignments.map((pa) => (
@@ -121,6 +122,9 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
                 <td className="utrecht-table__cell">{formatDate(pa.endDate)}</td>
                 <td className="utrecht-table__cell">{pa.reason ?? "—"}</td>
                 <td className="utrecht-table__cell">{pa.createdByUser?.name ?? "—"}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>
+                  <Link href={`/medewerkers/${emp.id}/posities/${pa.id}/bewerken`} className="utrecht-link" style={{ fontSize: "0.875rem" }}>Bewerken</Link>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -143,6 +147,7 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
               <th className="utrecht-table__header-cell">Van</th>
               <th className="utrecht-table__header-cell">Tot</th>
               <th className="utrecht-table__header-cell">Reden</th>
+              <th className="utrecht-table__header-cell"></th>
             </tr>
           </thead>
           <tbody className="utrecht-table__body">
@@ -153,6 +158,9 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
                 <td className="utrecht-table__cell">{formatDate(m.startDate)}</td>
                 <td className="utrecht-table__cell">{formatDate(m.endDate)}</td>
                 <td className="utrecht-table__cell">{m.reason ?? "—"}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>
+                  <Link href={`/teams/${m.team.id}/leden/${m.id}/bewerken`} className="utrecht-link" style={{ fontSize: "0.875rem" }}>Bewerken</Link>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -8,6 +8,8 @@ import { eq } from "drizzle-orm";
 const UpdateSchema = z.object({
   type: z.string().min(1).optional(),
   positionCode: z.string().optional().nullable(),
+  schaal: z.string().optional().nullable(),
+  annualCost: z.number().positive().optional().nullable(),
   status: z.enum(["planned", "open", "filled", "closed"]).optional(),
   expectedStart: z.string().datetime().optional().nullable(),
   expectedEnd: z.string().datetime().optional().nullable(),
@@ -40,6 +42,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
 
   const data = {
     ...parsed.data,
+    annualCost: parsed.data.annualCost != null ? String(parsed.data.annualCost) : parsed.data.annualCost === null ? null : undefined,
     expectedStart: parsed.data.expectedStart ? new Date(parsed.data.expectedStart) : parsed.data.expectedStart === null ? null : undefined,
     expectedEnd: parsed.data.expectedEnd ? new Date(parsed.data.expectedEnd) : parsed.data.expectedEnd === null ? null : undefined,
     updatedAt: new Date(),

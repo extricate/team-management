@@ -9,6 +9,8 @@ const Schema = z.object({
   teamId: z.string().uuid(),
   type: z.string().min(1), // e.g. OPF1, OPF2
   positionCode: z.string().optional(),
+  schaal: z.string().optional(),
+  annualCost: z.number().positive().optional(),
   status: z.enum(["planned", "open", "filled", "closed"]).default("planned"),
   expectedStart: z.string().datetime().optional(),
   expectedEnd: z.string().datetime().optional(),
@@ -31,6 +33,7 @@ export const POST = withErrorHandling(async (req: Request) => {
 
   const data = {
     ...parsed.data,
+    annualCost: parsed.data.annualCost != null ? String(parsed.data.annualCost) : undefined,
     expectedStart: parsed.data.expectedStart ? new Date(parsed.data.expectedStart) : undefined,
     expectedEnd: parsed.data.expectedEnd ? new Date(parsed.data.expectedEnd) : undefined,
   };
