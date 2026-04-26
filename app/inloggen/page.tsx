@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
-import { Button, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth, signIn } from "@/lib/auth";
-import DevLoginButton from "./dev-login-button";
+import { devSignIn } from "./actions";
 
 interface SearchParams { error?: string; callbackUrl?: string; }
 
 const errorMessages: Record<string, string> = {
-  OAuthSignin:        "Er is een fout opgetreden bij het inloggen. Probeer het opnieuw.",
-  OAuthCallback:      "Er is een fout opgetreden bij het verwerken van uw inlogpoging.",
-  Default:            "Er is een onbekende fout opgetreden.",
+  OAuthSignin:   "Er is een fout opgetreden bij het inloggen. Probeer het opnieuw.",
+  OAuthCallback: "Er is een fout opgetreden bij het verwerken van uw inlogpoging.",
+  Default:       "Er is een onbekende fout opgetreden.",
 };
 
 function sanitizeRedirect(url?: string): string {
@@ -52,15 +52,6 @@ export default async function InloggenPage({ searchParams }: { searchParams: Sea
           Stuur inloglink
         </button>
       </form>
-
-      {process.env.NODE_ENV === "development" && (
-        <div style={{ borderTop: "1px solid var(--rvo-color-grijs-300)", paddingTop: "1.5rem", marginTop: "1.5rem" }}>
-          <Paragraph style={{ marginBottom: "1rem", fontSize: "0.875rem", color: "var(--rvo-color-grijs-600)" }}>
-            
-          </Paragraph>
-          <DevLoginButton callbackUrl={searchParams.callbackUrl}>⚠️ Dev mode</DevLoginButton>
-        </div>
-      )}
     </div>
   );
 }

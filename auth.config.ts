@@ -1,37 +1,11 @@
 import type { NextAuthConfig } from "next-auth";
 
-// Edge-safe auth config — NO imports from lib/db or any Node.js-only modules.
-// Used by middleware.ts which runs in the Edge Runtime.
+// Shared config consumed by lib/auth/index.ts (Node.js runtime, has DB adapter).
+// The middleware no longer uses NextAuth directly — see middleware.ts.
 export const authConfig = {
   pages: {
     signIn: "/inloggen",
     error: "/inloggen",
   },
-  callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      
-      // Allow dev routes in development
-      if (process.env.NODE_ENV === "development" && nextUrl.pathname.startsWith("/dev")) {
-        return true;
-      }
-      
-      const isProtectedRoute =
-        nextUrl.pathname.startsWith("/dashboard") ||
-        nextUrl.pathname.startsWith("/organisaties") ||
-        nextUrl.pathname.startsWith("/teams") ||
-        nextUrl.pathname.startsWith("/medewerkers") ||
-        nextUrl.pathname.startsWith("/financiering") ||
-        nextUrl.pathname.startsWith("/instellingen");
-
-      if (isProtectedRoute && !isLoggedIn) {
-        const loginUrl = new URL("/inloggen", nextUrl.origin);
-        loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
-        return Response.redirect(loginUrl);
-      }
-
-      return true;
-    },
-  },
-  providers: [], // providers are added in lib/auth/index.ts — not needed here
+  providers: [],
 } satisfies NextAuthConfig;

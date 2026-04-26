@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
 import { isNull } from "drizzle-orm";
@@ -18,6 +19,7 @@ export default async function TeamsPage() {
 
   return (
     <div>
+      <Breadcrumbs crumbs={[{ label: "Teams" }]} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <Heading level={1} style={{ margin: 0 }}>Teams</Heading>
         <Link href="/teams/nieuw" className="utrecht-button utrecht-button--primary-action">

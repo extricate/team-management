@@ -34,3 +34,173 @@ main {
   padding: 2rem 1.5rem;
   width: 100%;
 }
+
+/* ── Form layout ──────────────────────────────────────────────── */
+
+.form-page { max-width: 640px; }
+
+.form-field {
+  margin-bottom: 1.25rem;
+}
+
+.form-field label,
+.utrecht-form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+  font-size: 0.9375rem;
+}
+
+.form-field .form-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--rvo-color-grijs-600, #5a5a5a);
+}
+
+.form-required { color: var(--rvo-color-rood-600, #c0392b); margin-left: 0.25rem; }
+
+.utrecht-textbox,
+.utrecht-select,
+.utrecht-textarea {
+  display: block;
+  width: 100%;
+  max-width: 40rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--rvo-color-hemelblauw-800, #003d83);
+  background: #ffffff;
+  border: 2px solid var(--rvo-color-grijs-400, #b0b0b0);
+  border-radius: 2px;
+  transition: border-color 0.15s;
+}
+
+.utrecht-textbox:focus,
+.utrecht-select:focus,
+.utrecht-textarea:focus {
+  outline: 3px solid var(--rvo-color-geel-500, #f9b000);
+  outline-offset: 0;
+  border-color: var(--rvo-color-hemelblauw-700, #154273);
+}
+
+.utrecht-textarea { resize: vertical; min-height: 6rem; }
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ── Alert / form error ───────────────────────────────────────── */
+
+.form-alert {
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 2px;
+  border-left: 4px solid var(--rvo-color-rood-600, #c0392b);
+  background: var(--rvo-color-rood-100, #fdecea);
+  color: var(--rvo-color-rood-800, #7d1a0f);
+  font-size: 0.9375rem;
+}
+
+.form-alert p { margin: 0; }
+
+.form-alert--success {
+  border-left-color: var(--rvo-color-groen-600, #155724);
+  background: var(--rvo-color-groen-100, #d4edda);
+  color: var(--rvo-color-groen-800, #0a2e14);
+}
+
+/* ── Button overrides / additions ────────────────────────────── */
+
+.utrecht-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  border: 2px solid transparent;
+  line-height: 1.4;
+}
+
+.utrecht-button--primary-action {
+  background: var(--rvo-color-hemelblauw-700, #154273);
+  color: #ffffff;
+  border-color: var(--rvo-color-hemelblauw-700, #154273);
+}
+
+.utrecht-button--primary-action:hover,
+.utrecht-button--primary-action:focus {
+  background: var(--rvo-color-hemelblauw-800, #003d83);
+  border-color: var(--rvo-color-hemelblauw-800, #003d83);
+}
+
+.utrecht-button--secondary-action {
+  background: transparent;
+  color: var(--rvo-color-hemelblauw-700, #154273);
+  border-color: var(--rvo-color-hemelblauw-700, #154273);
+}
+
+.utrecht-button--secondary-action:hover,
+.utrecht-button--secondary-action:focus {
+  background: var(--rvo-color-hemelblauw-50, #eef4fb);
+}
+
+.utrecht-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Table ────────────────────────────────────────────────────── */
+
+.utrecht-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.utrecht-table__header-cell {
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  background: var(--rvo-color-hemelblauw-50, #eef4fb);
+  border-bottom: 2px solid var(--rvo-color-hemelblauw-200, #a8c8e8);
+  font-weight: 600;
+  color: var(--rvo-color-hemelblauw-800, #003d83);
+  white-space: nowrap;
+}
+
+.utrecht-table__cell {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-100, #f1f1f1);
+  vertical-align: middle;
+}
+
+.utrecht-table__row:hover .utrecht-table__cell {
+  background: var(--rvo-color-hemelblauw-50, #eef4fb);
+}
+
+/* ── Links ────────────────────────────────────────────────────── */
+
+.utrecht-link {
+  color: var(--rvo-color-hemelblauw-700, #154273);
+  text-decoration: underline;
+}
+
+.utrecht-link:hover { color: var(--rvo-color-hemelblauw-900, #001f4d); }
+
+/* ── Loading placeholder ──────────────────────────────────────── */
+
+.page-loading {
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--rvo-color-grijs-600, #5a5a5a);
+  font-size: 0.9375rem;
+}

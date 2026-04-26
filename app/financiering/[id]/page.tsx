@@ -8,6 +8,7 @@ import { eq, isNull, desc, and } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default async function FinancieringDetailPage({ params }: { params: { id: string } }) {
@@ -58,17 +59,15 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
 
   return (
     <div>
-      <div style={{ marginBottom: "2rem" }}>
-        <Link href="/financiering" className="utrecht-link" style={{ fontSize: "0.875rem" }}>← Terug naar financieringsbronnen</Link>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.75rem" }}>
-          <div>
-            <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{source.name}</Heading>
-            <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
-              Project: <code>{source.projectId}</code> · {source.organisation.name}
-            </Paragraph>
-          </div>
-          <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+      <Breadcrumbs crumbs={[{ label: "Financiering", href: "/financiering" }, { label: source.name }]} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
+        <div>
+          <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{source.name}</Heading>
+          <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
+            Project: <code>{source.projectId}</code> · {source.organisation.name}
+          </Paragraph>
         </div>
+        <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
       </div>
 
       {/* Budget summary */}

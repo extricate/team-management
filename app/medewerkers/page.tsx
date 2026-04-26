@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { employees } from "@/lib/db/schema";
 import { isNull } from "drizzle-orm";
 import { formatFullName } from "@/lib/utils";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export default async function MedewerkersPage() {
   const session = await auth();
@@ -23,6 +24,7 @@ export default async function MedewerkersPage() {
 
   return (
     <div>
+      <Breadcrumbs crumbs={[{ label: "Medewerkers" }]} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <Heading level={1} style={{ margin: 0 }}>Medewerkers</Heading>
         <Link href="/medewerkers/nieuw" className="utrecht-button utrecht-button--primary-action">

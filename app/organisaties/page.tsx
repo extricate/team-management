@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { organisations } from "@/lib/db/schema";
 import { isNull } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export default async function OrganisatiesPage() {
   const session = await auth();
@@ -19,6 +20,7 @@ export default async function OrganisatiesPage() {
 
   return (
     <div>
+      <Breadcrumbs crumbs={[{ label: "Organisaties" }]} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <Heading level={1} style={{ margin: 0 }}>Organisaties</Heading>
         <Link href="/organisaties/nieuw" className="utrecht-button utrecht-button--primary-action">

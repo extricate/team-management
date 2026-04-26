@@ -8,6 +8,7 @@ import { eq, isNull, desc, and } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatFullName, formatDate } from "@/lib/utils";
 
 export default async function MedewerkerDetailPage({ params }: { params: { id: string } }) {
@@ -44,18 +45,16 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
 
   return (
     <div>
-      <div style={{ marginBottom: "2rem" }}>
-        <Link href="/medewerkers" className="utrecht-link" style={{ fontSize: "0.875rem" }}>← Terug naar medewerkers</Link>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.75rem" }}>
-          <div>
-            <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{fullName}</Heading>
-            <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
-              {emp.organisation.name}
-              {activePos && <> · Positie: <strong>{activePos.position.type}</strong></>}
-            </Paragraph>
-          </div>
-          <Link href={`/medewerkers/${emp.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+      <Breadcrumbs crumbs={[{ label: "Medewerkers", href: "/medewerkers" }, { label: fullName }]} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
+        <div>
+          <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{fullName}</Heading>
+          <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
+            {emp.organisation.name}
+            {activePos && <> · Positie: <strong>{activePos.position.type}</strong></>}
+          </Paragraph>
         </div>
+        <Link href={`/medewerkers/${emp.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
       </div>
 
       {/* Current status */}

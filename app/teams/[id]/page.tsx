@@ -8,6 +8,7 @@ import { eq, isNull, desc, and } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatFullName, formatDate } from "@/lib/utils";
 
 export default async function TeamDetailPage({ params }: { params: { id: string } }) {
@@ -52,20 +53,17 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <Link href="/teams" className="utrecht-link" style={{ fontSize: "0.875rem" }}>← Terug naar teams</Link>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.75rem" }}>
-          <div>
-            <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{team.name}</Heading>
-            <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
-              {team.organisation.name} · {team.organisation.type}
-            </Paragraph>
-          </div>
-          <Link href={`/teams/${team.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
-            Bewerken
-          </Link>
+      <Breadcrumbs crumbs={[{ label: "Teams", href: "/teams" }, { label: team.name }]} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
+        <div>
+          <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{team.name}</Heading>
+          <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
+            {team.organisation.name} · {team.organisation.type}
+          </Paragraph>
         </div>
+        <Link href={`/teams/${team.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
+          Bewerken
+        </Link>
       </div>
 
       {/* Stats */}
