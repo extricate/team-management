@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { organisations } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
+import { syncOrganisation, removeFromIndex } from "@/lib/search/sync";
+import { INDEXES } from "@/lib/search/client";
 import { eq } from "drizzle-orm";
 
 const UpdateSchema = z.object({
@@ -30,6 +32,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
 
   const [after] = await db.update(organisations).set({ ...parsed.data, updatedAt: new Date() }).where(eq(organisations.id, id)).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "organisation", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
+  syncOrganisation(id).catch(err => console.error("[search sync]", err));
   return ok(after);
 });
 
@@ -41,5 +44,6 @@ export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext)
 
   const [after] = await db.update(organisations).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(organisations.id, id)).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "organisation", entityId: id, action: "archive", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
+  removeFromIndex(INDEXES.organisations, id).catch(err => console.error("[search sync]", err));
   return ok({ message: "Gearchiveerd" });
 });

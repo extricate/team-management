@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth, signIn } from "@/lib/auth";
-import { devSignIn } from "./actions";
 
 interface SearchParams { error?: string; callbackUrl?: string; }
 
@@ -23,6 +22,8 @@ export default async function InloggenPage({ searchParams }: { searchParams: Sea
   const errorMessage = searchParams.error
     ? (errorMessages[searchParams.error] ?? errorMessages.Default)
     : null;
+
+    console.log(process.env.environment);
 
   return (
     <div style={{ maxWidth: "480px", margin: "0 auto" }}>

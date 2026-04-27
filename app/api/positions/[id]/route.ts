@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { positions } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
+import { syncPosition, removeFromIndex } from "@/lib/search/sync";
+import { INDEXES } from "@/lib/search/client";
 import { eq } from "drizzle-orm";
 
 const UpdateSchema = z.object({
@@ -49,6 +51,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
   };
   const [after] = await db.update(positions).set(data).where(eq(positions.id, id)).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
+  syncPosition(id).catch(err => console.error("[search sync]", err));
   return ok(after);
 });
 
@@ -60,5 +63,6 @@ export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext)
 
   await db.update(positions).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(positions.id, id));
   await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: id, action: "archive", before: before as Record<string, unknown> });
+  removeFromIndex(INDEXES.positions, id).catch(err => console.error("[search sync]", err));
   return ok({ message: "Gearchiveerd" });
 });

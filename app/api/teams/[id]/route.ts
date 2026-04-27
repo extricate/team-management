@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
+import { syncTeam, removeFromIndex } from "@/lib/search/sync";
+import { INDEXES } from "@/lib/search/client";
 import { eq } from "drizzle-orm";
 
 const UpdateSchema = z.object({
@@ -39,6 +41,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
 
   const [after] = await db.update(teams).set({ ...parsed.data, updatedAt: new Date() }).where(eq(teams.id, id)).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
+  syncTeam(id).catch(err => console.error("[search sync]", err));
   return ok(after);
 });
 
@@ -50,5 +53,6 @@ export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext)
 
   await db.update(teams).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(teams.id, id));
   await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: id, action: "archive", before: before as Record<string, unknown> });
+  removeFromIndex(INDEXES.teams, id).catch(err => console.error("[search sync]", err));
   return ok({ message: "Gearchiveerd" });
 });

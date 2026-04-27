@@ -5,7 +5,7 @@ import { SiteHeader, SiteFooter } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Teambeheer",
-  description: "Rijksoverheid teambeheer applicatie",
+  description: "Teambeheer applicatie",
 };
 
 export default async function RootLayout({

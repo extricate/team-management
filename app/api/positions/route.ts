@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { positions } from "@/lib/db/schema";
 import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
+import { syncPosition } from "@/lib/search/sync";
 import { isNull } from "drizzle-orm";
 
 const Schema = z.object({
@@ -39,5 +40,6 @@ export const POST = withErrorHandling(async (req: Request) => {
   };
   const [row] = await db.insert(positions).values(data).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: row.id, action: "create", after: row as Record<string, unknown> });
+  syncPosition(row.id).catch(err => console.error("[search sync]", err));
   return created(row);
 });

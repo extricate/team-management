@@ -49,6 +49,17 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  meilisearch:
+    image: getmeili/meilisearch:v1.42.1
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-teambeheer_search_key}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meilidata:/meili_data
+    ports:
+      - "7700:7700"
+
   mailhog:
     image: mailhog/mailhog:latest
     restart: unless-stopped
@@ -58,3 +69,4 @@ services:
 
 volumes:
   pgdata:
+  meilidata:

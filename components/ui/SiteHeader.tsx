@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signOut } from "@/lib/auth";
 import styles from "./SiteHeader.module.css";
 import { SiteHeaderNav } from "./SiteHeaderNav";
+import { SearchBar } from "./SearchBar";
 
 interface SiteHeaderProps { userName?: string; }
 
@@ -18,6 +19,7 @@ export function SiteHeader({ userName }: SiteHeaderProps) {
           <span className={styles.logoText}>Teambeheer</span>
         </Link>
         <SiteHeaderNav />
+        <SearchBar />
         <div className={styles.userArea}>
           {userName ? (
             <>
