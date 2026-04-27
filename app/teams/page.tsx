@@ -3,19 +3,42 @@ import { redirect } from "next/navigation";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { Pagination } from "@/components/ui/Pagination";
 import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
-import { isNull } from "drizzle-orm";
+import { isNull, count } from "drizzle-orm";
 
-export default async function TeamsPage() {
+const PAGE_SIZE = 25;
+
+export default async function TeamsPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
-  const allTeams = await db.query.teams.findMany({
+  const page = Math.max(1, Number(searchParams?.page) || 1);
+
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(teams)
+    .where(isNull(teams.deletedAt));
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const currentPage = Math.min(page, Math.max(1, totalPages));
+  const offset = (currentPage - 1) * PAGE_SIZE;
+
+  const pageTeams = await db.query.teams.findMany({
     where: isNull(teams.deletedAt),
     with: { organisation: true, positions: true, memberships: true },
     orderBy: (t, { asc }) => [asc(t.name)],
+    limit: PAGE_SIZE,
+    offset,
   });
+
+  const from = offset + 1;
+  const to = Math.min(offset + PAGE_SIZE, total);
 
   return (
     <div>
@@ -26,6 +49,14 @@ export default async function TeamsPage() {
           + Nieuw team
         </Link>
       </div>
+
+      {total > 0 && (
+        <p style={{ margin: "0 0 1rem 0", fontSize: "0.875rem", color: "var(--rvo-color-grijs-600)" }}>
+          {total === 1
+            ? "1 team"
+            : `${from}–${to} van ${total} teams`}
+        </p>
+      )}
 
       <table className="utrecht-table">
         <thead className="utrecht-table__header">
@@ -39,14 +70,14 @@ export default async function TeamsPage() {
           </tr>
         </thead>
         <tbody className="utrecht-table__body">
-          {allTeams.length === 0 && (
+          {pageTeams.length === 0 && (
             <tr className="utrecht-table__row">
               <td className="utrecht-table__cell" colSpan={6} style={{ textAlign: "center", padding: "2rem", color: "var(--rvo-color-grijs-600)" }}>
                 Nog geen teams aangemaakt.
               </td>
             </tr>
           )}
-          {allTeams.map((team) => {
+          {pageTeams.map((team) => {
             const activeMembers   = team.memberships.filter(m => m.status === "active" && !m.endDate).length;
             const totalPositions  = team.positions.filter(p => !p.deletedAt).length;
             const filledPositions = team.positions.filter(p => p.status === "filled" && !p.deletedAt).length;
@@ -75,6 +106,12 @@ export default async function TeamsPage() {
           })}
         </tbody>
       </table>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        buildHref={(p) => `/teams?page=${p}`}
+      />
     </div>
   );
 }
