@@ -1,5 +1,5 @@
 /**
- * Demo seeder — populates all models with realistic Dutch test data.
+ * Demo seeder — COC2-I&V, Ministerie van Defensie.
  *
  * Usage:
  *   npm run db:seed:demo           # add demo data (skips if data already exists)
@@ -14,56 +14,219 @@ import {
   financialSources, financialTypes, financialSourceAmounts, fundingAllocations,
   auditEvents, comments,
 } from "../schema";
-import type {
-  Organisation, Team, Employee,
-} from "../schema";
+import type { Organisation, Team, Employee } from "../schema";
 import { reindex } from "../../search/reindex";
 
 // ── Static content ─────────────────────────────────────────────────────────────
 
 const ORG_DEFINITIONS = [
+  // ── OS1: Secties ──────────────────────────────────────────────────────────────
   {
-    name: "Dienst Digitalisering",
+    name: "Plan & BITA",
     type: "OS1" as const,
+    employeeCount: 18,
     teams: [
-      { name: "Architectuur & Design",   description: "Verantwoordelijk voor technische architectuur en ontwerpstandaarden." },
-      { name: "Softwareontwikkeling",     description: "Ontwikkelt en onderhoudt interne applicaties en platformen." },
-      { name: "Data & Analyse",           description: "Verwerking en ontsluiting van organisatiedata voor besluitvorming." },
-      { name: "Beheer & Infrastructuur",  description: "Beheert servers, netwerken en cloudinfrastructuur." },
-      { name: "Digitale Innovatie",       description: "Onderzoekt nieuwe technologieën en begeleidt digitale transformatie." },
+      {
+        name: "Beleid & Advies",
+        description: "Ontwikkeling en advisering van IT-beleid en -strategie voor het defensie-cyberdomein.",
+      },
+      {
+        name: "Informatiemanagement",
+        description: "Beheer van informatiearchitectuur en informatiestromen binnen COC2-I&V.",
+      },
+      {
+        name: "Technische Architectuur",
+        description: "Ontwerp en bewaking van de enterprise-architectuur van defensie-informatiesystemen.",
+      },
+      {
+        name: "Portfolio & Planning",
+        description: "Coördinatie van het IT-portfolio, capaciteitsplanning en voortgangsbewaking van initiatieven.",
+      },
     ],
     financialSources: [
-      { name: "Digitaliseringsprogramma 2025",    projectId: "2025-DIG-001" },
-      { name: "Operationeel Budget Digitalisering", projectId: "2025-DIG-002" },
+      { name: "Beleidsondersteuning COC2-I&V 2025",  projectId: "2025-BITA-001" },
+      { name: "Architectuurprogramma Defensie 2025",  projectId: "2025-BITA-002" },
     ],
   },
   {
-    name: "Bureau Regelgeving",
-    type: "OS2" as const,
+    name: "Projecten & Ontwikkeling",
+    type: "OS1" as const,
+    employeeCount: 24,
     teams: [
-      { name: "Beleidsvoorbereiding",        description: "Voorbereiding en afstemming van nieuw beleid en regelgeving." },
-      { name: "Juridische Zaken",            description: "Juridische advisering en toetsing van wet- en regelgeving." },
-      { name: "Handhaving",                  description: "Toezicht op naleving van wet- en regelgeving." },
-      { name: "Communicatie & Voorlichting", description: "Interne en externe communicatie over regelgeving." },
-      { name: "Bedrijfsvoering",             description: "HR, financiën en facilitaire ondersteuning van het bureau." },
+      {
+        name: "Projectmanagement",
+        description: "Aansturing van IT-projecten en -programma's conform PRINCE2- en SAFe-methodiek.",
+      },
+      {
+        name: "Applicatieontwikkeling",
+        description: "Ontwikkeling van mission-critical defensieapplicaties en systeeminterfaces.",
+      },
+      {
+        name: "Integratie & Test",
+        description: "Systeemintegratie, acceptatietesten en kwaliteitsborging van defensiesystemen.",
+      },
+      {
+        name: "DevSecOps",
+        description: "Veilige en geautomatiseerde software-deliverypipelines voor defensiesystemen.",
+      },
     ],
     financialSources: [
-      { name: "Handhavingsbudget 2025",    projectId: "2025-REG-001" },
-      { name: "Beleidsondersteuning 2025", projectId: "2025-REG-002" },
+      { name: "Projectportfolio Digitalisering 2025",  projectId: "2025-PO-001" },
+      { name: "Digitale Transformatie Defensie 2025",  projectId: "2025-DTD-001" },
+    ],
+  },
+  {
+    name: "Systeemmanagement & Beheer",
+    type: "OS1" as const,
+    employeeCount: 30,
+    teams: [
+      {
+        name: "Infrastructuurbeheer",
+        description: "Beheer van servers, opslag en datacenterinfrastructuur van COC2-I&V.",
+      },
+      {
+        name: "Applicatiebeheer",
+        description: "Functioneel en technisch beheer van operationele defensieapplicaties.",
+      },
+      {
+        name: "Security Operations Center",
+        description: "24/7 monitoring, detectie en respons op cyberdreigingen gericht op defensienetwerken.",
+      },
+      {
+        name: "Servicedesk & Support",
+        description: "Eerstelijns gebruikersondersteuning en incidentafhandeling voor defensiepersoneel.",
+      },
+    ],
+    financialSources: [
+      { name: "Beheer & Onderhoud ICT 2025",   projectId: "2025-SMB-001" },
+      { name: "Datacenter Modernisering 2025",  projectId: "2025-SMB-002" },
+    ],
+  },
+
+  // ── OS2: Subdomeinen ──────────────────────────────────────────────────────────
+  {
+    name: "B2C2&G",
+    type: "OS2" as const,
+    employeeCount: 16,
+    teams: [
+      {
+        name: "Command & Control Systemen",
+        description: "Beheer en onderhoud van C2-systemen voor grondgebonden commandovoering.",
+      },
+      {
+        name: "Grondgebonden Communicatie",
+        description: "Tactische en strategische communicatiesystemen voor grondgebonden eenheden.",
+      },
+      {
+        name: "Tactische Netwerken",
+        description: "Militaire tactische datanetwerken en radiocommunicatie-infrastructuur in het veld.",
+      },
+    ],
+    financialSources: [
+      { name: "Vervangingsprogramma C2-Systemen 2025",  projectId: "2025-B2C2G-001" },
+    ],
+  },
+  {
+    name: "HOI&D",
+    type: "OS2" as const,
+    employeeCount: 14,
+    teams: [
+      {
+        name: "HQ Informatiesystemen",
+        description: "IT-ondersteuning van de hoofdkwartiersfunctie en operationele staven.",
+      },
+      {
+        name: "Operationele Informatieverwerking",
+        description: "Verwerking en verspreiding van operationele en tactische situatiebeelden.",
+      },
+      {
+        name: "Datalink & TADIL",
+        description: "Link-16, JREAP-C en overige NATO-datalinksystemen en -protocollen.",
+      },
+    ],
+    financialSources: [
+      { name: "HQ Digitalisering & Operaties 2025",  projectId: "2025-HOID-001" },
+    ],
+  },
+  {
+    name: "G&M",
+    type: "OS2" as const,
+    employeeCount: 14,
+    teams: [
+      {
+        name: "Grondgebonden Systemen",
+        description: "IT-systemen en communicatieoplossingen voor de landstrijdkrachten.",
+      },
+      {
+        name: "Maritieme Systemen",
+        description: "Scheepsgebonden informatiesystemen en maritieme communicatieoplossingen.",
+      },
+      {
+        name: "Joint Capabilities",
+        description: "Gezamenlijke IT-capaciteiten voor joint en combined operations.",
+      },
+    ],
+    financialSources: [
+      { name: "Domein Grond & Maritiem ICT 2025",  projectId: "2025-GM-001" },
+    ],
+  },
+  {
+    name: "Inlichtingen",
+    type: "OS2" as const,
+    employeeCount: 12,
+    teams: [
+      {
+        name: "Inlichtingensystemen",
+        description: "Beheer van gespecialiseerde systemen voor inlichtingenverzameling en -verwerking.",
+      },
+      {
+        name: "OSINT & Data-analyse",
+        description: "Open-source inlichtingen en geavanceerde data-analysetechnieken voor defensie.",
+      },
+      {
+        name: "Technische Inlichtingenverzameling",
+        description: "Technische sensoren en systemen voor SIGINT- en IMINT-verzameling.",
+      },
+    ],
+    financialSources: [
+      { name: "Inlichtingen IT-portfolio 2025",  projectId: "2025-INLICHT-001" },
+    ],
+  },
+  {
+    name: "CEMA",
+    type: "OS2" as const,
+    employeeCount: 12,
+    teams: [
+      {
+        name: "Cyberoperaties",
+        description: "Offensieve en defensieve cyberoperaties en ontwikkeling van cybercapaciteiten.",
+      },
+      {
+        name: "Elektromagnetisch Spectrumbeheer",
+        description: "Beheer en coördinatie van het elektromagnetisch spectrum voor militaire operaties.",
+      },
+      {
+        name: "Electronic Warfare",
+        description: "Electronic support, electronic attack en electronic protection systemen en oefeningen.",
+      },
+    ],
+    financialSources: [
+      { name: "Cybercapaciteit Uitbreiding 2025",  projectId: "2025-CEMA-001" },
+      { name: "EMS-modernisering 2025",             projectId: "2025-CEMA-002" },
     ],
   },
 ] as const;
 
-// Dutch government function codes (functiegroepen) and matching scales
+// Defensie IT-functiegroepen met bijbehorende salarisschalen
 const POSITION_DEFS = [
-  { type: "OPF1",  schaal: "8",  annualCost: 42000 },
-  { type: "OPF2",  schaal: "9",  annualCost: 47500 },
-  { type: "OPF3",  schaal: "10", annualCost: 53000 },
-  { type: "OBF1",  schaal: "11", annualCost: 60000 },
-  { type: "OBF2",  schaal: "12", annualCost: 68000 },
-  { type: "OBF3",  schaal: "13", annualCost: 78500 },
-  { type: "TL-01", schaal: "13", annualCost: 82000 },
-  { type: "PL-01", schaal: "12", annualCost: 70000 },
+  { type: "OPF1",  schaal: "8",  annualCost: 44000 },
+  { type: "OPF2",  schaal: "9",  annualCost: 49500 },
+  { type: "OPF3",  schaal: "10", annualCost: 55000 },
+  { type: "OBF1",  schaal: "11", annualCost: 63000 },
+  { type: "OBF2",  schaal: "12", annualCost: 72000 },
+  { type: "OBF3",  schaal: "13", annualCost: 84000 },
+  { type: "TL-01", schaal: "13", annualCost: 88000 },
+  { type: "PL-01", schaal: "12", annualCost: 74000 },
 ] as const;
 
 // Dutch tussenvoegsels — ~40 % chance of having one
@@ -96,7 +259,6 @@ function distribute<T>(arr: T[], buckets: number): T[][] {
 
 async function resetAll() {
   console.log("  Clearing all non-auth data…");
-  // Strict dependency order — FK constraints require children before parents
   await db.delete(fundingAllocations);
   await db.delete(financialSourceAmounts);
   await db.delete(financialTypes);
@@ -115,7 +277,7 @@ async function resetAll() {
 // ── Organisations & Teams ──────────────────────────────────────────────────────
 
 async function seedOrganisationsAndTeams() {
-  type OrgWithTeams = { org: Organisation; teams: Team[] };
+  type OrgWithTeams = { org: Organisation; teams: Team[]; employeeCount: number };
   const result: OrgWithTeams[] = [];
 
   for (const def of ORG_DEFINITIONS) {
@@ -134,7 +296,7 @@ async function seedOrganisationsAndTeams() {
       orgTeams.push(team);
     }
 
-    result.push({ org, teams: orgTeams });
+    result.push({ org, teams: orgTeams, employeeCount: def.employeeCount });
   }
 
   return result;
@@ -142,13 +304,12 @@ async function seedOrganisationsAndTeams() {
 
 // ── Employees ─────────────────────────────────────────────────────────────────
 
-async function seedEmployees(orgsWithTeams: { org: Organisation }[]) {
+async function seedEmployees(orgsWithTeams: { org: Organisation; employeeCount: number }[]) {
   type EmployeeWithOrg = { emp: Employee; orgId: string };
   const result: EmployeeWithOrg[] = [];
 
-  for (const { org } of orgsWithTeams) {
-    // Build all rows first so we can batch-insert
-    const rows = Array.from({ length: 25 }, () => ({
+  for (const { org, employeeCount } of orgsWithTeams) {
+    const rows = Array.from({ length: employeeCount }, () => ({
       organisationId: org.id,
       firstName:  faker.person.firstName(),
       lastName:   faker.person.lastName(),
@@ -172,16 +333,15 @@ async function seedPositions(orgsWithTeams: { teams: Team[] }[]) {
 
   for (const { teams: orgTeams } of orgsWithTeams) {
     for (const team of orgTeams) {
-      // 3 positions per team, distinct types
       const defs = faker.helpers.shuffle([...POSITION_DEFS]).slice(0, 3);
 
       const rows = defs.map((def, i) => ({
-        teamId:       team.id,
-        type:         def.type,
-        positionCode: `${team.id.slice(0, 6).toUpperCase()}-${def.type}-${i + 1}`,
-        schaal:       def.schaal,
-        annualCost:   String(def.annualCost),
-        status:       pick(statusWeights),
+        teamId:        team.id,
+        type:          def.type,
+        positionCode:  `${team.id.slice(0, 6).toUpperCase()}-${def.type}-${i + 1}`,
+        schaal:        def.schaal,
+        annualCost:    String(def.annualCost),
+        status:        pick(statusWeights),
         expectedStart: faker.date.between({ from: "2024-01-01", to: "2025-06-01" }),
       }));
 
@@ -204,16 +364,14 @@ async function seedTeamMemberships(
 
   for (const { org, teams: orgTeams } of orgsWithTeams) {
     const orgEmps = allEmployees.filter(e => e.orgId === org.id).map(e => e.emp);
-
-    // Distribute employees evenly across the org's teams (primary membership)
     const buckets = distribute(orgEmps, orgTeams.length);
 
     const primaryRows = buckets.flatMap((bucket, i) =>
       bucket.map(emp => ({
-        teamId:    orgTeams[i].id,
+        teamId:     orgTeams[i].id,
         employeeId: emp.id,
-        startDate: faker.date.between({ from: "2023-01-01", to: "2024-06-01" }),
-        status:    "active" as const,
+        startDate:  faker.date.between({ from: "2022-01-01", to: "2024-06-01" }),
+        status:     "active" as const,
       }))
     );
 
@@ -222,7 +380,7 @@ async function seedTeamMemberships(
       created.push(...primaryRows.map(r => ({ teamId: r.teamId, empId: r.employeeId })));
     }
 
-    // ~20 % of employees get a secondary team within the same org
+    // ~20 % of medewerkers krijgen een tweede teamlidmaatschap
     const secondaryCandidates = pickN(orgEmps, Math.floor(orgEmps.length * 0.2));
     for (const emp of secondaryCandidates) {
       const alreadyIn = new Set(created.filter(m => m.empId === emp.id).map(m => m.teamId));
@@ -246,7 +404,7 @@ async function seedTeamMemberships(
 // ── Position Assignments ───────────────────────────────────────────────────────
 
 async function seedPositionAssignments(
-  allPositions:  { pos: typeof positions.$inferSelect; teamId: string }[],
+  allPositions:   { pos: typeof positions.$inferSelect; teamId: string }[],
   allMemberships: { teamId: string; empId: string }[],
 ) {
   const filledPositions = allPositions.filter(p => p.pos.status === "filled");
@@ -291,10 +449,11 @@ async function seedFinancialData(orgsWithTeams: { org: Organisation; teams: Team
           year,
         }).returning();
 
+        // Defensie-schaal budgetten
         const baseAmount =
-          category === "PERSEX"      ? faker.number.int({ min: 500_000,  max: 2_500_000 }) :
-          category === "MATEX"       ? faker.number.int({ min: 100_000,  max:   600_000 }) :
-          /* Investeringen */           faker.number.int({ min: 200_000,  max: 1_500_000 });
+          category === "PERSEX"      ? faker.number.int({ min: 1_000_000, max: 6_000_000 }) :
+          category === "MATEX"       ? faker.number.int({ min:   200_000, max: 1_500_000 }) :
+          /* Investeringen */           faker.number.int({ min:   500_000, max: 5_000_000 });
 
         const isReleased = faker.datatype.boolean({ probability: 0.6 });
 
@@ -307,7 +466,7 @@ async function seedFinancialData(orgsWithTeams: { org: Organisation; teams: Team
           releaseDate:       isReleased ? new Date(`${year}-03-01`) : undefined,
         }).returning();
 
-        // Allocate released PERSEX budgets across 1–2 teams
+        // Vrijgegeven PERSEX-budgetten verdelen over 1–2 teams
         if (category === "PERSEX" && isReleased) {
           const teamsToFund = pickN(orgTeams, faker.number.int({ min: 1, max: 2 }));
           const perTeam = Math.floor(baseAmount / teamsToFund.length);
@@ -334,46 +493,47 @@ async function seedFinancialData(orgsWithTeams: { org: Organisation; teams: Team
 async function main() {
   const shouldReset = process.argv.includes("--reset");
 
-  // Guard: skip if data already present (unless --reset)
   const [existing] = await db.select().from(organisations).limit(1);
   if (existing && !shouldReset) {
-    console.log("⚠  Demo data already present. Run with --reset to wipe and reseed.");
+    console.log("⚠  Demo data al aanwezig. Gebruik --reset om te wissen en opnieuw te seeden.");
     return;
   }
 
   if (shouldReset) await resetAll();
 
-  console.log("Seeding organisations & teams…");
+  console.log("Seeding COC2-I&V — Ministerie van Defensie\n");
+
+  console.log("Organisaties & teams…");
   const orgsWithTeams = await seedOrganisationsAndTeams();
   const totalTeams = orgsWithTeams.reduce((n, o) => n + o.teams.length, 0);
-  console.log(`  ✓ ${orgsWithTeams.length} organisaties, ${totalTeams} teams`);
+  console.log(`  ✓ ${orgsWithTeams.length} organisaties (3 secties + 5 subdomeinen), ${totalTeams} teams`);
 
-  console.log("Seeding employees…");
+  console.log("Medewerkers…");
   const allEmployees = await seedEmployees(orgsWithTeams);
   console.log(`  ✓ ${allEmployees.length} medewerkers`);
 
-  console.log("Seeding positions…");
+  console.log("Posities…");
   const allPositions = await seedPositions(orgsWithTeams);
   console.log(`  ✓ ${allPositions.length} posities`);
 
-  console.log("Seeding team memberships…");
+  console.log("Teamlidmaatschappen…");
   const allMemberships = await seedTeamMemberships(orgsWithTeams, allEmployees);
   console.log(`  ✓ ${allMemberships.length} lidmaatschappen`);
 
-  console.log("Seeding position assignments…");
+  console.log("Positietoewijzingen…");
   const assignmentCount = await seedPositionAssignments(allPositions, allMemberships);
   console.log(`  ✓ ${assignmentCount} toewijzingen`);
 
-  console.log("Seeding financial data…");
+  console.log("Financieringsdata…");
   await seedFinancialData(orgsWithTeams);
   const srcCount = ORG_DEFINITIONS.reduce((n, d) => n + d.financialSources.length, 0);
-  console.log(`  ✓ ${srcCount} bronnen × ${FINANCIAL_CATEGORIES.length} categorieën`);
+  console.log(`  ✓ ${srcCount} financieringsbronnen × ${FINANCIAL_CATEGORIES.length} categorieën`);
 
-  console.log("Reindexing search…");
+  console.log("Zoekindex bijwerken…");
   await reindex();
-  console.log("  ✓ Search index bijgewerkt");
+  console.log("  ✓ Klaar");
 }
 
 main()
-  .then(() => { console.log("\n✓ Demo seed voltooid"); process.exit(0); })
-  .catch(err => { console.error("\n✗ Demo seed mislukt:", err); process.exit(1); });
+  .then(() => { console.log("\n✓ Seed voltooid"); process.exit(0); })
+  .catch(err => { console.error("\n✗ Seed mislukt:", err); process.exit(1); });
