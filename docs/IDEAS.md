@@ -13,3 +13,8 @@ Auth: remove resend and implement basic username/password for management (includ
 - Export function for the entire database to an excel document
 - Import function for the entire database from an excel document
 - Easy backup functionality
+
+- Easy drag 'n drop interface to quickly move team members to and from positions among teams
+- An easy to display team + team members and position overview interface
+
+- Add <title></title> for every page where appropriate.
