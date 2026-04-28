@@ -17,7 +17,8 @@
       "Bash(curl -s -H \"Authorization: Bearer teambeheer_search_key\" \"http://localhost:7700/tasks?limit=20&indexUids=teams,employees,positions,financial-sources\")",
       "Bash(curl -s -H \"Authorization: Bearer teambeheer_search_key\" \"http://localhost:7700/tasks/76\")",
       "Bash(curl -s -H \"Authorization: Bearer teambeheer_search_key\" \"http://localhost:7700/indexes/teams/search\" -X POST -H \"Content-Type: application/json\" -d '{\"q\":\"softw\"}')",
-      "Bash(python3 -c \"import sys,json; r=json.load\\(sys.stdin\\); print\\(f'{len\\(r[\\\\\"hits\\\\\"]\\)} hits'\\); [print\\(' -', h['name']\\) for h in r['hits']]\")"
+      "Bash(python3 -c \"import sys,json; r=json.load\\(sys.stdin\\); print\\(f'{len\\(r[\\\\\"hits\\\\\"]\\)} hits'\\); [print\\(' -', h['name']\\) for h in r['hits']]\")",
+      "Bash(grep -E '\\\\.\\(css|scss|html|js|ts|tsx|jsx|vue\\)$')"
     ]
   }
 }

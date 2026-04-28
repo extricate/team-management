@@ -3,7 +3,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: var(--rvo-font-sans-serif, "RO Sans", Arial, sans-serif);
+  font-family: "Fira Sans", Arial, sans-serif;
   color: var(--rvo-color-hemelblauw-800, #003d83);
   background-color: var(--rvo-color-white, #ffffff);
 }
@@ -78,8 +78,8 @@ main {
 .utrecht-textbox:focus,
 .utrecht-select:focus,
 .utrecht-textarea:focus {
-  outline: 3px solid var(--rvo-color-geel-500, #f9b000);
-  outline-offset: 0;
+  outline: 2px solid #000000;
+  outline-offset: 2px;
   border-color: var(--rvo-color-hemelblauw-700, #154273);
 }
 
@@ -113,50 +113,11 @@ main {
   color: var(--rvo-color-groen-800, #0a2e14);
 }
 
-/* ── Button overrides / additions ────────────────────────────── */
+/* ── Button tweaks ────────────────────────────────────────────── */
 
 .utrecht-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.9375rem;
-  font-family: inherit;
-  font-weight: 600;
-  border-radius: 2px;
-  cursor: pointer;
+  font-family: "Fira Sans", Arial, sans-serif;
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-  border: 2px solid transparent;
-  line-height: 1.4;
-}
-
-.utrecht-button--primary-action {
-  background: var(--rvo-color-hemelblauw-700, #154273);
-  color: #ffffff;
-  border-color: var(--rvo-color-hemelblauw-700, #154273);
-}
-
-.utrecht-button--primary-action:hover,
-.utrecht-button--primary-action:focus {
-  background: var(--rvo-color-hemelblauw-800, #003d83);
-  border-color: var(--rvo-color-hemelblauw-800, #003d83);
-}
-
-.utrecht-button--secondary-action {
-  background: transparent;
-  color: var(--rvo-color-hemelblauw-700, #154273);
-  border-color: var(--rvo-color-hemelblauw-700, #154273);
-}
-
-.utrecht-button--secondary-action:hover,
-.utrecht-button--secondary-action:focus {
-  background: var(--rvo-color-hemelblauw-50, #eef4fb);
-}
-
-.utrecht-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 /* ── Table ────────────────────────────────────────────────────── */

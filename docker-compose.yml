@@ -31,23 +31,23 @@ services:
         condition: service_healthy
     restart: on-failure
 
-  app:
-    env_file:
-      - .env
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      AUTH_SECRET: ${AUTH_SECRET}
-      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
-      CHOKIDAR_USEPOLLING: "true"
-      WATCHPACK_POLLING: "true"
-      ENV: ${ENV}
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-    restart: unless-stopped
+  # app:
+  #   env_file:
+  #     - .env
+  #   build: .
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     DATABASE_URL: ${DATABASE_URL}
+  #     AUTH_SECRET: ${AUTH_SECRET}
+  #     AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+  #     CHOKIDAR_USEPOLLING: "true"
+  #     WATCHPACK_POLLING: "true"
+  #     ENV: ${ENV}
+  #   depends_on:
+  #     migrate:
+  #       condition: service_completed_successfully
+  #   restart: unless-stopped
 
   meilisearch:
     image: getmeili/meilisearch:v1.42.1

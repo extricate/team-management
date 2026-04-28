@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import "@rijkshuisstijl-community/font/dist/index.css";
+import "@rijkshuisstijl-community/design-tokens/dist/index.css";
+import "@utrecht/button-css/dist/index.css";
 import "./globals.css";
 import { auth } from "@/lib/auth";
 import { SiteHeader, SiteFooter } from "@/components/ui";
@@ -17,7 +20,7 @@ export default async function RootLayout({
   const userName = session?.user?.name ?? session?.user?.email ?? undefined;
 
   return (
-    <html lang="nl">
+    <html lang="nl" className="rhc-theme">
       <body>
         <a href="#main-content" className="skip-link">Ga naar inhoud</a>
         <div className="page-wrapper">
