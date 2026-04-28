@@ -6,12 +6,13 @@ import { eq, isNull, and, asc } from "drizzle-orm";
 import { AddTeamForm } from "./AddTeamForm";
 import { formatFullName } from "@/lib/utils";
 
-export default async function TeamToevoegenPage({ params }: { params: { id: string } }) {
+export default async function TeamToevoegenPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
   const emp = await db.query.employees.findFirst({
-    where: and(eq(employees.id, params.id), isNull(employees.deletedAt)),
+    where: and(eq(employees.id, id), isNull(employees.deletedAt)),
   });
   if (!emp) notFound();
 

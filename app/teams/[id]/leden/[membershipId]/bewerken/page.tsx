@@ -6,20 +6,21 @@ import { eq, and, isNull } from "drizzle-orm";
 import { formatFullName } from "@/lib/utils";
 import { EditMembershipForm } from "./EditMembershipForm";
 
-export default async function EditLidPage({ params }: { params: { id: string; membershipId: string } }) {
+export default async function EditLidPage({ params }: { params: Promise<{ id: string; membershipId: string }> }) {
+  const { id, membershipId } = await params;
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
   const team = await db.query.teams.findFirst({
-    where: and(eq(teams.id, params.id), isNull(teams.deletedAt)),
+    where: and(eq(teams.id, id), isNull(teams.deletedAt)),
   });
   if (!team) notFound();
 
   const membership = await db.query.teamMemberships.findFirst({
-    where: eq(teamMemberships.id, params.membershipId),
+    where: eq(teamMemberships.id, membershipId),
     with: { employee: true },
   });
-  if (!membership || membership.teamId !== params.id) notFound();
+  if (!membership || membership.teamId !== id) notFound();
 
   return (
     <EditMembershipForm

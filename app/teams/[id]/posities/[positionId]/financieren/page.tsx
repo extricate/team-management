@@ -6,18 +6,19 @@ import { eq, and, isNull, inArray } from "drizzle-orm";
 import { AllocatePositionForm } from "./AllocatePositionForm";
 import { getOPFType } from "@/lib/opf-types";
 
-export default async function FinancierPositiePage({ params }: { params: { id: string; positionId: string } }) {
+export default async function FinancierPositiePage({ params }: { params: Promise<{ id: string; positionId: string }> }) {
+  const { id, positionId } = await params;
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
   const team = await db.query.teams.findFirst({
-    where: and(eq(teams.id, params.id), isNull(teams.deletedAt)),
+    where: and(eq(teams.id, id), isNull(teams.deletedAt)),
     with: { organisation: true },
   });
   if (!team) notFound();
 
   const position = await db.query.positions.findFirst({
-    where: and(eq(positions.id, params.positionId), isNull(positions.deletedAt)),
+    where: and(eq(positions.id, positionId), isNull(positions.deletedAt)),
     with: {
       fundingAllocations: {
         where: eq(fundingAllocations.status, "active"),
@@ -25,7 +26,7 @@ export default async function FinancierPositiePage({ params }: { params: { id: s
       },
     },
   });
-  if (!position || position.teamId !== params.id) notFound();
+  if (!position || position.teamId !== id) notFound();
 
   const opfDef = getOPFType(position.opfType);
 

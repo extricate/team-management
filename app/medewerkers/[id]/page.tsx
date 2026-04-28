@@ -11,12 +11,13 @@ import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatFullName, formatDate } from "@/lib/utils";
 
-export default async function MedewerkerDetailPage({ params }: { params: { id: string } }) {
+export default async function MedewerkerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
   const emp = await db.query.employees.findFirst({
-    where: and(eq(employees.id, params.id), isNull(employees.deletedAt)),
+    where: and(eq(employees.id, id), isNull(employees.deletedAt)),
     with: {
       organisation: true,
       memberships: { with: { team: true, createdByUser: true }, orderBy: (m, { desc }) => [desc(m.startDate)] },
@@ -27,13 +28,13 @@ export default async function MedewerkerDetailPage({ params }: { params: { id: s
   if (!emp) notFound();
 
   const empComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "employee"), eq(comments.commentableId, params.id)),
+    where: and(eq(comments.commentableType, "employee"), eq(comments.commentableId, id)),
     with: { createdByUser: true },
     orderBy: [desc(comments.createdAt)],
   });
 
   const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "employee"), eq(auditEvents.entityId, params.id)),
+    where: and(eq(auditEvents.entityType, "employee"), eq(auditEvents.entityId, id)),
     with: { actorUser: true },
     orderBy: [desc(auditEvents.createdAt)],
     limit: 50,

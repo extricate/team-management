@@ -14,12 +14,13 @@ import { BudgetGridEditor, type GridInitialEntry } from "@/components/ui/BudgetG
 import { formatCurrency, formatDate, prorateCost } from "@/lib/utils";
 import { detectFinancialConflicts, type FinancialConflict as Conflict } from "@/lib/financial-conflicts";
 
-export default async function FinancieringDetailPage({ params }: { params: { id: string } }) {
+export default async function FinancieringDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
   const source = await db.query.financialSources.findFirst({
-    where: and(eq(financialSources.id, params.id), isNull(financialSources.deletedAt)),
+    where: and(eq(financialSources.id, id), isNull(financialSources.deletedAt)),
     with: {
       organisation: true,
       types: { orderBy: (t, { asc }) => [asc(t.year), asc(t.type)] },
@@ -43,13 +44,13 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
   if (!source) notFound();
 
   const sourceComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "financialSource"), eq(comments.commentableId, params.id)),
+    where: and(eq(comments.commentableType, "financialSource"), eq(comments.commentableId, id)),
     with: { createdByUser: true },
     orderBy: [desc(comments.createdAt)],
   });
 
   const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "financialSource"), eq(auditEvents.entityId, params.id)),
+    where: and(eq(auditEvents.entityType, "financialSource"), eq(auditEvents.entityId, id)),
     with: { actorUser: true },
     orderBy: [desc(auditEvents.createdAt)],
     limit: 50,

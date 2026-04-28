@@ -20,11 +20,11 @@
     "@auth/drizzle-adapter": "^1.11.2",
     "drizzle-orm": "^0.36.4",
     "meilisearch": "^0.57.0",
-    "next": "14.2.5",
+    "next": "^16.2.4",
     "next-auth": "^5.0.0-beta.19",
     "postgres": "^3.4.9",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -33,11 +33,11 @@
     "@rijkshuisstijl-community/design-tokens": "^15.0.0",
     "@rijkshuisstijl-community/font": "^1.1.4",
     "@types/node": "^20.19.39",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^18.3.7",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "drizzle-kit": "^0.31.10",
     "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.5",
+    "eslint-config-next": "^16.2.4",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }

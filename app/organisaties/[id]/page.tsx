@@ -11,12 +11,13 @@ import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatCurrency } from "@/lib/utils";
 
-export default async function OrganisatieDetailPage({ params }: { params: { id: string } }) {
+export default async function OrganisatieDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
   const org = await db.query.organisations.findFirst({
-    where: and(eq(organisations.id, params.id), isNull(organisations.deletedAt)),
+    where: and(eq(organisations.id, id), isNull(organisations.deletedAt)),
     with: {
       teams: {
         where: isNull(teams.deletedAt),
@@ -41,13 +42,13 @@ export default async function OrganisatieDetailPage({ params }: { params: { id: 
   if (!org) notFound();
 
   const orgComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "team"), eq(comments.commentableId, params.id)),
+    where: and(eq(comments.commentableType, "team"), eq(comments.commentableId, id)),
     with: { createdByUser: true },
     orderBy: [desc(comments.createdAt)],
   });
 
   const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "organisation"), eq(auditEvents.entityId, params.id)),
+    where: and(eq(auditEvents.entityType, "organisation"), eq(auditEvents.entityId, id)),
     with: { actorUser: true },
     orderBy: [desc(auditEvents.createdAt)],
     limit: 50,

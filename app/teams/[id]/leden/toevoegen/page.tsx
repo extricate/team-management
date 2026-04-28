@@ -5,12 +5,13 @@ import { teams, employees } from "@/lib/db/schema";
 import { eq, isNull, and, asc } from "drizzle-orm";
 import { AddLidForm } from "./AddLidForm";
 
-export default async function LidToevoegenPage({ params }: { params: { id: string } }) {
+export default async function LidToevoegenPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
   const team = await db.query.teams.findFirst({
-    where: and(eq(teams.id, params.id), isNull(teams.deletedAt)),
+    where: and(eq(teams.id, id), isNull(teams.deletedAt)),
     with: { organisation: true },
   });
   if (!team) notFound();

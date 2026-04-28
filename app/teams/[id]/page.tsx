@@ -13,12 +13,13 @@ import { formatFullName, formatDate, formatCurrency, prorateCost } from "@/lib/u
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
 
-export default async function TeamDetailPage({ params }: { params: { id: string } }) {
+export default async function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
   const team = await db.query.teams.findFirst({
-    where: and(eq(teams.id, params.id), isNull(teams.deletedAt)),
+    where: and(eq(teams.id, id), isNull(teams.deletedAt)),
     with: {
       organisation: true,
       positions: {
@@ -52,13 +53,13 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
   const sourceAmountMap = new Map(sourceAmounts.map(a => [a.id, a]));
 
   const teamComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "team"), eq(comments.commentableId, params.id)),
+    where: and(eq(comments.commentableType, "team"), eq(comments.commentableId, id)),
     with: { createdByUser: true },
     orderBy: [desc(comments.createdAt)],
   });
 
   const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "team"), eq(auditEvents.entityId, params.id)),
+    where: and(eq(auditEvents.entityType, "team"), eq(auditEvents.entityId, id)),
     with: { actorUser: true },
     orderBy: [desc(auditEvents.createdAt)],
     limit: 50,
