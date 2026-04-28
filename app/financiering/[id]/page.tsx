@@ -11,10 +11,8 @@ import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { BudgetGridEditor, type GridInitialEntry } from "@/components/ui/BudgetGridEditor";
-import { formatCurrency, formatDate } from "@/lib/utils";
-
-type ConflictSeverity = "error" | "warning";
-interface Conflict { severity: ConflictSeverity; message: string }
+import { formatCurrency, formatDate, prorateCost } from "@/lib/utils";
+import { detectFinancialConflicts, type FinancialConflict as Conflict } from "@/lib/financial-conflicts";
 
 export default async function FinancieringDetailPage({ params }: { params: { id: string } }) {
   const session = await auth();
@@ -60,44 +58,22 @@ export default async function FinancieringDetailPage({ params }: { params: { id:
   // ── Budget summary ─────────────────────────────────────────────────────────
   const totalBudget = source.amounts.reduce((s, a) => s + Number(a.amount), 0);
   const releasedBudget = source.amounts.filter(a => a.status === "released").reduce((s, a) => s + Number(a.amount), 0);
-  const allocatedBudget = source.amounts.flatMap(a => a.allocations).filter(al => al.status === "active").reduce((s, al) => s + Number(al.amount ?? 0), 0);
+  const allocatedBudget = source.amounts.reduce((total, a) => {
+    const year = a.financialType?.year;
+    return total + a.allocations
+      .filter(al => al.status === "active")
+      .reduce((s, al) => {
+        const raw = Number(al.amount ?? 0);
+        if (year && al.position?.expectedStart) {
+          return s + prorateCost(raw, al.position.expectedStart, al.position.expectedEnd, year);
+        }
+        return s + raw;
+      }, 0);
+  }, 0);
   const remaining = releasedBudget - allocatedBudget;
 
   // ── Conflict detection ─────────────────────────────────────────────────────
-  const conflicts: Conflict[] = [];
-  for (const amount of source.amounts) {
-    const activeAllocs = amount.allocations.filter(al => al.status === "active");
-    const totalAllocated = activeAllocs.reduce((s, al) => s + Number(al.amount ?? 0), 0);
-    const amountVal = Number(amount.amount);
-    const label = amount.financialType
-      ? `${amount.financialType.type} ${amount.financialType.year}`
-      : "Ongetypeerd bedrag";
-
-    if (activeAllocs.length > 0 && totalAllocated > amountVal) {
-      const over = totalAllocated - amountVal;
-      conflicts.push({
-        severity: "error",
-        message: `${label}: gealloceerd (${formatCurrency(totalAllocated)}) overschrijdt het bedrag (${formatCurrency(amountVal)}) met ${formatCurrency(over)}.`,
-      });
-    }
-    if (amount.status === "concept" && activeAllocs.length > 0) {
-      conflicts.push({
-        severity: "warning",
-        message: `${label}: ${activeAllocs.length} actieve allocatie(s) zijn gekoppeld aan een conceptbedrag (nog niet vrijgegeven).`,
-      });
-    }
-    if (amount.releaseDate) {
-      for (const al of activeAllocs) {
-        if (al.startDate && al.startDate < amount.releaseDate) {
-          conflicts.push({
-            severity: "warning",
-            message: `${label}: allocatie start op ${formatDate(al.startDate)}, vóór de vrijgavedatum van ${formatDate(amount.releaseDate)}.`,
-          });
-          break;
-        }
-      }
-    }
-  }
+  const conflicts: Conflict[] = detectFinancialConflicts(source.amounts);
 
   // ── Prepare grid data ─────────────────────────────────────────────────────
   const gridEntries: GridInitialEntry[] = source.types.map((t) => {

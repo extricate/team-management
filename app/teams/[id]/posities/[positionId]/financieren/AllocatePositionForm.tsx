@@ -6,8 +6,8 @@ import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
-import { formatCurrency } from "@/lib/utils";
-import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS, type OPFNaturalCategory } from "@/lib/opf-types";
+import { formatCurrency, prorateCost } from "@/lib/utils";
+import { getOPFType, getCrossCategoryConflict, CATEGORY_LABELS, CATEGORY_COLORS, type OPFNaturalCategory } from "@/lib/opf-types";
 import type { FinancialTypeCategory } from "@/lib/db/schema";
 
 interface FinancialType { id: string; type: string; year: number; }
@@ -23,9 +23,12 @@ interface SourceAmount {
 interface Position {
   id: string;
   type: string;
+  opfType: string | null;
   positionCode: string | null;
   schaal: string | null;
   annualCost: string | null;
+  expectedStart: string | Date | null;
+  expectedEnd: string | Date | null;
 }
 
 interface Props {
@@ -34,39 +37,35 @@ interface Props {
   teamName: string;
   availableAmounts: SourceAmount[];
   alreadyAllocated: number;
-  opfKey: string;
 }
 
 function CrossCategoryWarning({
   selectedCategory,
-  expectedCategory,
-  isExternal,
+  opfKey,
   annualCost,
 }: {
-  selectedCategory: FinancialTypeCategory | undefined;
-  expectedCategory: OPFNaturalCategory | undefined;
-  isExternal: boolean;
+  selectedCategory: string | undefined;
+  opfKey: string | null | undefined;
   annualCost: number;
 }) {
-  if (!selectedCategory || !expectedCategory || expectedCategory === "extern") return null;
-  if (selectedCategory === expectedCategory) return null;
+  const conflict = getCrossCategoryConflict(selectedCategory, opfKey);
+  if (conflict.kind === "none") return null;
 
-  const blocksInternal = isExternal && selectedCategory === "PERSEX";
-
+  const isBlocking = conflict.kind === "blocks-internal-budget";
   return (
     <div style={{
       marginTop: "0.75rem",
       padding: "0.75rem 1rem",
       borderRadius: "4px",
-      border: `1px solid ${blocksInternal ? "var(--rvo-color-rood-300, #f5a3a3)" : "var(--rvo-color-geel-400, #e6a817)"}`,
-      background: blocksInternal ? "var(--rvo-color-rood-50, #fff5f5)" : "var(--rvo-color-geel-50, #fffbea)",
+      border: `1px solid ${isBlocking ? "var(--rvo-color-rood-300, #f5a3a3)" : "var(--rvo-color-geel-400, #e6a817)"}`,
+      background: isBlocking ? "var(--rvo-color-rood-50, #fff5f5)" : "var(--rvo-color-geel-50, #fffbea)",
       fontSize: "0.875rem",
     }}>
-      <strong style={{ color: blocksInternal ? "var(--rvo-color-rood-700, #b30000)" : "var(--rvo-color-oranje-800, #7a3b00)" }}>
-        {blocksInternal ? "⚠ Budgetconflict: extern personeel uit PERSEX" : "⚠ Afwijkend budgettype"}
+      <strong style={{ color: isBlocking ? "var(--rvo-color-rood-700, #b30000)" : "var(--rvo-color-oranje-800, #7a3b00)" }}>
+        {isBlocking ? "⚠ Budgetconflict: extern personeel uit PERSEX" : "⚠ Afwijkend budgettype"}
       </strong>
-      <p style={{ margin: "0.375rem 0 0 0", color: blocksInternal ? "var(--rvo-color-rood-700, #b30000)" : "var(--rvo-color-oranje-800, #7a3b00)" }}>
-        {blocksInternal ? (
+      <p style={{ margin: "0.375rem 0 0 0", color: isBlocking ? "var(--rvo-color-rood-700, #b30000)" : "var(--rvo-color-oranje-800, #7a3b00)" }}>
+        {isBlocking ? (
           <>
             Dit is een externe inhuurpositie. Financiering uit het personeelsbudget (PERSEX) blokkeert structurele interne formatieplekken —
             extern personeel is doorgaans duurder per FTE dan intern personeel.
@@ -76,8 +75,10 @@ function CrossCategoryWarning({
           </>
         ) : (
           <>
-            Verwacht budgettype voor dit OPF-type is <strong>{CATEGORY_LABELS[expectedCategory]}</strong>,
-            maar er is een <strong>{CATEGORY_LABELS[selectedCategory as OPFNaturalCategory]}</strong>-bedrag geselecteerd.
+            Verwacht budgettype voor dit OPF-type is{" "}
+            <strong>{conflict.expectedCategory ? CATEGORY_LABELS[conflict.expectedCategory] : "—"}</strong>,
+            maar er is een{" "}
+            <strong>{conflict.selectedCategory ? CATEGORY_LABELS[conflict.selectedCategory as OPFNaturalCategory] ?? conflict.selectedCategory : "—"}</strong>-bedrag geselecteerd.
             Dit is toegestaan maar afwijkend — controleer of dit bewust is.
           </>
         )}
@@ -86,18 +87,22 @@ function CrossCategoryWarning({
   );
 }
 
-export function AllocatePositionForm({ position, teamId, teamName, availableAmounts, alreadyAllocated, opfKey }: Props) {
+export function AllocatePositionForm({ position, teamId, teamName, availableAmounts, alreadyAllocated }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [selectedAmountId, setSelectedAmountId] = useState(availableAmounts[0]?.id ?? "");
   const [noEndDate, setNoEndDate] = useState(false);
 
-  const opfDef = getOPFType(opfKey);
+  const opfDef = getOPFType(position.opfType);
   const annualCost = Number(position.annualCost ?? 0);
-  const remaining = annualCost > 0 ? annualCost - alreadyAllocated : null;
-
   const selectedAmount = availableAmounts.find(a => a.id === selectedAmountId);
+  const selectedYear = selectedAmount?.financialType?.year ?? new Date().getFullYear();
+  const startDate = position.expectedStart ? new Date(position.expectedStart) : null;
+  const endDate = position.expectedEnd ? new Date(position.expectedEnd) : null;
+  const effectiveCost = annualCost > 0 ? prorateCost(annualCost, startDate, endDate, selectedYear) : 0;
+  const isProrated = effectiveCost > 0 && effectiveCost < annualCost;
+  const remaining = effectiveCost > 0 ? effectiveCost - alreadyAllocated : null;
   const usedOnSelected = selectedAmount
     ? selectedAmount.allocations.reduce((s, a) => s + Number(a.amount ?? 0), 0)
     : 0;
@@ -141,7 +146,7 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
     }
   }
 
-  const positionLabel = `${position.type}${position.positionCode ? ` (${position.positionCode})` : ""}${position.schaal ? ` · Schaal ${position.schaal}` : ""}`;
+  const positionLabel = `${position.type}${position.positionCode ? ` (${position.positionCode})` : ""}${position.schaal ? ` · Schaal ${position.schaal}` : ""}${opfDef ? ` · ${opfDef.label}` : ""}`;
 
   return (
     <div className="form-page">
@@ -182,24 +187,35 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
 
       {/* Cost overview */}
       {annualCost > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "1.5rem" }}>
-          {[
-            { label: "Jaarlijkse kosten", value: annualCost, color: "var(--rvo-color-hemelblauw-700)" },
-            { label: "Al gealloceerd", value: alreadyAllocated, color: "var(--rvo-color-groen-700)" },
-            {
-              label: "Nog te dekken",
-              value: remaining!,
-              color: remaining! <= 0 ? "var(--rvo-color-groen-700)" : "var(--rvo-color-oranje-600, #e17000)",
-            },
-          ].map(({ label, value, color }) => (
-            <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50)", borderRadius: "4px", padding: "1rem", textAlign: "center" }}>
-              <div style={{ fontSize: "1.25rem", fontWeight: 700, color }}>
-                <CurrencyDisplay value={value} />
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: isProrated ? "0.5rem" : "1.5rem" }}>
+            {[
+              {
+                label: isProrated ? `Kosten in ${selectedYear}` : "Jaarlijkse kosten",
+                value: effectiveCost,
+                color: "var(--rvo-color-hemelblauw-700)",
+              },
+              { label: "Al gealloceerd", value: alreadyAllocated, color: "var(--rvo-color-groen-700)" },
+              {
+                label: "Nog te dekken",
+                value: remaining!,
+                color: remaining! <= 0 ? "var(--rvo-color-groen-700)" : "var(--rvo-color-oranje-600, #e17000)",
+              },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50)", borderRadius: "4px", padding: "1rem", textAlign: "center" }}>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color }}>
+                  <CurrencyDisplay value={value} />
+                </div>
+                <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
               </div>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          {isProrated && (
+            <p style={{ margin: "0 0 1.5rem 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
+              Proratering op basis van startdatum: {formatCurrency(annualCost)} p.j. × deel van {selectedYear} = {formatCurrency(effectiveCost)}
+            </p>
+          )}
+        </>
       )}
 
       {error && (
@@ -265,8 +281,7 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
 
             <CrossCategoryWarning
               selectedCategory={selectedCategory}
-              expectedCategory={opfDef?.naturalCategory}
-              isExternal={opfDef?.isExternal ?? false}
+              opfKey={position.opfType}
               annualCost={annualCost}
             />
           </div>

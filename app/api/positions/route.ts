@@ -8,7 +8,8 @@ import { isNull } from "drizzle-orm";
 
 const Schema = z.object({
   teamId: z.string().uuid(),
-  type: z.string().min(1), // e.g. OPF1, OPF2
+  type: z.string().min(1), // identifying name, e.g. "Product Owner"
+  opfType: z.string().optional().nullable(), // OPF classification key, e.g. "OPF1", "OPF9-inhuur"
   positionCode: z.string().optional(),
   schaal: z.string().optional(),
   annualCost: z.number().positive().optional(),

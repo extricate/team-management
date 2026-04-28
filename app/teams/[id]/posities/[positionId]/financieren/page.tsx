@@ -27,7 +27,7 @@ export default async function FinancierPositiePage({ params }: { params: { id: s
   });
   if (!position || position.teamId !== params.id) notFound();
 
-  const opfDef = getOPFType(position.type);
+  const opfDef = getOPFType(position.opfType);
 
   // Released source amounts from the same organisation
   const orgSources = await db
@@ -72,7 +72,6 @@ export default async function FinancierPositiePage({ params }: { params: { id: s
       teamName={team.name}
       availableAmounts={availableAmounts}
       alreadyAllocated={alreadyAllocated}
-      opfKey={position.type}
     />
   );
 }

@@ -95,6 +95,39 @@ export const CATEGORY_LABELS: Record<OPFNaturalCategory, string> = {
   extern: "Extern",
 };
 
+export type CrossCategoryKind = "none" | "blocks-internal-budget" | "mismatch";
+
+export interface CrossCategoryConflict {
+  kind: CrossCategoryKind;
+  selectedCategory?: string;
+  expectedCategory?: OPFNaturalCategory;
+}
+
+/**
+ * Returns what kind of cross-category conflict (if any) exists when a given
+ * financial source category is used to fund an OPF position.
+ *
+ * "blocks-internal-budget": external position funded from PERSEX — consumes
+ *   structural personnel budget that could otherwise cover internal FTEs.
+ * "mismatch": any other category deviation from the OPF natural category.
+ * "none": no conflict (categories match, OPF type unknown, or OPF is extern).
+ */
+export function getCrossCategoryConflict(
+  selectedCategory: string | null | undefined,
+  opfKey: string | null | undefined,
+): CrossCategoryConflict {
+  if (!selectedCategory) return { kind: "none" };
+  const opfDef = getOPFType(opfKey);
+  if (!opfDef) return { kind: "none" };
+  const { naturalCategory, isExternal } = opfDef;
+  if (naturalCategory === "extern") return { kind: "none" };
+  if (selectedCategory === naturalCategory) return { kind: "none" };
+  if (isExternal && selectedCategory === "PERSEX") {
+    return { kind: "blocks-internal-budget", selectedCategory, expectedCategory: naturalCategory };
+  }
+  return { kind: "mismatch", selectedCategory, expectedCategory: naturalCategory };
+}
+
 export const CATEGORY_COLORS: Record<OPFNaturalCategory, { bg: string; text: string }> = {
   PERSEX: { bg: "var(--rvo-color-hemelblauw-100, #d3e4f5)", text: "var(--rvo-color-hemelblauw-800)" },
   MATEX: { bg: "var(--rvo-color-groen-100, #c7e9c0)", text: "var(--rvo-color-groen-800, #005a00)" },

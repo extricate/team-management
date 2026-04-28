@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { formatFullName, formatDate, formatCurrency } from "@/lib/utils";
+import { formatFullName, formatDate, formatCurrency, prorateCost } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
 
@@ -118,29 +118,37 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
               const activeAllocations = pos.fundingAllocations.filter(fa => fa.status === "active");
               const annualCost = Number(pos.annualCost ?? 0);
               const totalAllocated = activeAllocations.reduce((s, fa) => s + Number(fa.amount ?? 0), 0);
-              const coveragePct = annualCost > 0 ? Math.min(100, Math.round((totalAllocated / annualCost) * 100)) : null;
-              const opfDef = getOPFType(pos.type);
+              const currentYear = new Date().getFullYear();
+              const startYear = pos.expectedStart ? pos.expectedStart.getFullYear() : null;
+              const relevantYear = startYear && startYear > currentYear ? startYear : currentYear;
+              const effectiveCost = annualCost > 0 ? prorateCost(annualCost, pos.expectedStart, pos.expectedEnd, relevantYear) : 0;
+              const isProrated = effectiveCost > 0 && effectiveCost < annualCost;
+              const coveragePct = effectiveCost > 0 ? Math.min(100, Math.round((totalAllocated / effectiveCost) * 100)) : null;
+              const opfDef = getOPFType(pos.opfType);
 
               return (
                 <div key={pos.id} style={{ border: "1px solid var(--rvo-color-hemelblauw-200, #b3d0ec)", borderRadius: "6px", overflow: "hidden" }}>
                   {/* Position header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", background: "var(--rvo-color-hemelblauw-50, #eef4fb)", flexWrap: "wrap", gap: "0.5rem" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-                      <strong style={{ fontSize: "1rem" }}>{opfDef ? opfDef.label : pos.type}</strong>
+                      <strong style={{ fontSize: "1rem" }}>{pos.type}</strong>
                       {pos.positionCode && (
                         <span style={{ color: "var(--rvo-color-grijs-600)", fontSize: "0.875rem" }}>{pos.positionCode}</span>
                       )}
                       {opfDef && (
-                        <span style={{
-                          borderRadius: "20px",
-                          padding: "0.125rem 0.625rem",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          background: CATEGORY_COLORS[opfDef.naturalCategory].bg,
-                          color: CATEGORY_COLORS[opfDef.naturalCategory].text,
-                        }}>
-                          {CATEGORY_LABELS[opfDef.naturalCategory]}
-                        </span>
+                        <>
+                          <span style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>{opfDef.label}</span>
+                          <span style={{
+                            borderRadius: "20px",
+                            padding: "0.125rem 0.625rem",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            background: CATEGORY_COLORS[opfDef.naturalCategory].bg,
+                            color: CATEGORY_COLORS[opfDef.naturalCategory].text,
+                          }}>
+                            {CATEGORY_LABELS[opfDef.naturalCategory]}
+                          </span>
+                        </>
                       )}
                       {pos.schaal && (
                         <span style={{ background: "var(--rvo-color-hemelblauw-100, #d3e4f5)", color: "var(--rvo-color-hemelblauw-800)", borderRadius: "20px", padding: "0.125rem 0.625rem", fontSize: "0.8125rem", fontWeight: 500 }}>
@@ -185,7 +193,10 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
                         <>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem" }}>
                             <span style={{ fontWeight: 500 }}><CurrencyDisplay value={totalAllocated} /></span>
-                            <span style={{ color: "var(--rvo-color-grijs-600)", fontSize: "0.875rem" }}>/ <CurrencyDisplay value={annualCost} /> p.j.</span>
+                            <span style={{ color: "var(--rvo-color-grijs-600)", fontSize: "0.875rem" }}>
+                              / <CurrencyDisplay value={effectiveCost} />
+                              {isProrated ? ` in ${relevantYear}` : " p.j."}
+                            </span>
                             {coveragePct !== null && (
                               <span style={{
                                 background: coveragePct >= 100 ? "var(--rvo-color-groen-100)" : coveragePct > 0 ? "var(--rvo-color-geel-100, #fff9e6)" : "var(--rvo-color-grijs-100)",
@@ -196,6 +207,11 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
                               </span>
                             )}
                           </div>
+                          {isProrated && (
+                            <div style={{ fontSize: "0.75rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>
+                              {formatCurrency(annualCost)} p.j. – start {pos.expectedStart ? formatDate(pos.expectedStart) : "?"}
+                            </div>
+                          )}
                           {/* Progress bar */}
                           <div style={{ height: "6px", background: "var(--rvo-color-grijs-200)", borderRadius: "3px", overflow: "hidden", marginBottom: "0.5rem" }}>
                             <div style={{ height: "100%", width: `${coveragePct ?? 0}%`, background: coveragePct! >= 100 ? "var(--rvo-color-groen-600)" : "var(--rvo-color-hemelblauw-500)", borderRadius: "3px", transition: "width 0.2s" }} />

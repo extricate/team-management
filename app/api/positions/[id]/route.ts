@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 
 const UpdateSchema = z.object({
   type: z.string().min(1).optional(),
+  opfType: z.string().optional().nullable(),
   positionCode: z.string().optional().nullable(),
   schaal: z.string().optional().nullable(),
   annualCost: z.number().positive().optional().nullable(),

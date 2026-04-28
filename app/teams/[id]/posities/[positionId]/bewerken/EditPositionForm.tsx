@@ -24,10 +24,9 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [selectedType, setSelectedType] = useState<string>(position.type);
+  const [selectedOpfType, setSelectedOpfType] = useState<string>(position.opfType ?? "");
 
-  const opfDef = getOPFType(selectedType);
-  const isLegacyType = !opfDef && !!selectedType;
+  const opfDef = getOPFType(selectedOpfType);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -44,6 +43,7 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: fd.get("type"),
+          opfType: (fd.get("opfType") as string) || null,
           positionCode: (fd.get("positionCode") as string) || null,
           schaal: (fd.get("schaal") as string) || null,
           annualCost: costStr ? parseFloat(costStr) : null,
@@ -84,21 +84,32 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
       <form onSubmit={handleSubmit}>
         <div className="form-field">
           <label htmlFor="type" className="utrecht-form-label">
-            OPF-type <span className="form-required" aria-label="verplicht">*</span>
+            Functienaam <span className="form-required" aria-label="verplicht">*</span>
           </label>
-          <select
+          <input
             id="type"
             name="type"
-            className="utrecht-select"
+            type="text"
+            className="utrecht-textbox"
             required
+            maxLength={100}
             autoFocus
-            value={selectedType}
-            onChange={e => setSelectedType(e.target.value)}
+            defaultValue={position.type}
+            placeholder="bijv. Product Owner, Scrum Master, Teamleider"
+          />
+          <p className="form-hint">De identificerende naam van de functie binnen het team.</p>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="opfType" className="utrecht-form-label">OPF-type</label>
+          <select
+            id="opfType"
+            name="opfType"
+            className="utrecht-select"
+            value={selectedOpfType}
+            onChange={e => setSelectedOpfType(e.target.value)}
           >
-            {/* Preserve legacy value if not in the standard list */}
-            {isLegacyType && (
-              <option value={position.type}>{position.type} (huidig – niet-standaard)</option>
-            )}
+            <option value="">— Geen OPF-type —</option>
             {OPF_TYPES.map(t => (
               <option key={t.key} value={t.key}>{t.label}</option>
             ))}
@@ -118,11 +129,9 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
               </span>
               <span style={{ color: "var(--rvo-color-grijs-700)" }}>{opfDef.hint}</span>
             </div>
-          ) : isLegacyType ? (
-            <p className="form-hint" style={{ color: "var(--rvo-color-oranje-700, #b35900)" }}>
-              Dit type is niet-standaard. Overweeg om over te stappen naar een OPF-type voor correcte financieringsberekeningen.
-            </p>
-          ) : null}
+          ) : (
+            <p className="form-hint">Bepaalt het verwachte budgettype (PERSEX, MATEX of Investeringen) voor financieringscontroles.</p>
+          )}
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>

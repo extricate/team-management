@@ -112,7 +112,8 @@ export const employees = pgTable("employees", {
 export const positions = pgTable("positions", {
   id: uuid("id").primaryKey().defaultRandom(),
   teamId: uuid("team_id").notNull().references(() => teams.id),
-  type: text("type").notNull(), // e.g. OPF1, OPF2 — open-ended per organisation
+  type: text("type").notNull(), // identifying name, e.g. "Product Owner", "Scrum Master"
+  opfType: text("opf_type"), // OPF classification key, e.g. "OPF1", "OPF9-inhuur"
   positionCode: text("position_code"),
   schaal: text("schaal"),
   annualCost: numeric("annual_cost", { precision: 15, scale: 2 }),

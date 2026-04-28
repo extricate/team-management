@@ -33,3 +33,37 @@ export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "—";
   return new Date(date).toLocaleDateString("nl-NL");
 }
+
+/**
+ * Calculates the effective cost for a position in a given year, prorated by
+ * how many days of that year the position is active (based on expectedStart/expectedEnd).
+ * Returns the full annualCost when the position is active the whole year.
+ */
+export function prorateCost(
+  annualCost: number,
+  expectedStart: Date | null | undefined,
+  expectedEnd: Date | null | undefined,
+  year: number,
+): number {
+  if (annualCost <= 0) return 0;
+
+  const yearStart = new Date(year, 0, 1);
+  const yearEnd = new Date(year, 11, 31);
+
+  if (expectedStart && expectedStart > yearEnd) return 0;
+  if (expectedEnd && expectedEnd < yearStart) return 0;
+
+  const activeFrom = expectedStart && expectedStart > yearStart ? expectedStart : yearStart;
+  const activeTo = expectedEnd && expectedEnd < yearEnd ? expectedEnd : yearEnd;
+
+  if (activeFrom > activeTo) return 0;
+
+  const totalDaysInYear = Math.round(
+    (new Date(year + 1, 0, 1).getTime() - new Date(year, 0, 1).getTime()) / 86400000,
+  );
+  const activeDays =
+    Math.round((activeTo.getTime() - activeFrom.getTime()) / 86400000) + 1;
+
+  if (activeDays >= totalDaysInYear) return annualCost;
+  return annualCost * (activeDays / totalDaysInYear);
+}

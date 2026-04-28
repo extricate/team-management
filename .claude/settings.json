@@ -19,10 +19,16 @@
       "Bash(curl -s -H \"Authorization: Bearer teambeheer_search_key\" \"http://localhost:7700/indexes/teams/search\" -X POST -H \"Content-Type: application/json\" -d '{\"q\":\"softw\"}')",
       "Bash(python3 -c \"import sys,json; r=json.load\\(sys.stdin\\); print\\(f'{len\\(r[\\\\\"hits\\\\\"]\\)} hits'\\); [print\\(' -', h['name']\\) for h in r['hits']]\")",
       "Bash(grep -E '\\\\.\\(css|scss|html|js|ts|tsx|jsx|vue\\)$')",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(npx vitest *)",
+      "Bash(node -e ' *)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(cat)",
+      "Bash(npx tsx *)"
     ],
     "additionalDirectories": [
-      "/home/hsfnelissen/code/team-management/app/api/financial-sources/[id]"
+      "/home/hsfnelissen/code/team-management/app/api/financial-sources/[id]",
+      "/tmp"
     ]
   }
 }

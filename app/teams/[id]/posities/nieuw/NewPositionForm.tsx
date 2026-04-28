@@ -16,9 +16,9 @@ export function NewPositionForm({ teamId, teamName }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [selectedType, setSelectedType] = useState<string>(OPF_TYPES[0].key);
+  const [selectedOpfType, setSelectedOpfType] = useState<string>("");
 
-  const opfDef = getOPFType(selectedType);
+  const opfDef = getOPFType(selectedOpfType);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -37,6 +37,7 @@ export function NewPositionForm({ teamId, teamName }: Props) {
         body: JSON.stringify({
           teamId,
           type: fd.get("type"),
+          opfType: (fd.get("opfType") as string) || null,
           positionCode: (fd.get("positionCode") as string) || undefined,
           schaal: (fd.get("schaal") as string) || undefined,
           annualCost: costStr ? parseFloat(costStr) : undefined,
@@ -77,22 +78,36 @@ export function NewPositionForm({ teamId, teamName }: Props) {
       <form onSubmit={handleSubmit}>
         <div className="form-field">
           <label htmlFor="type" className="utrecht-form-label">
-            OPF-type <span className="form-required" aria-label="verplicht">*</span>
+            Functienaam <span className="form-required" aria-label="verplicht">*</span>
           </label>
-          <select
+          <input
             id="type"
             name="type"
-            className="utrecht-select"
+            type="text"
+            className="utrecht-textbox"
             required
+            maxLength={100}
             autoFocus
-            value={selectedType}
-            onChange={e => setSelectedType(e.target.value)}
+            placeholder="bijv. Product Owner, Scrum Master, Teamleider"
+          />
+          <p className="form-hint">De identificerende naam van de functie binnen het team.</p>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="opfType" className="utrecht-form-label">OPF-type</label>
+          <select
+            id="opfType"
+            name="opfType"
+            className="utrecht-select"
+            value={selectedOpfType}
+            onChange={e => setSelectedOpfType(e.target.value)}
           >
+            <option value="">— Geen OPF-type —</option>
             {OPF_TYPES.map(t => (
               <option key={t.key} value={t.key}>{t.label}</option>
             ))}
           </select>
-          {opfDef && (
+          {opfDef ? (
             <div style={{ marginTop: "0.5rem", padding: "0.625rem 0.875rem", background: "var(--rvo-color-hemelblauw-50, #eef4fb)", borderRadius: "4px", fontSize: "0.875rem", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
               <span style={{
                 flexShrink: 0,
@@ -107,6 +122,8 @@ export function NewPositionForm({ teamId, teamName }: Props) {
               </span>
               <span style={{ color: "var(--rvo-color-grijs-700)" }}>{opfDef.hint}</span>
             </div>
+          ) : (
+            <p className="form-hint">Bepaalt het verwachte budgettype (PERSEX, MATEX of Investeringen) voor financieringscontroles.</p>
           )}
         </div>
 
