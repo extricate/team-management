@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { OPF_TYPES, getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
 
 interface Props {
   teamId: string;
@@ -15,6 +16,9 @@ export function NewPositionForm({ teamId, teamName }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selectedType, setSelectedType] = useState<string>(OPF_TYPES[0].key);
+
+  const opfDef = getOPFType(selectedType);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -73,19 +77,37 @@ export function NewPositionForm({ teamId, teamName }: Props) {
       <form onSubmit={handleSubmit}>
         <div className="form-field">
           <label htmlFor="type" className="utrecht-form-label">
-            Type <span className="form-required" aria-label="verplicht">*</span>
+            OPF-type <span className="form-required" aria-label="verplicht">*</span>
           </label>
-          <input
+          <select
             id="type"
             name="type"
-            type="text"
-            className="utrecht-textbox"
+            className="utrecht-select"
             required
-            maxLength={50}
             autoFocus
-            placeholder="bijv. OPF1, OPF2, PG-L"
-          />
-          <p className="form-hint">Het functietype zoals gehanteerd binnen de organisatie.</p>
+            value={selectedType}
+            onChange={e => setSelectedType(e.target.value)}
+          >
+            {OPF_TYPES.map(t => (
+              <option key={t.key} value={t.key}>{t.label}</option>
+            ))}
+          </select>
+          {opfDef && (
+            <div style={{ marginTop: "0.5rem", padding: "0.625rem 0.875rem", background: "var(--rvo-color-hemelblauw-50, #eef4fb)", borderRadius: "4px", fontSize: "0.875rem", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+              <span style={{
+                flexShrink: 0,
+                borderRadius: "20px",
+                padding: "0.125rem 0.625rem",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                background: CATEGORY_COLORS[opfDef.naturalCategory].bg,
+                color: CATEGORY_COLORS[opfDef.naturalCategory].text,
+              }}>
+                {CATEGORY_LABELS[opfDef.naturalCategory]}
+              </span>
+              <span style={{ color: "var(--rvo-color-grijs-700)" }}>{opfDef.hint}</span>
+            </div>
+          )}
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
@@ -125,7 +147,7 @@ export function NewPositionForm({ teamId, teamName }: Props) {
             className="utrecht-textbox"
             placeholder="0.00"
           />
-          <p className="form-hint">Totale jaarlijkse personeelskosten incl. werkgeverslasten.</p>
+          <p className="form-hint">Totale jaarlijkse kosten incl. werkgeverslasten{opfDef?.isExternal ? " (extern tarief)" : ""}.</p>
         </div>
 
         <div className="form-field">
@@ -143,23 +165,11 @@ export function NewPositionForm({ teamId, teamName }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           <div className="form-field">
             <label htmlFor="expectedStart" className="utrecht-form-label">Verwachte startdatum</label>
-            <input
-              id="expectedStart"
-              name="expectedStart"
-              type="date"
-              className="utrecht-textbox"
-              style={{ maxWidth: "100%" }}
-            />
+            <input id="expectedStart" name="expectedStart" type="date" className="utrecht-textbox" style={{ maxWidth: "100%" }} />
           </div>
           <div className="form-field">
             <label htmlFor="expectedEnd" className="utrecht-form-label">Verwachte einddatum</label>
-            <input
-              id="expectedEnd"
-              name="expectedEnd"
-              type="date"
-              className="utrecht-textbox"
-              style={{ maxWidth: "100%" }}
-            />
+            <input id="expectedEnd" name="expectedEnd" type="date" className="utrecht-textbox" style={{ maxWidth: "100%" }} />
           </div>
         </div>
 

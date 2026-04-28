@@ -10,6 +10,8 @@ import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatFullName, formatDate, formatCurrency } from "@/lib/utils";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
+import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
 
 export default async function TeamDetailPage({ params }: { params: { id: string } }) {
   const session = await auth();
@@ -117,15 +119,28 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
               const annualCost = Number(pos.annualCost ?? 0);
               const totalAllocated = activeAllocations.reduce((s, fa) => s + Number(fa.amount ?? 0), 0);
               const coveragePct = annualCost > 0 ? Math.min(100, Math.round((totalAllocated / annualCost) * 100)) : null;
+              const opfDef = getOPFType(pos.type);
 
               return (
                 <div key={pos.id} style={{ border: "1px solid var(--rvo-color-hemelblauw-200, #b3d0ec)", borderRadius: "6px", overflow: "hidden" }}>
                   {/* Position header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", background: "var(--rvo-color-hemelblauw-50, #eef4fb)", flexWrap: "wrap", gap: "0.5rem" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-                      <strong style={{ fontSize: "1rem" }}>{pos.type}</strong>
+                      <strong style={{ fontSize: "1rem" }}>{opfDef ? opfDef.label : pos.type}</strong>
                       {pos.positionCode && (
                         <span style={{ color: "var(--rvo-color-grijs-600)", fontSize: "0.875rem" }}>{pos.positionCode}</span>
+                      )}
+                      {opfDef && (
+                        <span style={{
+                          borderRadius: "20px",
+                          padding: "0.125rem 0.625rem",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          background: CATEGORY_COLORS[opfDef.naturalCategory].bg,
+                          color: CATEGORY_COLORS[opfDef.naturalCategory].text,
+                        }}>
+                          {CATEGORY_LABELS[opfDef.naturalCategory]}
+                        </span>
                       )}
                       {pos.schaal && (
                         <span style={{ background: "var(--rvo-color-hemelblauw-100, #d3e4f5)", color: "var(--rvo-color-hemelblauw-800)", borderRadius: "20px", padding: "0.125rem 0.625rem", fontSize: "0.8125rem", fontWeight: 500 }}>
@@ -169,8 +184,8 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
                       {annualCost > 0 ? (
                         <>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem" }}>
-                            <span style={{ fontWeight: 500 }}>{formatCurrency(totalAllocated)}</span>
-                            <span style={{ color: "var(--rvo-color-grijs-600)", fontSize: "0.875rem" }}>/ {formatCurrency(annualCost)} p.j.</span>
+                            <span style={{ fontWeight: 500 }}><CurrencyDisplay value={totalAllocated} /></span>
+                            <span style={{ color: "var(--rvo-color-grijs-600)", fontSize: "0.875rem" }}>/ <CurrencyDisplay value={annualCost} /> p.j.</span>
                             {coveragePct !== null && (
                               <span style={{
                                 background: coveragePct >= 100 ? "var(--rvo-color-groen-100)" : coveragePct > 0 ? "var(--rvo-color-geel-100, #fff9e6)" : "var(--rvo-color-grijs-100)",
@@ -201,7 +216,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
                               <div key={fa.id} style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>
                                 <span style={{ color: "var(--rvo-color-groen-700)", marginRight: "0.25rem" }}>✓</span>
                                 {sa?.financialSource.name ?? "—"}{typeSuffix}
-                                {fa.amount && <span style={{ marginLeft: "0.375rem", color: "var(--rvo-color-grijs-600)" }}>({formatCurrency(fa.amount)})</span>}
+                                {fa.amount && <span style={{ marginLeft: "0.375rem", color: "var(--rvo-color-grijs-600)" }}>(<CurrencyDisplay value={fa.amount} />)</span>}
                               </div>
                             );
                           })}

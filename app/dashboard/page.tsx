@@ -7,6 +7,7 @@ import { organisations, teams, employees, positions, financialSourceAmounts, aud
 import { isNull, desc } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 const actionLabels: Record<string, string> = {
   create: "Aangemaakt",
@@ -63,7 +64,7 @@ export default async function DashboardPage() {
       color: filledPositions === totalPositions && totalPositions > 0 ? "var(--rvo-color-groen-700)" : "var(--rvo-color-hemelblauw-700)" },
     { label: "Open posities",   value: openPositions, href: null,
       color: openPositions > 0 ? "var(--rvo-color-oranje-600, #e17000)" : "var(--rvo-color-groen-700)" },
-    { label: "Budget vrijgegeven", value: formatCurrency(releasedBudget), href: "/financiering",
+    { label: "Budget vrijgegeven", value: CurrencyDisplay({value: releasedBudget}), href: "/financiering",
       color: "var(--rvo-color-groen-700)" },
   ];
 

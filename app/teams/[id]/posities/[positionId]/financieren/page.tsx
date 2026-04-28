@@ -1,10 +1,10 @@
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { teams, positions, financialSourceAmounts, financialSources, financialTypes, fundingAllocations } from "@/lib/db/schema";
+import { teams, positions, financialSourceAmounts, financialSources, fundingAllocations } from "@/lib/db/schema";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { AllocatePositionForm } from "./AllocatePositionForm";
-import { formatCurrency } from "@/lib/utils";
+import { getOPFType } from "@/lib/opf-types";
 
 export default async function FinancierPositiePage({ params }: { params: { id: string; positionId: string } }) {
   const session = await auth();
@@ -27,6 +27,8 @@ export default async function FinancierPositiePage({ params }: { params: { id: s
   });
   if (!position || position.teamId !== params.id) notFound();
 
+  const opfDef = getOPFType(position.type);
+
   // Released source amounts from the same organisation
   const orgSources = await db
     .select({ id: financialSources.id })
@@ -35,7 +37,7 @@ export default async function FinancierPositiePage({ params }: { params: { id: s
 
   const sourceIds = orgSources.map(s => s.id);
 
-  const availableAmounts = sourceIds.length > 0
+  const rawAmounts = sourceIds.length > 0
     ? await db.query.financialSourceAmounts.findMany({
         where: and(
           eq(financialSourceAmounts.status, "released"),
@@ -50,6 +52,14 @@ export default async function FinancierPositiePage({ params }: { params: { id: s
       })
     : [];
 
+  // Sort: preferred-category amounts first, then others
+  const preferredCategory = opfDef?.naturalCategory;
+  const availableAmounts = [...rawAmounts].sort((a, b) => {
+    const aMatch = preferredCategory && a.financialType?.type === preferredCategory ? 0 : 1;
+    const bMatch = preferredCategory && b.financialType?.type === preferredCategory ? 0 : 1;
+    return aMatch - bMatch;
+  });
+
   const alreadyAllocated = position.fundingAllocations.reduce(
     (s, a) => s + Number(a.amount ?? 0),
     0,
@@ -62,6 +72,7 @@ export default async function FinancierPositiePage({ params }: { params: { id: s
       teamName={team.name}
       availableAmounts={availableAmounts}
       alreadyAllocated={alreadyAllocated}
+      opfKey={position.type}
     />
   );
 }

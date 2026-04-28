@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { financialSources } from "@/lib/db/schema";
 import { isNull, count } from "drizzle-orm";
 import { formatCurrency } from "@/lib/utils";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Pagination } from "@/components/ui/Pagination";
 
@@ -97,9 +98,9 @@ export default async function FinancieringPage({
                   </td>
                   <td className="utrecht-table__cell"><code>{source.projectId}</code></td>
                   <td className="utrecht-table__cell">{source.organisation.name}</td>
-                  <td className="utrecht-table__cell">{formatCurrency(String(totalBudget))}</td>
-                  <td className="utrecht-table__cell">{formatCurrency(String(releasedBudget))}</td>
-                  <td className="utrecht-table__cell">{formatCurrency(String(allocatedBudget))}</td>
+                  <td className="utrecht-table__cell"><CurrencyDisplay value={totalBudget} /></td>
+                  <td className="utrecht-table__cell"><CurrencyDisplay value={releasedBudget} /></td>
+                  <td className="utrecht-table__cell"><CurrencyDisplay value={allocatedBudget} /></td>
                   <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem" }}>
                     <Link href={`/financiering/${source.id}`} className="utrecht-link">Bekijken</Link>
                     <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-link">Bewerken</Link>
