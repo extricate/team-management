@@ -16,7 +16,7 @@ interface SourceAmount {
   id: string;
   amount: string;
   status: string;
-  financialSource: { id: string; name: string };
+  financialSource: { id: string; name: string; organisation: { name: string } };
   financialType: FinancialType | null;
   allocations: Allocation[];
 }
@@ -253,7 +253,7 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
                 const isPreferred = opfDef && a.financialType?.type === opfDef.naturalCategory;
                 return (
                   <option key={a.id} value={a.id}>
-                    {isPreferred ? "✓ " : ""}{a.financialSource.name}{typeLabel} — {formatCurrency(free)} beschikbaar
+                    {isPreferred ? "✓ " : ""}{a.financialSource.name}{typeLabel} [{a.financialSource.organisation.name}] — {formatCurrency(free)} beschikbaar
                   </option>
                 );
               })}

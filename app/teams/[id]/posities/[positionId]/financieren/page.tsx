@@ -30,22 +30,17 @@ export default async function FinancierPositiePage({ params }: { params: Promise
 
   const opfDef = getOPFType(position.opfType);
 
-  // Released source amounts from the same organisation
-  const orgSources = await db
-    .select({ id: financialSources.id })
-    .from(financialSources)
-    .where(and(eq(financialSources.organisationId, team.organisation.id), isNull(financialSources.deletedAt)));
+  // All released source amounts across all non-deleted financial sources
+  const allSourceIds = (await db.select({ id: financialSources.id }).from(financialSources).where(isNull(financialSources.deletedAt))).map(s => s.id);
 
-  const sourceIds = orgSources.map(s => s.id);
-
-  const rawAmounts = sourceIds.length > 0
+  const rawAmounts = allSourceIds.length > 0
     ? await db.query.financialSourceAmounts.findMany({
         where: and(
           eq(financialSourceAmounts.status, "released"),
-          inArray(financialSourceAmounts.financialSourceId, sourceIds),
+          inArray(financialSourceAmounts.financialSourceId, allSourceIds),
         ),
         with: {
-          financialSource: true,
+          financialSource: { with: { organisation: true } },
           financialType: true,
           allocations: { where: eq(fundingAllocations.status, "active") },
         },

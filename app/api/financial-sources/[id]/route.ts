@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { financialSources } from "@/lib/db/schema";
+import { financialSources, organisations } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { syncFinancialSource, removeFromIndex } from "@/lib/search/sync";
@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 const UpdateSchema = z.object({
   projectId: z.string().min(1).max(100).optional(),
   name: z.string().min(1).max(200).optional(),
+  organisationId: z.string().uuid().optional(),
 });
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
@@ -43,6 +44,11 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
   const body = await req.json();
   const parsed = UpdateSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
+
+  if (parsed.data.organisationId) {
+    const [org] = await db.select().from(organisations).where(eq(organisations.id, parsed.data.organisationId));
+    if (!org || org.deletedAt) return badRequest("Organisatie niet gevonden.");
+  }
 
   const [after] = await db.update(financialSources).set({ ...parsed.data, updatedAt: new Date() }).where(eq(financialSources.id, id)).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });

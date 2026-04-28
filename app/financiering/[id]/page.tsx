@@ -11,6 +11,7 @@ import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
+import { TransferButton } from "@/components/ui/TransferButton";
 import { BudgetGridEditor, type GridInitialEntry } from "@/components/ui/BudgetGridEditor";
 import { formatCurrency, formatDate, prorateCost } from "@/lib/utils";
 import { detectFinancialConflicts, type FinancialConflict as Conflict } from "@/lib/financial-conflicts";
@@ -104,6 +105,11 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+          <TransferButton
+            sourceId={source.id}
+            sourceName={source.name}
+            currentOrgId={source.organisationId}
+          />
           <ArchiveButton
             entityName={source.name}
             apiPath={`/api/financial-sources/${source.id}`}
