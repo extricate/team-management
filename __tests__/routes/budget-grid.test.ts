@@ -59,7 +59,7 @@ describe('PUT /api/financial-sources/[id]/budget-grid', () => {
       method: 'PUT',
       body: { entries: VALID_ENTRIES },
     })
-    const res = await PUT(req, { params: { id: SOURCE_ID } })
+    const res = await PUT(req, { params: Promise.resolve({ id: SOURCE_ID }) })
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.data.updated).toBe(2)
@@ -71,7 +71,7 @@ describe('PUT /api/financial-sources/[id]/budget-grid', () => {
       method: 'PUT',
       body: { entries: VALID_ENTRIES },
     })
-    const res = await PUT(req, { params: { id: 'unknown' } })
+    const res = await PUT(req, { params: Promise.resolve({ id: 'unknown' }) })
     expect(res.status).toBe(404)
   })
 
@@ -81,7 +81,7 @@ describe('PUT /api/financial-sources/[id]/budget-grid', () => {
       method: 'PUT',
       body: {},
     })
-    const res = await PUT(req, { params: { id: SOURCE_ID } })
+    const res = await PUT(req, { params: Promise.resolve({ id: SOURCE_ID }) })
     expect(res.status).toBe(400)
   })
 
@@ -91,7 +91,7 @@ describe('PUT /api/financial-sources/[id]/budget-grid', () => {
       method: 'PUT',
       body: { entries: [] },
     })
-    const res = await PUT(req, { params: { id: SOURCE_ID } })
+    const res = await PUT(req, { params: Promise.resolve({ id: SOURCE_ID }) })
     expect(res.status).toBe(400)
   })
 
@@ -101,7 +101,7 @@ describe('PUT /api/financial-sources/[id]/budget-grid', () => {
       method: 'PUT',
       body: { entries: [{ type: 'INVALID', year: 2025, amount: 10_000 }] },
     })
-    const res = await PUT(req, { params: { id: SOURCE_ID } })
+    const res = await PUT(req, { params: Promise.resolve({ id: SOURCE_ID }) })
     expect(res.status).toBe(400)
   })
 
@@ -111,17 +111,17 @@ describe('PUT /api/financial-sources/[id]/budget-grid', () => {
       method: 'PUT',
       body: { entries: [{ type: 'PERSEX', year: 2025, amount: -5_000 }] },
     })
-    const res = await PUT(req, { params: { id: SOURCE_ID } })
+    const res = await PUT(req, { params: Promise.resolve({ id: SOURCE_ID }) })
     expect(res.status).toBe(400)
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     const req = makeRequest(`/api/financial-sources/${SOURCE_ID}/budget-grid`, {
       method: 'PUT',
       body: { entries: VALID_ENTRIES },
     })
-    const res = await PUT(req, { params: { id: SOURCE_ID } })
+    const res = await PUT(req, { params: Promise.resolve({ id: SOURCE_ID }) })
     expect(res.status).toBe(401)
   })
 
@@ -141,7 +141,7 @@ describe('PUT /api/financial-sources/[id]/budget-grid', () => {
         ],
       },
     })
-    const res = await PUT(req, { params: { id: SOURCE_ID } })
+    const res = await PUT(req, { params: Promise.resolve({ id: SOURCE_ID }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.updated).toBe(1)
   })

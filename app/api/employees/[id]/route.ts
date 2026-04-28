@@ -16,7 +16,7 @@ const UpdateSchema = z.object({
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   await requireAuth();
-  const { id } = ctx.params;
+  const { id } = await ctx.params;
   const row = await db.query.employees.findFirst({
     where: eq(employees.id, id),
     with: {
@@ -31,7 +31,7 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
 
 export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
   const session = await requireAuth();
-  const { id } = ctx.params;
+  const { id } = await ctx.params;
   const [before] = await db.select().from(employees).where(eq(employees.id, id));
   if (!before || before.deletedAt) return notFound();
 
@@ -47,7 +47,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
 
 export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   const session = await requireAuth();
-  const { id } = ctx.params;
+  const { id } = await ctx.params;
   const [before] = await db.select().from(employees).where(eq(employees.id, id));
   if (!before || before.deletedAt) return notFound();
 

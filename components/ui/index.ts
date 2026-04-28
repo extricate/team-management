@@ -7,3 +7,5 @@ export { AuditLog } from "./AuditLog";
 export { Breadcrumbs } from "./Breadcrumbs";
 export type { Crumb } from "./Breadcrumbs";
 export { Pagination } from "./Pagination";
+export { PageSkeleton } from "./PageSkeleton";
+export { ArchiveButton } from "./ArchiveButton";

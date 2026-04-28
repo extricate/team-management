@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
 // Shared route context type for dynamic segments — avoids repeating this in every [id] route.
-export type RouteContext = { params: { id: string } };
+export type RouteContext = { params: Promise<{ id: string }> };
 
 export function ok<T>(data: T, status = 200): Response {
   return NextResponse.json({ data }, { status });

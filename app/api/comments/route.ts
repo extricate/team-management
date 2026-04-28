@@ -2,6 +2,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { comments } from "@/lib/db/schema";
 import { ok, created, badRequest, unauthorized, requireAuth, withErrorHandling } from "@/lib/api";
+import type { CommentableType } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 
 const Schema = z.object({
@@ -19,7 +20,7 @@ export const GET = withErrorHandling(async (req: Request) => {
   if (!type || !id) return ok([]);
 
   const rows = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, type), eq(comments.commentableId, id)),
+    where: and(eq(comments.commentableType, type as CommentableType), eq(comments.commentableId, id)),
     with: { createdByUser: true },
     orderBy: (c, { desc }) => [desc(c.createdAt)],
   });

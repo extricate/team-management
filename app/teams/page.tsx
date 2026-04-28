@@ -13,12 +13,13 @@ const PAGE_SIZE = 25;
 export default async function TeamsPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
-  const page = Math.max(1, Number(searchParams?.page) || 1);
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
 
   const [{ total }] = await db
     .select({ total: count() })
@@ -97,7 +98,7 @@ export default async function TeamsPage({
                     {filledPositions}/{totalPositions}
                   </span>
                 </td>
-                <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem" }}>
+                <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem", whiteSpace: "nowrap" }}>
                   <Link href={`/teams/${team.id}`} className="utrecht-link">Bekijken</Link>
                   <Link href={`/teams/${team.id}/bewerken`} className="utrecht-link">Bewerken</Link>
                 </td>

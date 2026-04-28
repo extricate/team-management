@@ -9,7 +9,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { formatCurrency } from "@/lib/utils";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 export default async function OrganisatieDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -78,10 +80,16 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
             {org.employees.length} medewerker{org.employees.length !== 1 ? "s" : ""}
           </Paragraph>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
           <Link href={`/organisaties/${org.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
             Bewerken
           </Link>
+          <ArchiveButton
+            entityName={org.name}
+            apiPath={`/api/organisations/${org.id}`}
+            redirectTo="/organisaties"
+            warningText="Alle bijbehorende teams en medewerkers worden ook gearchiveerd."
+          />
         </div>
       </div>
 
@@ -93,7 +101,7 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
           { label: "Posities (bezet)", value: `${filledPositions}/${totalPositions}` },
           { label: "Open posities",   value: openPositions },
           { label: "Financieringsbronnen", value: org.financialSources.length },
-          { label: "Totaal budget",   value: formatCurrency(totalBudget) },
+          { label: "Totaal budget",   value: CurrencyDisplay({value: totalBudget}) },
         ].map(({ label, value }) => (
           <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50)", borderRadius: "4px", padding: "1rem", textAlign: "center", border: "1px solid var(--rvo-color-hemelblauw-100)" }}>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--rvo-color-hemelblauw-700)" }}>{value}</div>
@@ -142,7 +150,7 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
                       {filled}/{total}
                     </span>
                   </td>
-                  <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem" }}>
+                  <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem", whiteSpace: "nowrap" }}>
                     <Link href={`/teams/${team.id}`} className="utrecht-link">Bekijken</Link>
                     <Link href={`/teams/${team.id}/bewerken`} className="utrecht-link">Bewerken</Link>
                   </td>
@@ -186,8 +194,8 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
                     <Link href={`/financiering/${fs.id}`} className="utrecht-link" style={{ fontWeight: 600 }}>{fs.name}</Link>
                   </td>
                   <td className="utrecht-table__cell"><code>{fs.projectId}</code></td>
-                  <td className="utrecht-table__cell">{formatCurrency(budget)}</td>
-                  <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem" }}>
+                  <td className="utrecht-table__cell">{CurrencyDisplay({value: budget})}</td>
+                  <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem", whiteSpace: "nowrap" }}>
                     <Link href={`/financiering/${fs.id}`} className="utrecht-link">Bekijken</Link>
                     <Link href={`/financiering/${fs.id}/bewerken`} className="utrecht-link">Bewerken</Link>
                   </td>

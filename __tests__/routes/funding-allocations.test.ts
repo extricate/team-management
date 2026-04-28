@@ -69,7 +69,7 @@ describe('GET /api/funding-allocations', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     expect((await GET()).status).toBe(401)
   })
 })
@@ -157,7 +157,7 @@ describe('POST /api/funding-allocations', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     const req = makeRequest('/api/funding-allocations', {
       method: 'POST',
       body: { financialSourceAmountId: FSA_ID, positionId: POSITION_ID },

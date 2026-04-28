@@ -11,6 +11,7 @@ import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatFullName, formatDate, formatCurrency, prorateCost } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
+import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
 
 export default async function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -81,9 +82,17 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
             {team.organisation.name} · {team.organisation.type}
           </Paragraph>
         </div>
-        <Link href={`/teams/${team.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
-          Bewerken
-        </Link>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Link href={`/teams/${team.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
+            Bewerken
+          </Link>
+          <ArchiveButton
+            entityName={team.name}
+            apiPath={`/api/teams/${team.id}`}
+            redirectTo="/teams"
+            warningText="Bijbehorende posities worden ook gearchiveerd."
+          />
+        </div>
       </div>
 
       {/* Stats */}
@@ -162,9 +171,14 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                       <Link href={`/teams/${team.id}/posities/${pos.id}/financieren`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
                         + Financieren
                       </Link>
-                      <Link href={`/teams/${team.id}/posities/${pos.id}/bewerken`} className="utrecht-link" style={{ fontSize: "0.875rem" }}>
+                      <Link href={`/teams/${team.id}/posities/${pos.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
                         Bewerken
                       </Link>
+                      <ArchiveButton
+                        entityName={pos.type}
+                        apiPath={`/api/positions/${pos.id}`}
+                        warningText="Actieve toewijzingen worden afgesloten."
+                      />
                     </div>
                   </div>
 
@@ -282,8 +296,8 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                   </Link>
                 </td>
                 <td className="utrecht-table__cell"><StatusBadge label={m.status} color={m.status === "active" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell">{formatDate(m.startDate)}</td>
-                <td className="utrecht-table__cell">{formatDate(m.endDate)}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(m.startDate)}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(m.endDate)}</td>
                 <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>
                   <Link href={`/teams/${team.id}/leden/${m.id}/bewerken`} className="utrecht-link" style={{ fontSize: "0.875rem" }}>Bewerken</Link>
                 </td>

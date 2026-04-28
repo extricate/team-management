@@ -74,7 +74,7 @@ describe('GET /api/comments', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     expect((await GET(makeRequest('/api/comments'))).status).toBe(401)
   })
 })
@@ -137,7 +137,7 @@ describe('POST /api/comments', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     const req = makeRequest('/api/comments', {
       method: 'POST',
       body: { body: 'Note', commentableType: 'team', commentableId: TEAM_ID },

@@ -127,7 +127,7 @@ describe('requireAuth', () => {
   })
 
   it('throws AuthError when auth() returns null', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     await expect(requireAuth()).rejects.toBeInstanceOf(AuthError)
   })
 })

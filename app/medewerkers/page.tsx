@@ -14,12 +14,13 @@ const PAGE_SIZE = 50;
 export default async function MedewerkersPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
-  const page = Math.max(1, Number(searchParams?.page) || 1);
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
   const offset = (page - 1) * PAGE_SIZE;
 
   const [{ total }] = await db
@@ -97,15 +98,15 @@ export default async function MedewerkersPage({
                   <Link href={`/medewerkers/${emp.id}`} className="utrecht-link" style={{ fontWeight: 600 }}>{fullName}</Link>
                 </td>
                 <td className="utrecht-table__cell">{emp.organisation.name}</td>
-                <td className="utrecht-table__cell">
+                <td className="utrecht-table__cell" style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={activeTeams.length > 0 ? activeTeams.map(m => m.team.name).join(", ") : undefined}>
                   {activeTeams.length === 0
                     ? <span style={{ color: "var(--rvo-color-grijs-500)" }}>Geen</span>
                     : activeTeams.map(m => m.team.name).join(", ")}
                 </td>
-                <td className="utrecht-table__cell">
+                <td className="utrecht-table__cell" style={{ maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={activePos?.position.type ?? undefined}>
                   {activePos ? activePos.position.type : <span style={{ color: "var(--rvo-color-grijs-500)" }}>Geen</span>}
                 </td>
-                <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem" }}>
+                <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem", whiteSpace: "nowrap" }}>
                   <Link href={`/medewerkers/${emp.id}`} className="utrecht-link">Bekijken</Link>
                   <Link href={`/medewerkers/${emp.id}/bewerken`} className="utrecht-link">Bewerken</Link>
                 </td>

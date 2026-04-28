@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { formatFullName, formatDate } from "@/lib/utils";
 
 export default async function MedewerkerDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -55,7 +56,15 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
             {activePos && <> · Positie: <strong>{activePos.position.type}</strong></>}
           </Paragraph>
         </div>
-        <Link href={`/medewerkers/${emp.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Link href={`/medewerkers/${emp.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+          <ArchiveButton
+            entityName={fullName}
+            apiPath={`/api/employees/${emp.id}`}
+            redirectTo="/medewerkers"
+            warningText="Actieve teamlidmaatschappen en positietoewijzingen worden afgesloten."
+          />
+        </div>
       </div>
 
       {/* Current status */}
@@ -119,10 +128,10 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
                 <td className="utrecht-table__cell"><strong>{pa.position.type}</strong></td>
                 <td className="utrecht-table__cell"><Link href={`/teams/${pa.position.team.id}`} className="utrecht-link">{pa.position.team.name}</Link></td>
                 <td className="utrecht-table__cell"><StatusBadge label={pa.status} color={pa.status === "active" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell">{formatDate(pa.startDate)}</td>
-                <td className="utrecht-table__cell">{formatDate(pa.endDate)}</td>
-                <td className="utrecht-table__cell">{pa.reason ?? "—"}</td>
-                <td className="utrecht-table__cell">{pa.createdByUser?.name ?? "—"}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(pa.startDate)}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(pa.endDate)}</td>
+                <td className="utrecht-table__cell" style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={pa.reason ?? undefined}>{pa.reason ?? "—"}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{pa.createdByUser?.name ?? "—"}</td>
                 <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>
                   <Link href={`/medewerkers/${emp.id}/posities/${pa.id}/bewerken`} className="utrecht-link" style={{ fontSize: "0.875rem" }}>Bewerken</Link>
                 </td>
@@ -156,9 +165,9 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
               <tr key={m.id} className="utrecht-table__row">
                 <td className="utrecht-table__cell"><Link href={`/teams/${m.team.id}`} className="utrecht-link">{m.team.name}</Link></td>
                 <td className="utrecht-table__cell"><StatusBadge label={m.status} color={m.status === "active" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell">{formatDate(m.startDate)}</td>
-                <td className="utrecht-table__cell">{formatDate(m.endDate)}</td>
-                <td className="utrecht-table__cell">{m.reason ?? "—"}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(m.startDate)}</td>
+                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(m.endDate)}</td>
+                <td className="utrecht-table__cell" style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={m.reason ?? undefined}>{m.reason ?? "—"}</td>
                 <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>
                   <Link href={`/teams/${m.team.id}/leden/${m.id}/bewerken`} className="utrecht-link" style={{ fontSize: "0.875rem" }}>Bewerken</Link>
                 </td>

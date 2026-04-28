@@ -63,7 +63,7 @@ describe('GET /api/employees', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     expect((await GET()).status).toBe(401)
   })
 })
@@ -113,19 +113,19 @@ describe('POST /api/employees', () => {
 describe('GET /api/employees/[id]', () => {
   it('returns 200 with employee details', async () => {
     dbMock.set(EMPLOYEE)
-    const res = await GetById(makeRequest('/api/employees/emp-1'), { params: { id: 'emp-1' } })
+    const res = await GetById(makeRequest('/api/employees/emp-1'), { params: Promise.resolve({ id: 'emp-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.id).toBe('emp-1')
   })
 
   it('returns 404 for unknown employee', async () => {
     dbMock.set(undefined)
-    expect((await GetById(makeRequest('/api/employees/missing'), { params: { id: 'missing' } })).status).toBe(404)
+    expect((await GetById(makeRequest('/api/employees/missing'), { params: Promise.resolve({ id: 'missing' }) })).status).toBe(404)
   })
 
   it('returns 404 for a soft-deleted employee', async () => {
     dbMock.set({ ...EMPLOYEE, deletedAt: new Date() })
-    expect((await GetById(makeRequest('/api/employees/emp-1'), { params: { id: 'emp-1' } })).status).toBe(404)
+    expect((await GetById(makeRequest('/api/employees/emp-1'), { params: Promise.resolve({ id: 'emp-1' }) })).status).toBe(404)
   })
 })
 
@@ -137,7 +137,7 @@ describe('PATCH /api/employees/[id]', () => {
     const updated = { ...EMPLOYEE, firstName: 'Piet' }
     dbMock.set([EMPLOYEE], [updated])
     const req = makeRequest('/api/employees/emp-1', { method: 'PATCH', body: { firstName: 'Piet' } })
-    const res = await PATCH(req, { params: { id: 'emp-1' } })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'emp-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.firstName).toBe('Piet')
   })
@@ -145,7 +145,7 @@ describe('PATCH /api/employees/[id]', () => {
   it('returns 404 when employee does not exist', async () => {
     dbMock.set([])
     const req = makeRequest('/api/employees/missing', { method: 'PATCH', body: { firstName: 'X' } })
-    expect((await PATCH(req, { params: { id: 'missing' } })).status).toBe(404)
+    expect((await PATCH(req, { params: Promise.resolve({ id: 'missing' }) })).status).toBe(404)
   })
 })
 
@@ -155,13 +155,13 @@ describe('PATCH /api/employees/[id]', () => {
 describe('DELETE /api/employees/[id]', () => {
   it('soft-deletes the employee and returns 200', async () => {
     dbMock.set([EMPLOYEE])
-    const res = await DELETE(makeRequest('/api/employees/emp-1'), { params: { id: 'emp-1' } })
+    const res = await DELETE(makeRequest('/api/employees/emp-1'), { params: Promise.resolve({ id: 'emp-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.message).toBe('Gearchiveerd')
   })
 
   it('returns 404 when employee does not exist', async () => {
     dbMock.set([])
-    expect((await DELETE(makeRequest('/api/employees/missing'), { params: { id: 'missing' } })).status).toBe(404)
+    expect((await DELETE(makeRequest('/api/employees/missing'), { params: Promise.resolve({ id: 'missing' }) })).status).toBe(404)
   })
 })

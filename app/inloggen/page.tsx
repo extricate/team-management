@@ -15,15 +15,14 @@ function sanitizeRedirect(url?: string): string {
   return "/dashboard";
 }
 
-export default async function InloggenPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function InloggenPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const session = await auth();
-  if (session?.user) redirect(sanitizeRedirect(searchParams.callbackUrl));
+  const { error, callbackUrl } = await searchParams;
+  if (session?.user) redirect(sanitizeRedirect(callbackUrl));
 
-  const errorMessage = searchParams.error
-    ? (errorMessages[searchParams.error] ?? errorMessages.Default)
+  const errorMessage = error
+    ? (errorMessages[error] ?? errorMessages.Default)
     : null;
-
-    console.log(process.env.environment);
 
   return (
     <div style={{ maxWidth: "480px", margin: "0 auto" }}>
@@ -39,7 +38,7 @@ export default async function InloggenPage({ searchParams }: { searchParams: Sea
       <form
         action={async (formData: FormData) => {
           "use server";
-          await signIn("resend", { email: formData.get("email") as string, redirectTo: sanitizeRedirect(searchParams.callbackUrl) });
+          await signIn("resend", { email: formData.get("email") as string, redirectTo: sanitizeRedirect(callbackUrl) });
         }}
         style={{ marginBottom: "2rem" }}
       >

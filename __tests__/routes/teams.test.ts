@@ -62,7 +62,7 @@ describe('GET /api/teams', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     expect((await GET()).status).toBe(401)
   })
 })
@@ -98,19 +98,19 @@ describe('POST /api/teams', () => {
 describe('GET /api/teams/[id]', () => {
   it('returns 200 with team details', async () => {
     dbMock.set(TEAM)
-    const res = await GetById(makeRequest('/api/teams/team-1'), { params: { id: 'team-1' } })
+    const res = await GetById(makeRequest('/api/teams/team-1'), { params: Promise.resolve({ id: 'team-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.id).toBe('team-1')
   })
 
   it('returns 404 for unknown team', async () => {
     dbMock.set(undefined)
-    expect((await GetById(makeRequest('/api/teams/missing'), { params: { id: 'missing' } })).status).toBe(404)
+    expect((await GetById(makeRequest('/api/teams/missing'), { params: Promise.resolve({ id: 'missing' }) })).status).toBe(404)
   })
 
   it('returns 404 for a soft-deleted team', async () => {
     dbMock.set({ ...TEAM, deletedAt: new Date() })
-    expect((await GetById(makeRequest('/api/teams/team-1'), { params: { id: 'team-1' } })).status).toBe(404)
+    expect((await GetById(makeRequest('/api/teams/team-1'), { params: Promise.resolve({ id: 'team-1' }) })).status).toBe(404)
   })
 })
 
@@ -122,7 +122,7 @@ describe('PATCH /api/teams/[id]', () => {
     const updated = { ...TEAM, name: 'Platform' }
     dbMock.set([TEAM], [updated])
     const req = makeRequest('/api/teams/team-1', { method: 'PATCH', body: { name: 'Platform' } })
-    const res = await PATCH(req, { params: { id: 'team-1' } })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'team-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.name).toBe('Platform')
   })
@@ -130,7 +130,7 @@ describe('PATCH /api/teams/[id]', () => {
   it('returns 404 when team does not exist', async () => {
     dbMock.set([])
     const req = makeRequest('/api/teams/missing', { method: 'PATCH', body: { name: 'X' } })
-    expect((await PATCH(req, { params: { id: 'missing' } })).status).toBe(404)
+    expect((await PATCH(req, { params: Promise.resolve({ id: 'missing' }) })).status).toBe(404)
   })
 })
 
@@ -140,13 +140,13 @@ describe('PATCH /api/teams/[id]', () => {
 describe('DELETE /api/teams/[id]', () => {
   it('soft-deletes the team and returns 200', async () => {
     dbMock.set([TEAM])
-    const res = await DELETE(makeRequest('/api/teams/team-1'), { params: { id: 'team-1' } })
+    const res = await DELETE(makeRequest('/api/teams/team-1'), { params: Promise.resolve({ id: 'team-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.message).toBe('Gearchiveerd')
   })
 
   it('returns 404 when team does not exist', async () => {
     dbMock.set([])
-    expect((await DELETE(makeRequest('/api/teams/missing'), { params: { id: 'missing' } })).status).toBe(404)
+    expect((await DELETE(makeRequest('/api/teams/missing'), { params: Promise.resolve({ id: 'missing' }) })).status).toBe(404)
   })
 })

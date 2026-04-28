@@ -14,7 +14,7 @@ const UpdateSchema = z.object({
 
 export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
   const session = await requireAuth();
-  const { id } = ctx.params;
+  const { id } = await ctx.params;
   const [before] = await db.select().from(positionAssignments).where(eq(positionAssignments.id, id));
   if (!before) return notFound("Positietoewijzing niet gevonden.");
 

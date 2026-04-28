@@ -11,7 +11,7 @@ const UpdateUserSchema = z.object({
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   await requireAuth();
-  const { id } = ctx.params;
+  const { id } = await ctx.params;
   const [user] = await db.select().from(users).where(eq(users.id, id));
   if (!user) return notFound("Gebruiker niet gevonden");
   return ok(user);
@@ -19,7 +19,7 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
 
 export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
   await requireAuth();
-  const { id } = ctx.params;
+  const { id } = await ctx.params;
   const body = await req.json();
   const parsed = UpdateUserSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
@@ -30,7 +30,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
 
 export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   await requireAuth();
-  const { id } = ctx.params;
+  const { id } = await ctx.params;
   const [deleted] = await db.delete(users).where(eq(users.id, id)).returning();
   if (!deleted) return notFound("Gebruiker niet gevonden");
   return ok({ message: "Gebruiker verwijderd" });

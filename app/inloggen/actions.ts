@@ -33,7 +33,7 @@ export async function devSignIn(formData: FormData) {
 
   await db.insert(sessions).values({ sessionToken, userId: user.id, expires });
 
-  cookies().set("authjs.session-token", sessionToken, {
+  (await cookies()).set("authjs.session-token", sessionToken, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",

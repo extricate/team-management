@@ -15,12 +15,13 @@ const PAGE_SIZE = 25;
 export default async function FinancieringPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
-  const page = Math.max(1, Number(searchParams?.page) || 1);
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
 
   const [{ total }] = await db
     .select({ total: count() })
@@ -98,10 +99,10 @@ export default async function FinancieringPage({
                   </td>
                   <td className="utrecht-table__cell"><code>{source.projectId}</code></td>
                   <td className="utrecht-table__cell">{source.organisation.name}</td>
-                  <td className="utrecht-table__cell"><CurrencyDisplay value={totalBudget} /></td>
-                  <td className="utrecht-table__cell"><CurrencyDisplay value={releasedBudget} /></td>
-                  <td className="utrecht-table__cell"><CurrencyDisplay value={allocatedBudget} /></td>
-                  <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem" }}>
+                  <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}><CurrencyDisplay value={totalBudget} /></td>
+                  <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}><CurrencyDisplay value={releasedBudget} /></td>
+                  <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}><CurrencyDisplay value={allocatedBudget} /></td>
+                  <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem", whiteSpace: "nowrap" }}>
                     <Link href={`/financiering/${source.id}`} className="utrecht-link">Bekijken</Link>
                     <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-link">Bewerken</Link>
                   </td>

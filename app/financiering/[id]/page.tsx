@@ -10,6 +10,7 @@ import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
+import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { BudgetGridEditor, type GridInitialEntry } from "@/components/ui/BudgetGridEditor";
 import { formatCurrency, formatDate, prorateCost } from "@/lib/utils";
 import { detectFinancialConflicts, type FinancialConflict as Conflict } from "@/lib/financial-conflicts";
@@ -101,7 +102,15 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
             Project: <code>{source.projectId}</code> · {source.organisation.name}
           </Paragraph>
         </div>
-        <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+          <ArchiveButton
+            entityName={source.name}
+            apiPath={`/api/financial-sources/${source.id}`}
+            redirectTo="/financiering"
+            warningText="Alle actieve budgettoewijzingen worden gedeactiveerd."
+          />
+        </div>
       </div>
 
       {/* Conflict warnings */}
@@ -199,10 +208,10 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
                       <tbody className="utrecht-table__body">
                         {typeAmounts.map((amount) => (
                           <tr key={amount.id} className="utrecht-table__row">
-                            <td className="utrecht-table__cell"><strong>{formatCurrency(amount.amount)}</strong></td>
+                            <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}><strong>{formatCurrency(amount.amount)}</strong></td>
                             <td className="utrecht-table__cell"><StatusBadge label={amount.status} color={amount.status === "released" ? "green" : "grey"} /></td>
-                            <td className="utrecht-table__cell">{formatDate(amount.effectiveDate)}</td>
-                            <td className="utrecht-table__cell">{formatDate(amount.releaseDate)}</td>
+                            <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(amount.effectiveDate)}</td>
+                            <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(amount.releaseDate)}</td>
                             <td className="utrecht-table__cell">{amount.allocations.length}</td>
                           </tr>
                         ))}
@@ -242,24 +251,26 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
               {source.amounts.flatMap(a => ({ ...a })).map(a =>
                 a.allocations.map((al) => (
                   <tr key={al.id} className="utrecht-table__row">
-                    <td className="utrecht-table__cell">
-                      {al.position
-                        ? <><strong>{al.position.type}</strong> in <Link href={`/teams/${al.position.team.id}`} className="utrecht-link">{al.position.team.name}</Link></>
-                        : al.team
-                        ? <><Link href={`/teams/${al.team.id}`} className="utrecht-link">{al.team.name}</Link> (team)</>
-                        : "—"}
+                    <td className="utrecht-table__cell" style={{ maxWidth: "220px" }}>
+                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {al.position
+                          ? <><strong>{al.position.type}</strong> in <Link href={`/teams/${al.position.team.id}`} className="utrecht-link">{al.position.team.name}</Link></>
+                          : al.team
+                          ? <><Link href={`/teams/${al.team.id}`} className="utrecht-link">{al.team.name}</Link> (team)</>
+                          : "—"}
+                      </div>
                     </td>
                     <td className="utrecht-table__cell" style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", whiteSpace: "nowrap" }}>
                       {a.financialType ? `${a.financialType.type} ${a.financialType.year}` : "—"}
                     </td>
-                    <td className="utrecht-table__cell"><CurrencyDisplay value={al.amount} /></td>
+                    <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}><CurrencyDisplay value={al.amount} /></td>
                     <td className="utrecht-table__cell">{al.percentage ? `${al.percentage}%` : "—"}</td>
                     <td className="utrecht-table__cell">
                       <StatusBadge label={al.status} color={al.status === "active" ? "green" : al.status === "reallocated" ? "orange" : "grey"} />
                     </td>
-                    <td className="utrecht-table__cell">{formatDate(al.startDate)}</td>
-                    <td className="utrecht-table__cell">{al.endDate ? formatDate(al.endDate) : <span style={{ color: "var(--rvo-color-grijs-500)", fontSize: "0.8125rem" }}>Doorlopend</span>}</td>
-                    <td className="utrecht-table__cell">{al.reason ?? "—"}</td>
+                    <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(al.startDate)}</td>
+                    <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{al.endDate ? formatDate(al.endDate) : <span style={{ color: "var(--rvo-color-grijs-500)", fontSize: "0.8125rem" }}>Doorlopend</span>}</td>
+                    <td className="utrecht-table__cell" style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={al.reason ?? undefined}>{al.reason ?? "—"}</td>
                   </tr>
                 ))
               )}

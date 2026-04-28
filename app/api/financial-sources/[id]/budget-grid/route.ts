@@ -18,7 +18,7 @@ const Schema = z.object({
 
 export const PUT = withErrorHandling(async (req: Request, ctx: RouteContext) => {
   const session = await requireAuth();
-  const { id } = ctx.params;
+  const { id } = await ctx.params;
 
   const [source] = await db
     .select({ id: financialSources.id })

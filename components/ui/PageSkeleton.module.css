@@ -1,0 +1,94 @@
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.block {
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--rvo-color-grijs-100, #f1f1f1) 25%,
+    var(--rvo-color-hemelblauw-50, #eef4fb) 50%,
+    var(--rvo-color-grijs-100, #f1f1f1) 75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.breadcrumb {
+  height: 14px;
+  width: 140px;
+  margin-bottom: 1.5rem;
+}
+
+.headingRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.heading {
+  height: 32px;
+  width: 220px;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.actionBtn {
+  height: 36px;
+  width: 120px;
+}
+
+/* ── Table variant ──────────────────────────────────────────── */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.thead {
+  background: var(--rvo-color-hemelblauw-50, #eef4fb);
+  border-bottom: 2px solid var(--rvo-color-hemelblauw-200, #a8c8e8);
+}
+
+.th {
+  padding: 0.625rem 0.75rem;
+}
+
+.thBlock {
+  height: 14px;
+}
+
+.tr {
+  border-bottom: 1px solid var(--rvo-color-grijs-100, #f1f1f1);
+}
+
+.td {
+  padding: 0.625rem 0.75rem;
+}
+
+.tdBlock {
+  height: 14px;
+}
+
+/* ── Detail variant ─────────────────────────────────────────── */
+
+.detailGrid {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.fieldLabel {
+  height: 13px;
+  margin-bottom: 0.4rem;
+}
+
+.fieldValue {
+  height: 16px;
+}

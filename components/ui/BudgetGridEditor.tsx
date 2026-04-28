@@ -338,15 +338,8 @@ export function BudgetGridEditor({ sourceId, initialEntries, initialYears }: Pro
             type="button"
             onClick={addYear}
             disabled={years.length > 0 && Math.max(...years) >= currentYear + 20}
-            style={{
-              background: "none",
-              border: "1px dashed var(--rvo-color-grijs-400)",
-              borderRadius: "4px",
-              padding: "0.375rem 0.875rem",
-              cursor: "pointer",
-              color: "var(--rvo-color-grijs-700)",
-              fontSize: "0.8125rem",
-            }}
+            className="utrecht-button utrecht-button--secondary-action"
+            style={{ fontSize: "0.8125rem" }}
           >
             + Jaar toevoegen
           </button>

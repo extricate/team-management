@@ -56,7 +56,7 @@ describe('GET /api/organisations', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     const res = await GET()
     expect(res.status).toBe(401)
   })
@@ -94,7 +94,7 @@ describe('POST /api/organisations', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null)
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
     const req = makeRequest('/api/organisations', {
       method: 'POST',
       body: { name: 'Test Org', type: 'OS1' },
@@ -109,20 +109,20 @@ describe('POST /api/organisations', () => {
 describe('GET /api/organisations/[id]', () => {
   it('returns 200 with the organisation when found', async () => {
     dbMock.set([ORG])
-    const res = await GetById(makeRequest('/api/organisations/org-1'), { params: { id: 'org-1' } })
+    const res = await GetById(makeRequest('/api/organisations/org-1'), { params: Promise.resolve({ id: 'org-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.id).toBe('org-1')
   })
 
   it('returns 404 when no organisation exists with that id', async () => {
     dbMock.set([])
-    const res = await GetById(makeRequest('/api/organisations/missing'), { params: { id: 'missing' } })
+    const res = await GetById(makeRequest('/api/organisations/missing'), { params: Promise.resolve({ id: 'missing' }) })
     expect(res.status).toBe(404)
   })
 
   it('returns 404 for a soft-deleted organisation', async () => {
     dbMock.set([{ ...ORG, deletedAt: new Date() }])
-    const res = await GetById(makeRequest('/api/organisations/org-1'), { params: { id: 'org-1' } })
+    const res = await GetById(makeRequest('/api/organisations/org-1'), { params: Promise.resolve({ id: 'org-1' }) })
     expect(res.status).toBe(404)
   })
 })
@@ -138,7 +138,7 @@ describe('PATCH /api/organisations/[id]', () => {
       method: 'PATCH',
       body: { name: 'Updated Org' },
     })
-    const res = await PATCH(req, { params: { id: 'org-1' } })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'org-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.name).toBe('Updated Org')
   })
@@ -146,13 +146,13 @@ describe('PATCH /api/organisations/[id]', () => {
   it('returns 404 when the organisation does not exist', async () => {
     dbMock.set([])
     const req = makeRequest('/api/organisations/missing', { method: 'PATCH', body: { name: 'X' } })
-    expect((await PATCH(req, { params: { id: 'missing' } })).status).toBe(404)
+    expect((await PATCH(req, { params: Promise.resolve({ id: 'missing' }) })).status).toBe(404)
   })
 
   it('returns 400 for an invalid type value', async () => {
     dbMock.set([ORG])
     const req = makeRequest('/api/organisations/org-1', { method: 'PATCH', body: { type: 'INVALID' } })
-    expect((await PATCH(req, { params: { id: 'org-1' } })).status).toBe(400)
+    expect((await PATCH(req, { params: Promise.resolve({ id: 'org-1' }) })).status).toBe(400)
   })
 })
 
@@ -162,18 +162,18 @@ describe('PATCH /api/organisations/[id]', () => {
 describe('DELETE /api/organisations/[id]', () => {
   it('soft-deletes the organisation and returns 200', async () => {
     dbMock.set([ORG], [{ ...ORG, deletedAt: new Date() }])
-    const res = await DELETE(makeRequest('/api/organisations/org-1'), { params: { id: 'org-1' } })
+    const res = await DELETE(makeRequest('/api/organisations/org-1'), { params: Promise.resolve({ id: 'org-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.message).toBe('Gearchiveerd')
   })
 
   it('returns 404 when organisation does not exist', async () => {
     dbMock.set([])
-    expect((await DELETE(makeRequest('/api/organisations/missing'), { params: { id: 'missing' } })).status).toBe(404)
+    expect((await DELETE(makeRequest('/api/organisations/missing'), { params: Promise.resolve({ id: 'missing' }) })).status).toBe(404)
   })
 
   it('returns 404 for an already archived organisation', async () => {
     dbMock.set([{ ...ORG, deletedAt: new Date() }])
-    expect((await DELETE(makeRequest('/api/organisations/org-1'), { params: { id: 'org-1' } })).status).toBe(404)
+    expect((await DELETE(makeRequest('/api/organisations/org-1'), { params: Promise.resolve({ id: 'org-1' }) })).status).toBe(404)
   })
 })

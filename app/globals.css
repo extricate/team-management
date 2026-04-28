@@ -157,6 +157,78 @@ main {
 
 .utrecht-link:hover { color: var(--rvo-color-hemelblauw-900, #001f4d); }
 
+/* ── Danger button ────────────────────────────────────────────── */
+
+.utrecht-button--danger {
+  background-color: var(--rvo-color-rood-600, #c0392b);
+  color: var(--rvo-color-white, #ffffff);
+  border: 2px solid var(--rvo-color-rood-600, #c0392b);
+  padding: 0.5rem 1rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: "Fira Sans", Arial, sans-serif;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.utrecht-button--danger:hover:not(:disabled) {
+  background-color: var(--rvo-color-rood-800, #7d1a0f);
+  border-color: var(--rvo-color-rood-800, #7d1a0f);
+}
+
+.utrecht-button--danger:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.utrecht-button--danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Confirmation dialog ──────────────────────────────────────── */
+
+.confirm-dialog {
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.25);
+  max-width: 480px;
+  width: 100%;
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.confirm-dialog__content {
+  padding: 2rem;
+}
+
+.confirm-dialog__title {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--rvo-color-hemelblauw-800, #003d83);
+}
+
+.confirm-dialog__body {
+  margin: 0 0 1.5rem 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--rvo-color-grijs-700, #4a4a4a);
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 /* ── Loading placeholder ──────────────────────────────────────── */
 
 .page-loading {
