@@ -9,7 +9,7 @@ const PROTECTED_PREFIXES = [
   "/instellingen",
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
