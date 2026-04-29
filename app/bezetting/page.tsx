@@ -58,6 +58,7 @@ export default async function BezettingPage({
       where: (e, { and: a }) => a(eq(e.organisationId, selectedOrgId), isNull(e.deletedAt)),
       with: {
         positionAssignments: { where: (a, { eq: _eq }) => _eq(a.status, "active") },
+        memberships: { where: (m, { and: _and, eq: _eq, inArray: _inArray }) => _and(_eq(m.status, "active"), _inArray(m.teamId, teamIds.length > 0 ? teamIds : ["__none__"])) },
       },
       orderBy: (e, { asc: _asc }) => [_asc(e.lastName), _asc(e.firstName)],
     }),
@@ -94,11 +95,14 @@ export default async function BezettingPage({
     const activeAssignment = emp.positionAssignments[0] ?? null;
     // Only count assignments to positions within this org's teams
     const isInOrg = activeAssignment ? positionIds.includes(activeAssignment.positionId) : false;
+    const activeMembership = emp.memberships[0] ?? null;
     return {
       id: emp.id,
       fullName: formatFullName(emp),
       currentAssignmentId: isInOrg ? (activeAssignment?.id ?? null) : null,
       currentPositionId: isInOrg ? (activeAssignment?.positionId ?? null) : null,
+      currentTeamMembershipId: activeMembership?.id ?? null,
+      currentTeamId: activeMembership?.teamId ?? null,
     };
   });
 

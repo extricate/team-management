@@ -19,6 +19,8 @@ export interface DndPositionEmployee {
   fullName: string;
   currentAssignmentId: string | null;
   currentPositionId: string | null;
+  currentTeamMembershipId: string | null;
+  currentTeamId: string | null;
 }
 
 export interface DndPositionTeam {
@@ -120,7 +122,7 @@ interface Props {
   positions: DndPosition[];
 }
 
-type Committed = Map<string, { assignmentId: string | null; positionId: string | null }>;
+type Committed = Map<string, { assignmentId: string | null; positionId: string | null; membershipId: string | null; teamId: string | null }>;
 
 export function DragDropPositionBuilder({ employees: initialEmployees, teams, positions: initialPositions }: Props) {
   const [employees, setEmployees] = useState<DndPositionEmployee[]>(initialEmployees);
@@ -133,7 +135,7 @@ export function DragDropPositionBuilder({ employees: initialEmployees, teams, po
 
   const committedRef = useRef<Promise<Committed>>(
     Promise.resolve(
-      new Map(initialEmployees.map(e => [e.id, { assignmentId: e.currentAssignmentId, positionId: e.currentPositionId }]))
+      new Map(initialEmployees.map(e => [e.id, { assignmentId: e.currentAssignmentId, positionId: e.currentPositionId, membershipId: e.currentTeamMembershipId, teamId: e.currentTeamId }]))
     )
   );
 
@@ -166,7 +168,7 @@ export function DragDropPositionBuilder({ employees: initialEmployees, teams, po
     setPending(n => n + 1);
     committedRef.current = committedRef.current
       .then(async (committed): Promise<Committed> => {
-        const c = committed.get(emp.id) ?? { assignmentId: null, positionId: null };
+        const c = committed.get(emp.id) ?? { assignmentId: null, positionId: null, membershipId: null, teamId: null };
         const next = new Map(committed);
 
         const displacedEntry = toPositionId
@@ -199,8 +201,22 @@ export function DragDropPositionBuilder({ employees: initialEmployees, teams, po
           if (!res.ok) throw new Error((await res.json()).error ?? "Fout bij verplaatsen huidige bezetter.");
         }
 
+        const toTeamId = targetPos?.teamId ?? null;
+
+        // End old team membership if moving to a different team (or to unassigned)
+        if (c.membershipId && c.teamId !== toTeamId) {
+          const res = await fetch(`/api/team-memberships/${c.membershipId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "ended", endDate: new Date().toISOString(), reason: "Herplaatsing via bezetting-interface" }),
+          });
+          if (!res.ok) throw new Error((await res.json()).error ?? "Fout bij beëindigen teamlidmaatschap.");
+        }
+
         let newAssignmentId: string | null = null;
-        if (toPositionId) {
+        let newMembershipId: string | null = c.teamId === toTeamId ? c.membershipId : null;
+
+        if (toPositionId && toTeamId) {
           const res = await fetch("/api/position-assignments", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -214,10 +230,22 @@ export function DragDropPositionBuilder({ employees: initialEmployees, teams, po
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: "filled" }),
           });
+
+          // Create team membership if the employee isn't already in this team
+          if (c.teamId !== toTeamId) {
+            const memberRes = await fetch("/api/team-memberships", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ teamId: toTeamId, employeeId: emp.id, startDate: new Date().toISOString(), reason: "Indeling via bezetting-interface" }),
+            });
+            if (!memberRes.ok) throw new Error((await memberRes.json()).error ?? "Fout bij aanmaken teamlidmaatschap.");
+            const { data: memberData } = await memberRes.json();
+            newMembershipId = memberData.id;
+          }
         }
 
-        next.set(emp.id, { assignmentId: newAssignmentId, positionId: toPositionId });
-        if (displacedId) next.set(displacedId, { assignmentId: null, positionId: null });
+        next.set(emp.id, { assignmentId: newAssignmentId, positionId: toPositionId, membershipId: newMembershipId, teamId: toTeamId });
+        if (displacedId) next.set(displacedId, { assignmentId: null, positionId: null, membershipId: next.get(displacedId)?.membershipId ?? null, teamId: next.get(displacedId)?.teamId ?? null });
         setEmployees(prev => prev.map(e =>
           e.id === emp.id ? { ...e, currentAssignmentId: newAssignmentId } : e
         ));
