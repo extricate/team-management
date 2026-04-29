@@ -12,12 +12,6 @@ Auth: remove resend and implement basic username/password for management (includ
 
 - Add <title></title> for every page where appropriate.
 
-
-- For positions add a required before date
-- In the dashboard, add an overview of conflicts regarding start dates that are after the required before dates, or which aren't financed yet
-- In the dashboard, add an overview of what's going to happen in the near future (30 to 90 days maybe?)
-
-
 - Export function for the entire database to an excel document
 - Import function for the entire database from an excel document
 - Easy backup functionality

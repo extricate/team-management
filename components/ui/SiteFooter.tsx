@@ -13,6 +13,7 @@ export function SiteFooter() {
               <li><Link href="/dashboard">Dashboard</Link></li>
               <li><Link href="/teams">Teams</Link></li>
               <li><Link href="/medewerkers">Medewerkers</Link></li>
+              <li><Link href="/financiering">Financiering</Link></li>
             </ul>
           </div>
           <div className={styles.column}>
@@ -25,14 +26,14 @@ export function SiteFooter() {
           <div className={styles.column}>
             <h3>Overheid</h3>
             <ul>
-              <li><a href="https://www.rijksoverheid.nl" target="_blank" rel="noopener noreferrer">Rijksoverheid.nl</a></li>
+              <li><a href="https://www.defensie.nl" target="_blank" rel="noopener noreferrer">Defensie.nl</a></li>
               <li><Link href="/toegankelijkheid">Toegankelijkheidsverklaring</Link></li>
               <li><Link href="/privacy">Privacyverklaring</Link></li>
             </ul>
           </div>
         </div>
         <div className={styles.bottom}>
-          <p>© {year} Rijksoverheid — Teambeheer applicatie</p>
+          <p>© {year} COC2-I&V — Teambeheer applicatie - versie {process.env.APP_VERSION}</p>
         </div>
       </div>
     </footer>
