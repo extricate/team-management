@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
+
+export const metadata: Metadata = { title: "Lid toevoegen – Teambeheer" };
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { teams, employees } from "@/lib/db/schema";

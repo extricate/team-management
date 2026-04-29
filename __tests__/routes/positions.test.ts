@@ -42,9 +42,12 @@ const POSITION = {
   type: 'Product Owner',
   opfType: null,
   positionCode: 'P001',
+  schaal: null,
+  annualCost: null,
   status: 'planned',
   expectedStart: null,
   expectedEnd: null,
+  requiredBefore: null,
   deletedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -135,6 +138,35 @@ describe('POST /api/positions', () => {
     })
     expect((await POST(req)).status).toBe(201)
   })
+
+  it('accepts a requiredBefore date and returns it in the response', async () => {
+    const requiredBefore = new Date('2025-03-01')
+    dbMock.set([{ ...POSITION, requiredBefore }])
+    const req = makeRequest('/api/positions', {
+      method: 'POST',
+      body: {
+        teamId: TEAM_ID,
+        type: 'Product Owner',
+        status: 'planned',
+        requiredBefore: '2025-03-01T00:00:00.000Z',
+      },
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    const body = await res.json()
+    expect(new Date(body.data.requiredBefore).toISOString()).toBe(requiredBefore.toISOString())
+  })
+
+  it('creates a position without requiredBefore (it is optional)', async () => {
+    dbMock.set([POSITION])
+    const req = makeRequest('/api/positions', {
+      method: 'POST',
+      body: { teamId: TEAM_ID, type: 'Tester', status: 'planned' },
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    expect((await res.json()).data.requiredBefore).toBeNull()
+  })
 })
 
 // --- GET /api/positions/[id] ---
@@ -179,6 +211,29 @@ describe('PATCH /api/positions/[id]', () => {
     const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.opfType).toBe('OPF9-inhuur')
+  })
+
+  it('sets requiredBefore and returns it in the response', async () => {
+    const requiredBefore = new Date('2025-12-31')
+    const updated = { ...POSITION, requiredBefore }
+    dbMock.set([POSITION], [updated])
+    const req = makeRequest('/api/positions/pos-1', {
+      method: 'PATCH',
+      body: { requiredBefore: '2025-12-31T00:00:00.000Z' },
+    })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
+    expect(res.status).toBe(200)
+    expect(new Date((await res.json()).data.requiredBefore).toISOString()).toBe(requiredBefore.toISOString())
+  })
+
+  it('clears requiredBefore when set to null', async () => {
+    const withReqBefore = { ...POSITION, requiredBefore: new Date('2025-12-31') }
+    const cleared = { ...POSITION, requiredBefore: null }
+    dbMock.set([withReqBefore], [cleared])
+    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { requiredBefore: null } })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
+    expect(res.status).toBe(200)
+    expect((await res.json()).data.requiredBefore).toBeNull()
   })
 
   it('clears opfType when set to null', async () => {

@@ -1,6 +1,6 @@
 # Teambeheer — Architectural Design Document
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Last updated:** April 2026  
 **Audience:** Engineers, tech leads
 
@@ -63,7 +63,7 @@ A group within an organisation. Has many positions and many employees (via TeamM
 A person employed in the organisation. Belongs to one organisation but can be a member of multiple teams over time (via TeamMembership). Holds positions over time (via PositionAssignment).
 
 **Position**  
-A role slot within a team. Statuses: `planned → open → filled → closed`. A position can be filled by multiple employees sequentially (never concurrently). The `positionCode` is an optional external reference (e.g. from HR systems).
+A role slot within a team. Statuses: `planned → open → filled → closed`. A position can be filled by multiple employees sequentially (never concurrently). The `positionCode` is an optional external reference (e.g. from HR systems). The optional `requiredBefore` date signals the deadline by which the position must be staffed — used by the dashboard conflict detector to flag late starts.
 
 **TeamMembership**  
 Junction between Employee and Team, with a date range (`startDate`/`endDate`) and a `status`. Represents "employee X was a member of team Y from date A to date B". Historical memberships are retained.
@@ -115,7 +115,8 @@ All page files (`app/**/page.tsx`) are **React Server Components** by default. T
 
 - Data fetching happens on the server with direct Drizzle queries (no client-side `fetch` for initial data).
 - No need for API routes for page rendering — they exist only as the REST interface.
-- Client components (`"use client"`) are used only where interactivity is required (forms with validation state, comment sections, navigation active state).
+- Client components (`"use client"`) are used only where interactivity is required (forms with validation state, comment sections, drag-and-drop interfaces, navigation active state).
+- `export const metadata` and `export async function generateMetadata()` are supported only on Server Components. All pages export a title so every view has a meaningful browser tab/search snippet.
 
 ### 4.2 Component Hierarchy
 
@@ -125,6 +126,7 @@ app/layout.tsx (Server)
 └── <page> (Server) — queries DB, renders data
     └── CommentSection (Client) — manages local comment state
     └── EditForm (Client) — manages form state, POSTs to API routes
+    └── DragDropTeamBuilder (Client) — HTML5 drag-and-drop team builder
 └── SiteFooter (Server)
 ```
 
@@ -134,34 +136,57 @@ app/layout.tsx (Server)
 |---|---|---|
 | `SiteHeader` | Server | Defines server action for sign-out |
 | `SiteHeaderNav` | Client | Uses `usePathname` for active state |
-| Page components (`page.tsx`) | Server | Direct DB queries |
+| Page components (`page.tsx`) | Server | Direct DB queries, metadata export |
 | `CommentSection` | Client | Optimistic updates, local state |
 | `AuditLog` | Server | Read-only display |
 | `StatusBadge` | Server | Pure presentational |
-| Create/Edit forms | Client | Form state, validation, API calls |
+| `SortHeader` | Server | Pure presentational (renders an `<a>` link) |
+| Create/Edit forms (`*Form.tsx`) | Client | Form state, validation, API calls |
+| `DragDropTeamBuilder` | Client | HTML5 DnD, optimistic moves, fetch calls |
 
 ### 4.4 Form Pattern
 
 Create/edit forms are client components that:
-1. Optionally pre-fetch prerequisite lists (org options for team form, etc.)
+1. Receive prerequisite data as props (fetched by the server page wrapper)
 2. Manage local form state and validation errors
 3. `POST`/`PATCH` to the REST API routes
 4. Redirect with `router.push()` on success
 
-Edit page pattern (two files):
+**Edit page pattern** (two files):
 ```
 app/teams/[id]/bewerken/
-├── page.tsx     — Server Component: fetches team, renders EditForm
+├── page.tsx     — Server Component: fetches team, exports generateMetadata, renders EditForm
 └── EditForm.tsx — Client Component: form pre-filled with team data
 ```
 
-Create page pattern (single file):
+**Create page pattern** (two files — server wrapper + client form):
 ```
 app/teams/nieuw/
-└── page.tsx     — Client Component: fetches org list, handles form
+├── page.tsx          — Server Component: fetches org list, exports metadata, renders NieuwTeamForm
+└── NieuwTeamForm.tsx — Client Component: form state, org list passed as props
 ```
 
-### 4.5 Data Access Pattern
+This split is required because `export const metadata` cannot coexist with `"use client"`. The server wrapper fetches any prerequisite data (e.g. org dropdowns) and passes it as props to the client form component, avoiding a client-side `useEffect` fetch waterfall.
+
+### 4.5 Sorting and Filtering on List Pages
+
+All list pages (`/teams`, `/medewerkers`, `/financiering`, `/organisaties`) support server-rendered sorting and filtering via URL search parameters. No client-side JavaScript is needed.
+
+**URL params:** `?sort=<column>&order=asc|desc&q=<search>&<entityFilter>=<value>&page=<n>`
+
+**`SortHeader` component** (`components/ui/SortHeader.tsx`) renders a `<th>` with an `<a>` link. Clicking it navigates to the same URL with the updated sort column and order, toggling direction if the column is already active. An arrow icon (↑ ↓ ↕) gives visual feedback.
+
+```tsx
+<SortHeader label="Naam" column="name" currentSort={sort} currentOrder={order} buildHref={buildHref} />
+```
+
+`buildHref(column, order)` is defined inline in each page and merges the new sort into existing filter params so sort changes don't reset filters or pagination.
+
+**Filter forms** use native HTML `<form method="get">`. Submission rewrites the URL with the filter values, implicitly resetting to page 1. A "Wis filter" link points to the bare list URL.
+
+**Text search** uses Drizzle `ilike()` against relevant string columns (name, first/last name, etc.), wrapped in `or()` for multi-column matching.
+
+### 4.6 Data Access Pattern
 
 Pages query the database directly via Drizzle:
 
@@ -178,9 +203,54 @@ const team = await db.query.teams.findFirst({
 ```
 
 The REST API routes (`app/api/`) are the interface for:
-- Client components (forms, comment section)
+- Client components (forms, comment section, drag-and-drop team builder)
 - External integrations (future)
 - Testing (Vitest mocks the API layer)
+
+### 4.7 Dashboard Analytics Module
+
+`lib/dashboard.ts` contains pure business-logic functions used by `app/dashboard/page.tsx`. Extracting these into a separate module makes them unit-testable without a database.
+
+**`detectPositionConflicts(positions)`** → `PositionConflict[]`
+
+Scans positions and returns conflict objects of two types:
+- `late_start` — `expectedStart` is after `requiredBefore` (position will miss its staffing deadline)
+- `unfunded` — status is `planned` or `open` but has no `FundingAllocation` with `status = 'active'`
+
+Closed positions are skipped entirely. Each conflict carries `positionId`, `positionType`, `teamName`, and a `type` discriminant.
+
+**`collectUpcomingEvents(positions, memberships, assignments, now, minDays, maxDays)`** → `UpcomingEvent[]`
+
+Aggregates upcoming events within a configurable day window (default 0–90 days):
+- `position_start` — planned/open position with an `expectedStart` date
+- `position_end` — any position with an `expectedEnd` date
+- `membership_end` — active `TeamMembership` with an `endDate` approaching
+- `assignment_end` — active `PositionAssignment` with an `endDate` approaching
+
+Returns events sorted chronologically. Each event carries `kind`, `daysUntil`, `label`, `teamName`, and supporting display fields.
+
+### 4.8 Printable Team Overview
+
+`app/teams/[id]/overzicht/page.tsx` is a server-rendered print-friendly overview page for department events. It renders a two-column grid:
+- Left: table of active team members (name, assigned position, member-since date)
+- Right: table of positions (title, occupant, status badge)
+
+A "Afdrukken" button triggers `window.print()` via an inline `<script>`. `@media print` CSS hides navigation and the button (`no-print` class). The page is suitable for printing to PDF or paper without any client-side state.
+
+### 4.9 Drag-and-Drop Team Builder
+
+`components/ui/DragDropTeamBuilder.tsx` is a client component that lets users reassign employees to teams by dragging and dropping, without navigating to individual employee pages.
+
+**API flow on drop:**
+1. If the employee has a current membership: `PATCH /api/team-memberships/:id` → `{ status: "ended", endDate: today }`
+2. If moving to a new team (not unassigning): `POST /api/team-memberships` → new active membership
+3. Optimistic state update in React before the API responds; errors displayed inline per employee card
+
+**`/indelen` page** (`app/indelen/page.tsx`) is the server wrapper that:
+- Fetches all organisations the user can access
+- Renders an org selector if multiple orgs exist (URL param `?orgId=`)
+- Queries all teams and employees for the selected org
+- Derives current membership state and passes `DndEmployee[]` + `DndTeam[]` to `DragDropTeamBuilder`
 
 ---
 
@@ -189,23 +259,23 @@ The REST API routes (`app/api/`) are the interface for:
 ### 5.1 API Route Structure
 
 ```
-/api/organisations         GET (list), POST (create)
-/api/organisations/[id]    GET, PATCH, DELETE
-/api/teams                 GET, POST
-/api/teams/[id]            GET, PATCH, DELETE
-/api/employees             GET, POST
-/api/employees/[id]        GET, PATCH, DELETE
-/api/positions             GET, POST
-/api/positions/[id]        GET, PATCH, DELETE
-/api/position-assignments  POST
-/api/team-memberships      POST
-/api/financial-sources     GET, POST
+/api/organisations          GET (list), POST (create)
+/api/organisations/[id]     GET, PATCH, DELETE
+/api/teams                  GET, POST
+/api/teams/[id]             GET, PATCH, DELETE
+/api/employees              GET, POST
+/api/employees/[id]         GET, PATCH, DELETE
+/api/positions              GET, POST (fields: teamId, type, status, opfType?, positionCode?, schaal?, annualCost?, expectedStart?, expectedEnd?, requiredBefore?)
+/api/positions/[id]         GET, PATCH, DELETE  (PATCH accepts requiredBefore: ISO string | null to set/clear)
+/api/position-assignments   POST
+/api/team-memberships       GET, POST, PATCH (used by DragDropTeamBuilder to end/create memberships)
+/api/financial-sources      GET, POST
 /api/financial-sources/[id] GET, PATCH, DELETE
-/api/funding-allocations   GET, POST
-/api/comments              GET (by type+id), POST
-/api/audit-events          GET (by entityType+entityId)
-/api/users                 GET, POST
-/api/users/[id]            GET, PATCH, DELETE
+/api/funding-allocations    GET, POST
+/api/comments               GET (by type+id), POST
+/api/audit-events           GET (by entityType+entityId)
+/api/users                  GET, POST
+/api/users/[id]             GET, PATCH, DELETE
 ```
 
 ### 5.2 Request Handling Pattern
@@ -414,7 +484,7 @@ npm run test:watch      # watch mode
 3. Add API routes: `app/api/<entity>/route.ts` + `app/api/<entity>/[id]/route.ts`
 4. Add list page: `app/<entity>/page.tsx`
 5. Add detail page: `app/<entity>/[id]/page.tsx`
-6. Add create form: `app/<entity>/nieuw/page.tsx`
+6. Add create form: `app/<entity>/nieuw/page.tsx` (server wrapper) + `Nieuw<Entity>Form.tsx` (client form)
 7. Add edit form: `app/<entity>/[id]/bewerken/page.tsx` + `EditForm.tsx`
 8. Add Vitest route tests: `__tests__/routes/<entity>.test.ts`
 
@@ -428,34 +498,50 @@ __tests__/
 ├── setup.ts                 — global afterEach clearAllMocks
 ├── unit/
 │   ├── api.test.ts          — lib/api.ts helpers (17 tests)
-│   └── audit.test.ts        — lib/audit.ts (3 tests)
+│   ├── audit.test.ts        — lib/audit.ts (3 tests)
+│   └── dashboard.test.ts    — lib/dashboard.ts: detectPositionConflicts + collectUpcomingEvents (20 tests)
 └── routes/
     ├── organisations.test.ts
     ├── teams.test.ts
     ├── employees.test.ts
-    ├── positions.test.ts
+    ├── positions.test.ts    — includes POST/PATCH tests for requiredBefore
     ├── comments.test.ts
     └── funding-allocations.test.ts
+```
+
+**DB mock pattern** (`vi.hoisted`):
+
+The mock uses a Proxy that queues return values and resolves any chain of method calls (`.insert().values().returning()`, `.query.positions.findMany()`, etc.) to the next queued value. Tests call `dbMock.set(val1, val2, ...)` before exercising the route — each awaited DB call in the route consumes one value in sequence.
+
+```typescript
+dbMock.set([POSITION])              // single DB call → returns [POSITION]
+dbMock.set([EXISTING], [UPDATED])   // two DB calls: first returns [EXISTING], second [UPDATED]
 ```
 
 ---
 
 ## 11. Roadmap
 
-### v1.1 — Access Control
+### v1.1 — Workforce Planning & UX ✅ (complete)
+- `requiredBefore` date field on positions
+- Dashboard conflict detection (late starts, unfunded positions)
+- Dashboard upcoming events (30–90 day horizon)
+- Sortable table headers on all list pages (URL-based, no JS)
+- Filters on all list pages (text search + entity dropdown)
+- Drag-and-drop team builder (`/indelen` page)
+- Printable team overview page (`/teams/[id]/overzicht`)
+- `<title>` tags on every page via `metadata` / `generateMetadata`
+- Unit tests for dashboard business logic
+
+### v1.2 — Access Control
 - Enforce role-based permissions at API route level
 - Scope queries to `user.organisationId`
 - Viewer role: disable all mutation buttons in UI
 
-### v1.2 — Advanced Workforce Planning
+### v1.3 — Advanced Workforce Planning
 - Dashboard: planned vs actual positions chart
 - Timeline view per employee (position history as visual timeline)
 - Position gap analysis (open positions without funding)
-
-### v1.3 — Search & Filtering
-- Organisation/team filter on all list pages
-- Date range filter for historical views
-- Full-text search on employee names and team names
 
 ### v1.4 — Notifications
 - Email notifications for key events (position opened, budget allocated)
@@ -489,3 +575,19 @@ __tests__/
 ### ADR-005: Polymorphic comments
 **Decision:** Use `commentable_type` + `commentable_id` discriminator.  
 **Rationale:** Comments are a cross-cutting concern. Adding separate FK columns per entity would require schema changes every time a new commentable entity is added.
+
+### ADR-006: Server-wrapper + client-form split for "nieuw" pages
+**Decision:** All create pages are split into a server `page.tsx` (fetches prerequisite data, exports `metadata`) and a client `*Form.tsx` (handles form state and API calls).  
+**Rationale:** Next.js does not allow `"use client"` and `export const metadata` in the same file. The split also eliminates the `useEffect`-based fetch waterfall that would otherwise occur when the client fetches org/employee dropdowns after mount.
+
+### ADR-007: URL-based sorting and filtering (no client state)
+**Decision:** All list-page sorting and filtering is expressed entirely in the URL (`?sort=&order=&q=&orgId=&page=`). The `SortHeader` component renders `<a>` links; filter forms use `<form method="get">`.  
+**Rationale:** Server-rendered sorting requires no JavaScript. Deep-linked URLs let users bookmark or share filtered views. It avoids the need for a global client-side state manager for a purely read-oriented feature.
+
+### ADR-008: HTML5 Drag-and-Drop API (no library)
+**Decision:** `DragDropTeamBuilder` uses the native `draggable` attribute and `onDragStart`/`onDragOver`/`onDrop` events rather than an external DnD library.  
+**Rationale:** The interaction is simple (single-item card moves between columns) and doesn't require complex nesting, reordering within lists, or touch support. Adding a library (react-dnd, dnd-kit) would add bundle weight and abstraction overhead disproportionate to the use case.
+
+### ADR-009: Dashboard analytics as pure functions in `lib/dashboard.ts`
+**Decision:** Conflict detection and upcoming-event aggregation are plain TypeScript functions that take typed arrays and return typed arrays, with no DB access.  
+**Rationale:** The dashboard page already fetches all required data from the DB. Keeping the aggregation logic as pure functions makes it trivially testable in Vitest without needing DB mocks, and keeps the page component thin.

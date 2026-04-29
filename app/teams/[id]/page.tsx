@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { teams, comments, auditEvents, positions, fundingAllocations, financialSourceAmounts } from "@/lib/db/schema";
+import { teams, comments, auditEvents, positions, financialSourceAmounts } from "@/lib/db/schema";
 import { eq, isNull, desc, and, inArray } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
@@ -13,6 +13,12 @@ import { formatFullName, formatDate, formatCurrency, prorateCost } from "@/lib/u
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const team = await db.query.teams.findFirst({ where: and(eq(teams.id, id), isNull(teams.deletedAt)) });
+  return { title: team ? `${team.name} – Teambeheer` : "Team – Teambeheer" };
+}
 
 export default async function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

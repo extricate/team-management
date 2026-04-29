@@ -16,6 +16,7 @@ const Schema = z.object({
   status: z.enum(["planned", "open", "filled", "closed"]).default("planned"),
   expectedStart: z.string().datetime().optional(),
   expectedEnd: z.string().datetime().optional(),
+  requiredBefore: z.string().datetime().optional(),
 });
 
 export const GET = withErrorHandling(async () => {
@@ -38,6 +39,7 @@ export const POST = withErrorHandling(async (req: Request) => {
     annualCost: parsed.data.annualCost != null ? String(parsed.data.annualCost) : undefined,
     expectedStart: parsed.data.expectedStart ? new Date(parsed.data.expectedStart) : undefined,
     expectedEnd: parsed.data.expectedEnd ? new Date(parsed.data.expectedEnd) : undefined,
+    requiredBefore: parsed.data.requiredBefore ? new Date(parsed.data.requiredBefore) : undefined,
   };
   const [row] = await db.insert(positions).values(data).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: row.id, action: "create", after: row as Record<string, unknown> });

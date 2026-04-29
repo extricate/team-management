@@ -16,6 +16,12 @@ import { BudgetGridEditor, type GridInitialEntry } from "@/components/ui/BudgetG
 import { formatCurrency, formatDate, prorateCost } from "@/lib/utils";
 import { detectFinancialConflicts, type FinancialConflict as Conflict } from "@/lib/financial-conflicts";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const source = await db.query.financialSources.findFirst({ where: and(eq(financialSources.id, id), isNull(financialSources.deletedAt)) });
+  return { title: source ? `${source.name} – Teambeheer` : "Financieringsbron – Teambeheer" };
+}
+
 export default async function FinancieringDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();

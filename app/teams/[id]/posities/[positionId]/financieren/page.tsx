@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
+
+export const metadata: Metadata = { title: "Positie financieren – Teambeheer" };
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { teams, positions, financialSourceAmounts, financialSources, fundingAllocations } from "@/lib/db/schema";

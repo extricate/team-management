@@ -5,6 +5,12 @@ import { organisations } from "@/lib/db/schema";
 import { eq, isNull, and } from "drizzle-orm";
 import { OrganisatieEditForm } from "./EditForm";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const org = await db.query.organisations.findFirst({ where: and(eq(organisations.id, id), isNull(organisations.deletedAt)) });
+  return { title: org ? `${org.name} bewerken – Teambeheer` : "Organisatie bewerken – Teambeheer" };
+}
+
 export default async function OrganisatieBewerkenPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();

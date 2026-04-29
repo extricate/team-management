@@ -120,6 +120,7 @@ export const positions = pgTable("positions", {
   status: text("status").$type<PositionStatus>().notNull().default("planned"),
   expectedStart: timestamp("expected_start", { mode: "date" }),
   expectedEnd: timestamp("expected_end", { mode: "date" }),
+  requiredBefore: timestamp("required_before", { mode: "date" }),
   deletedAt: timestamp("deleted_at", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),

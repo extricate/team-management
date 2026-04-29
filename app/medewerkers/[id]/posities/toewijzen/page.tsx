@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
+
+export const metadata: Metadata = { title: "Positie toewijzen – Teambeheer" };
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { employees, positions, teams } from "@/lib/db/schema";

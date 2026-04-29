@@ -16,6 +16,7 @@ const UpdateSchema = z.object({
   status: z.enum(["planned", "open", "filled", "closed"]).optional(),
   expectedStart: z.string().datetime().optional().nullable(),
   expectedEnd: z.string().datetime().optional().nullable(),
+  requiredBefore: z.string().datetime().optional().nullable(),
 });
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
@@ -48,6 +49,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
     annualCost: parsed.data.annualCost != null ? String(parsed.data.annualCost) : parsed.data.annualCost === null ? null : undefined,
     expectedStart: parsed.data.expectedStart ? new Date(parsed.data.expectedStart) : parsed.data.expectedStart === null ? null : undefined,
     expectedEnd: parsed.data.expectedEnd ? new Date(parsed.data.expectedEnd) : parsed.data.expectedEnd === null ? null : undefined,
+    requiredBefore: parsed.data.requiredBefore ? new Date(parsed.data.requiredBefore) : parsed.data.requiredBefore === null ? null : undefined,
     updatedAt: new Date(),
   };
   const [after] = await db.update(positions).set(data).where(eq(positions.id, id)).returning();

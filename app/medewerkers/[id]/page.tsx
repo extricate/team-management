@@ -12,6 +12,12 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { formatFullName, formatDate } from "@/lib/utils";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const emp = await db.query.employees.findFirst({ where: and(eq(employees.id, id), isNull(employees.deletedAt)) });
+  return { title: emp ? `${emp.firstName} ${emp.lastName} – Teambeheer` : "Medewerker – Teambeheer" };
+}
+
 export default async function MedewerkerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();

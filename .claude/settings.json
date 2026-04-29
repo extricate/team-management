@@ -28,7 +28,8 @@
     ],
     "additionalDirectories": [
       "/home/hsfnelissen/code/team-management/app/api/financial-sources/[id]",
-      "/tmp"
+      "/tmp",
+      "/home/hsfnelissen/code/team-management/app/teams/[id]"
     ]
   }
 }

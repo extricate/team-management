@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth, signIn } from "@/lib/auth";
+
+export const metadata: Metadata = { title: "Inloggen – Teambeheer" };
 
 interface SearchParams { error?: string; callbackUrl?: string; }
 

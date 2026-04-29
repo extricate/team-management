@@ -13,6 +13,12 @@ import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { formatCurrency } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const org = await db.query.organisations.findFirst({ where: and(eq(organisations.id, id), isNull(organisations.deletedAt)) });
+  return { title: org ? `${org.name} – Teambeheer` : "Organisatie – Teambeheer" };
+}
+
 export default async function OrganisatieDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();

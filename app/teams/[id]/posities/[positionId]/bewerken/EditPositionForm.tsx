@@ -33,6 +33,7 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
     const fd = new FormData(e.currentTarget);
     const startStr = fd.get("expectedStart") as string;
     const endStr = fd.get("expectedEnd") as string;
+    const requiredBeforeStr = fd.get("requiredBefore") as string;
     const costStr = (fd.get("annualCost") as string).replace(",", ".");
 
     setSaving(true);
@@ -50,6 +51,7 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
           status: fd.get("status"),
           expectedStart: startStr ? new Date(startStr).toISOString() : null,
           expectedEnd: endStr ? new Date(endStr).toISOString() : null,
+          requiredBefore: requiredBeforeStr ? new Date(requiredBeforeStr).toISOString() : null,
         }),
       });
       if (!res.ok) {
@@ -189,7 +191,7 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
           </select>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
           <div className="form-field">
             <label htmlFor="expectedStart" className="utrecht-form-label">Verwachte startdatum</label>
             <input id="expectedStart" name="expectedStart" type="date" className="utrecht-textbox" defaultValue={toDateInput(position.expectedStart)} style={{ maxWidth: "100%" }} />
@@ -197,6 +199,11 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
           <div className="form-field">
             <label htmlFor="expectedEnd" className="utrecht-form-label">Verwachte einddatum</label>
             <input id="expectedEnd" name="expectedEnd" type="date" className="utrecht-textbox" defaultValue={toDateInput(position.expectedEnd)} style={{ maxWidth: "100%" }} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="requiredBefore" className="utrecht-form-label">Vereist vóór</label>
+            <input id="requiredBefore" name="requiredBefore" type="date" className="utrecht-textbox" defaultValue={toDateInput(position.requiredBefore)} style={{ maxWidth: "100%" }} />
+            <p className="form-hint">Uiterste datum voor invulling van de positie.</p>
           </div>
         </div>
 
