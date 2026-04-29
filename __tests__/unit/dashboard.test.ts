@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { detectPositionConflicts, collectUpcomingEvents } from '@/lib/dashboard'
+import type { PositionStatus } from '@/lib/db/schema'
 
 const TEAM = { name: 'Alpha Team' }
 
@@ -7,7 +8,7 @@ function makePosition(overrides: Partial<{
   id: string
   type: string
   teamId: string
-  status: string
+  status: PositionStatus
   expectedStart: Date | null
   expectedEnd: Date | null
   requiredBefore: Date | null

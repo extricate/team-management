@@ -16,6 +16,7 @@ import {
 } from "../schema";
 import type { Organisation, Team, Employee } from "../schema";
 import { reindex } from "../../search/reindex";
+import { OPF_TYPES } from "../../opf-types";
 
 // ── Static content ─────────────────────────────────────────────────────────────
 
@@ -154,12 +155,12 @@ const ORG_DEFINITIONS = [
     employeeCount: 14,
     teams: [
       {
-        name: "Grondgebonden Systemen",
-        description: "IT-systemen en communicatieoplossingen voor de landstrijdkrachten.",
+        name: "Grens",
+        description: "IT-systemen en communicatieoplossingen voor de grenssystemen.",
       },
       {
-        name: "Maritieme Systemen",
-        description: "Scheepsgebonden informatiesystemen en maritieme communicatieoplossingen.",
+        name: "Migratie Systemen",
+        description: "IT voor Migratie.",
       },
       {
         name: "Joint Capabilities",
@@ -167,7 +168,7 @@ const ORG_DEFINITIONS = [
       },
     ],
     financialSources: [
-      { name: "Domein Grond & Maritiem ICT 2025",  projectId: "2025-GM-001" },
+      { name: "Domein Grens & Migratie 2025",  projectId: "2025-GM-001" },
     ],
   },
   {
@@ -219,14 +220,16 @@ const ORG_DEFINITIONS = [
 
 // Defensie IT-functiegroepen met bijbehorende salarisschalen
 const POSITION_DEFS = [
-  { type: "OPF1",  schaal: "8",  annualCost: 44000 },
-  { type: "OPF2",  schaal: "9",  annualCost: 49500 },
-  { type: "OPF3",  schaal: "10", annualCost: 55000 },
-  { type: "OBF1",  schaal: "11", annualCost: 63000 },
-  { type: "OBF2",  schaal: "12", annualCost: 72000 },
-  { type: "OBF3",  schaal: "13", annualCost: 84000 },
-  { type: "TL-01", schaal: "13", annualCost: 88000 },
-  { type: "PL-01", schaal: "12", annualCost: 74000 },
+  { opfKey: "OPF1",          schaal: "10", annualCost: 55000  },
+  { opfKey: "OPF2b-vap",     schaal: "9",  annualCost: 49500  },
+  { opfKey: "OPF2b-nw",      schaal: "11", annualCost: 95000  },
+  { opfKey: "OPF3",          schaal: "10", annualCost: 58000  },
+  { opfKey: "OPF4",          schaal: "9",  annualCost: 47000  },
+  { opfKey: "OPF5",          schaal: "8",  annualCost: 44000  },
+  { opfKey: "OPF8",          schaal: "12", annualCost: 78000  },
+  { opfKey: "OPF9-inhuur",   schaal: "13", annualCost: 130000 },
+  { opfKey: "OPF9-wba",      schaal: "6",  annualCost: 32000  },
+  { opfKey: "OPF9-stagiair", schaal: "2",  annualCost: 18000  },
 ] as const;
 
 // Dutch tussenvoegsels — ~40 % chance of having one
@@ -335,15 +338,19 @@ async function seedPositions(orgsWithTeams: { teams: Team[] }[]) {
     for (const team of orgTeams) {
       const defs = faker.helpers.shuffle([...POSITION_DEFS]).slice(0, 3);
 
-      const rows = defs.map((def, i) => ({
-        teamId:        team.id,
-        type:          def.type,
-        positionCode:  `${team.id.slice(0, 6).toUpperCase()}-${def.type}-${i + 1}`,
-        schaal:        def.schaal,
-        annualCost:    String(def.annualCost),
-        status:        pick(statusWeights),
-        expectedStart: faker.date.between({ from: "2024-01-01", to: "2025-06-01" }),
-      }));
+      const rows = defs.map((def, i) => {
+        const opfDef = OPF_TYPES.find(t => t.key === def.opfKey);
+        return {
+          teamId:        team.id,
+          type:          opfDef?.label ?? def.opfKey,
+          opfType:       def.opfKey,
+          positionCode:  `${team.id.slice(0, 6).toUpperCase()}-${def.opfKey}-${i + 1}`,
+          schaal:        def.schaal,
+          annualCost:    String(def.annualCost),
+          status:        pick(statusWeights),
+          expectedStart: faker.date.between({ from: "2024-01-01", to: "2025-06-01" }),
+        };
+      });
 
       const created = await db.insert(positions).values(rows).returning();
       result.push(...created.map(pos => ({ pos, teamId: team.id })));

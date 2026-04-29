@@ -75,7 +75,13 @@ export default async function IndelenPage({
     <div>
       <Breadcrumbs crumbs={[{ label: "Teamleden indelen" }]} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
-        <Heading level={1} style={{ margin: 0 }}>Teamleden indelen</Heading>
+        <div>
+          <Heading level={1} style={{ margin: "0 0 0.25rem" }}>Teamleden indelen</Heading>
+          <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--rvo-color-grijs-600)" }}>
+            Medewerkers per team — sleep om te herindelen.
+            <a href="/bezetting" style={{ marginLeft: "1rem", color: "var(--rvo-color-hemelblauw-700)" }}>→ Bezetting indelen</a>
+          </p>
+        </div>
       </div>
 
       {/* Org selector */}
