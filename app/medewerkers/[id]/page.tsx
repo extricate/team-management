@@ -10,6 +10,7 @@ import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
+import { FilterableMembershipsTable } from "@/components/ui/FilterableMembershipsTable";
 import { formatFullName, formatDate } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -155,32 +156,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
             + Team toevoegen
           </Link>
         </div>
-        <table className="utrecht-table">
-          <thead className="utrecht-table__header">
-            <tr className="utrecht-table__row">
-              <th className="utrecht-table__header-cell">Team</th>
-              <th className="utrecht-table__header-cell">Status</th>
-              <th className="utrecht-table__header-cell">Van</th>
-              <th className="utrecht-table__header-cell">Tot</th>
-              <th className="utrecht-table__header-cell">Reden</th>
-              <th className="utrecht-table__header-cell"></th>
-            </tr>
-          </thead>
-          <tbody className="utrecht-table__body">
-            {emp.memberships.map((m) => (
-              <tr key={m.id} className="utrecht-table__row">
-                <td className="utrecht-table__cell"><Link href={`/teams/${m.team.id}`} className="utrecht-link">{m.team.name}</Link></td>
-                <td className="utrecht-table__cell"><StatusBadge label={m.status} color={m.status === "active" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(m.startDate)}</td>
-                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(m.endDate)}</td>
-                <td className="utrecht-table__cell" style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={m.reason ?? undefined}>{m.reason ?? "—"}</td>
-                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>
-                  <Link href={`/teams/${m.team.id}/leden/${m.id}/bewerken`} className="utrecht-link" style={{ fontSize: "0.875rem" }}>Bewerken</Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <FilterableMembershipsTable employeeId={emp.id} memberships={emp.memberships} />
       </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>

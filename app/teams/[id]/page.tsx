@@ -9,9 +9,10 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { formatFullName, formatDate, formatCurrency, prorateCost } from "@/lib/utils";
+import { formatDate, formatCurrency, prorateCost } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
+import { FilterableTeamMembersTable } from "@/components/ui/FilterableTeamMembersTable";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -276,41 +277,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
             + Lid toevoegen
           </Link>
         </div>
-        <table className="utrecht-table">
-          <thead className="utrecht-table__header">
-            <tr className="utrecht-table__row">
-              <th className="utrecht-table__header-cell">Naam</th>
-              <th className="utrecht-table__header-cell">Status</th>
-              <th className="utrecht-table__header-cell">Startdatum</th>
-              <th className="utrecht-table__header-cell">Einddatum</th>
-              <th className="utrecht-table__header-cell"></th>
-            </tr>
-          </thead>
-          <tbody className="utrecht-table__body">
-            {activeMembers.length === 0 && (
-              <tr className="utrecht-table__row">
-                <td className="utrecht-table__cell" colSpan={5} style={{ textAlign: "center", padding: "1.5rem", color: "var(--rvo-color-grijs-600)" }}>
-                  Geen actieve leden.
-                </td>
-              </tr>
-            )}
-            {team.memberships.map((m) => (
-              <tr key={m.id} className="utrecht-table__row">
-                <td className="utrecht-table__cell">
-                  <Link href={`/medewerkers/${m.employee.id}`} className="utrecht-link">
-                    {formatFullName(m.employee)}
-                  </Link>
-                </td>
-                <td className="utrecht-table__cell"><StatusBadge label={m.status} color={m.status === "active" ? "green" : "grey"} /></td>
-                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(m.startDate)}</td>
-                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(m.endDate)}</td>
-                <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>
-                  <Link href={`/teams/${team.id}/leden/${m.id}/bewerken`} className="utrecht-link" style={{ fontSize: "0.875rem" }}>Bewerken</Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <FilterableTeamMembersTable teamId={team.id} memberships={team.memberships} />
       </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
