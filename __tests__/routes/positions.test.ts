@@ -39,7 +39,8 @@ const TEAM_ID = 'b1b2c3d4-0000-0000-0000-000000000001'
 const POSITION = {
   id: 'pos-1',
   teamId: TEAM_ID,
-  type: 'OPF1',
+  type: 'Product Owner',
+  opfType: null,
   positionCode: 'P001',
   status: 'planned',
   expectedStart: null,
@@ -61,7 +62,7 @@ describe('GET /api/positions', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.data).toHaveLength(1)
-    expect(body.data[0].type).toBe('OPF1')
+    expect(body.data[0].type).toBe('Product Owner')
   })
 
   it('returns 401 when not authenticated', async () => {
@@ -77,17 +78,37 @@ describe('POST /api/positions', () => {
     dbMock.set([POSITION])
     const req = makeRequest('/api/positions', {
       method: 'POST',
-      body: { teamId: TEAM_ID, type: 'OPF1', status: 'planned' },
+      body: { teamId: TEAM_ID, type: 'Product Owner', status: 'planned' },
     })
     const res = await POST(req)
     expect(res.status).toBe(201)
-    expect((await res.json()).data.type).toBe('OPF1')
+    expect((await res.json()).data.type).toBe('Product Owner')
+  })
+
+  it('creates a position with opfType and returns it in the response', async () => {
+    dbMock.set([{ ...POSITION, opfType: 'OPF1' }])
+    const req = makeRequest('/api/positions', {
+      method: 'POST',
+      body: { teamId: TEAM_ID, type: 'Product Owner', status: 'planned', opfType: 'OPF1' },
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    expect((await res.json()).data.opfType).toBe('OPF1')
+  })
+
+  it('creates a position without opfType (opfType is optional)', async () => {
+    dbMock.set([POSITION])
+    const req = makeRequest('/api/positions', {
+      method: 'POST',
+      body: { teamId: TEAM_ID, type: 'Scrum Master', status: 'open' },
+    })
+    expect((await POST(req)).status).toBe(201)
   })
 
   it('returns 400 when teamId is missing', async () => {
     const req = makeRequest('/api/positions', {
       method: 'POST',
-      body: { type: 'OPF1' },
+      body: { type: 'Product Owner' },
     })
     expect((await POST(req)).status).toBe(400)
   })
@@ -95,7 +116,7 @@ describe('POST /api/positions', () => {
   it('returns 400 for an invalid status value', async () => {
     const req = makeRequest('/api/positions', {
       method: 'POST',
-      body: { teamId: TEAM_ID, type: 'OPF1', status: 'invalid_status' },
+      body: { teamId: TEAM_ID, type: 'Product Owner', status: 'invalid_status' },
     })
     expect((await POST(req)).status).toBe(400)
   })
@@ -106,7 +127,7 @@ describe('POST /api/positions', () => {
       method: 'POST',
       body: {
         teamId: TEAM_ID,
-        type: 'OPF2',
+        type: 'Scrum Master',
         status: 'open',
         expectedStart: '2025-01-01T00:00:00.000Z',
         expectedEnd: '2026-01-01T00:00:00.000Z',
@@ -149,6 +170,25 @@ describe('PATCH /api/positions/[id]', () => {
     const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
     expect(res.status).toBe(200)
     expect((await res.json()).data.status).toBe('filled')
+  })
+
+  it('sets opfType and returns it in the response', async () => {
+    const updated = { ...POSITION, opfType: 'OPF9-inhuur' }
+    dbMock.set([POSITION], [updated])
+    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { opfType: 'OPF9-inhuur' } })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
+    expect(res.status).toBe(200)
+    expect((await res.json()).data.opfType).toBe('OPF9-inhuur')
+  })
+
+  it('clears opfType when set to null', async () => {
+    const withOpf = { ...POSITION, opfType: 'OPF1' }
+    const cleared = { ...POSITION, opfType: null }
+    dbMock.set([withOpf], [cleared])
+    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { opfType: null } })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
+    expect(res.status).toBe(200)
+    expect((await res.json()).data.opfType).toBeNull()
   })
 
   it('returns 404 when position does not exist', async () => {

@@ -18,3 +18,8 @@ Auth: remove resend and implement basic username/password for management (includ
 - An easy to display team + team members and position overview interface
 
 - Add <title></title> for every page where appropriate.
+
+
+- For positions add a required before date
+- In the dashboard, add an overview of conflicts regarding start dates that are after the required before dates, or which aren't financed yet
+- In the dashboard, add an overview of what's going to happen in the near future (30 to 90 days maybe?)
