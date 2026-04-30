@@ -42,6 +42,27 @@ export class AuthError extends Error {
   }
 }
 
+export class ForbiddenError extends Error {
+  constructor(message = "Toegang geweigerd") {
+    super(message);
+    this.name = "ForbiddenError";
+  }
+}
+
+// Throws ForbiddenError when the session user's organisation differs from the entity's organisation.
+// Admins bypass this check. Pass null/undefined entityOrgId to skip (entity is not org-scoped).
+export function assertOrgAccess(
+  session: { user?: { role?: string | null; organisationId?: string | null } | null },
+  entityOrgId: string | null | undefined,
+): void {
+  if (!entityOrgId) return;
+  const user = session.user;
+  if (user?.role === "admin") return;
+  if (user?.organisationId !== entityOrgId) {
+    throw new ForbiddenError("Toegang geweigerd: u hebt geen toegang tot deze organisatie.");
+  }
+}
+
 // Generic wrapper so TypeScript infers the exact handler signature — no casts needed at the call site.
 export function withErrorHandling<TArgs extends unknown[]>(
   handler: (...args: TArgs) => Promise<Response>
@@ -51,6 +72,7 @@ export function withErrorHandling<TArgs extends unknown[]>(
       return await handler(...args);
     } catch (error) {
       if (error instanceof AuthError) return unauthorized(error.message);
+      if (error instanceof ForbiddenError) return forbidden(error.message);
       console.error("[API error]", error);
       return serverError();
     }

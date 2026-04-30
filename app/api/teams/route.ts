@@ -1,16 +1,10 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
 import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { syncTeam } from "@/lib/search/sync";
+import { dispatchSync } from "@/lib/search/sync";
+import { TeamSchema } from "@/lib/schemas";
 import { isNull } from "drizzle-orm";
-
-const Schema = z.object({
-  organisationId: z.string().uuid(),
-  name: z.string().min(1).max(200),
-  description: z.string().optional(),
-});
 
 export const GET = withErrorHandling(async () => {
   await requireAuth();
@@ -24,11 +18,11 @@ export const GET = withErrorHandling(async () => {
 export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
   const body = await req.json();
-  const parsed = Schema.safeParse(body);
+  const parsed = TeamSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [row] = await db.insert(teams).values(parsed.data).returning();
-  await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: row.id, action: "create", after: row as Record<string, unknown> });
-  syncTeam(row.id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: row.id, action: "create", after: row });
+  dispatchSync("team", row.id);
   return created(row);
 });

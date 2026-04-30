@@ -1,17 +1,10 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
-import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
+import { ok, notFound, badRequest, requireAuth, withErrorHandling, assertOrgAccess, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { syncTeam, removeFromIndex } from "@/lib/search/sync";
-import { INDEXES } from "@/lib/search/client";
+import { dispatchSync } from "@/lib/search/sync";
+import { TeamUpdateSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
-
-const UpdateSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
-  organisationId: z.string().uuid().optional(),
-});
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   await requireAuth();
@@ -34,14 +27,15 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
   const { id } = await ctx.params;
   const [before] = await db.select().from(teams).where(eq(teams.id, id));
   if (!before || before.deletedAt) return notFound();
+  assertOrgAccess(session, before.organisationId);
 
   const body = await req.json();
-  const parsed = UpdateSchema.safeParse(body);
+  const parsed = TeamUpdateSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [after] = await db.update(teams).set({ ...parsed.data, updatedAt: new Date() }).where(eq(teams.id, id)).returning();
-  await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
-  syncTeam(id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: id, action: "update", before, after });
+  dispatchSync("team", id);
   return ok(after);
 });
 
@@ -50,9 +44,10 @@ export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext)
   const { id } = await ctx.params;
   const [before] = await db.select().from(teams).where(eq(teams.id, id));
   if (!before || before.deletedAt) return notFound();
+  assertOrgAccess(session, before.organisationId);
 
   await db.update(teams).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(teams.id, id));
-  await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: id, action: "archive", before: before as Record<string, unknown> });
-  removeFromIndex(INDEXES.teams, id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: id, action: "archive", before });
+  dispatchSync("team", id);
   return ok({ message: "Gearchiveerd" });
 });

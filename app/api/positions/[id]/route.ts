@@ -1,23 +1,10 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { positions } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { syncPosition, removeFromIndex } from "@/lib/search/sync";
-import { INDEXES } from "@/lib/search/client";
+import { dispatchSync } from "@/lib/search/sync";
+import { PositionUpdateSchema, parseNullableDate } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
-
-const UpdateSchema = z.object({
-  type: z.string().min(1).optional(),
-  opfType: z.string().optional().nullable(),
-  positionCode: z.string().optional().nullable(),
-  schaal: z.string().optional().nullable(),
-  annualCost: z.number().positive().optional().nullable(),
-  status: z.enum(["planned", "open", "filled", "closed"]).optional(),
-  expectedStart: z.string().datetime().optional().nullable(),
-  expectedEnd: z.string().datetime().optional().nullable(),
-  requiredBefore: z.string().datetime().optional().nullable(),
-});
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   await requireAuth();
@@ -41,20 +28,20 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
   if (!before || before.deletedAt) return notFound();
 
   const body = await req.json();
-  const parsed = UpdateSchema.safeParse(body);
+  const parsed = PositionUpdateSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const data = {
     ...parsed.data,
     annualCost: parsed.data.annualCost != null ? String(parsed.data.annualCost) : parsed.data.annualCost === null ? null : undefined,
-    expectedStart: parsed.data.expectedStart ? new Date(parsed.data.expectedStart) : parsed.data.expectedStart === null ? null : undefined,
-    expectedEnd: parsed.data.expectedEnd ? new Date(parsed.data.expectedEnd) : parsed.data.expectedEnd === null ? null : undefined,
-    requiredBefore: parsed.data.requiredBefore ? new Date(parsed.data.requiredBefore) : parsed.data.requiredBefore === null ? null : undefined,
+    expectedStart: parseNullableDate(parsed.data.expectedStart),
+    expectedEnd: parseNullableDate(parsed.data.expectedEnd),
+    requiredBefore: parseNullableDate(parsed.data.requiredBefore),
     updatedAt: new Date(),
   };
   const [after] = await db.update(positions).set(data).where(eq(positions.id, id)).returning();
-  await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
-  syncPosition(id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: id, action: "update", before, after });
+  dispatchSync("position", id);
   return ok(after);
 });
 
@@ -65,7 +52,7 @@ export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext)
   if (!before || before.deletedAt) return notFound();
 
   await db.update(positions).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(positions.id, id));
-  await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: id, action: "archive", before: before as Record<string, unknown> });
-  removeFromIndex(INDEXES.positions, id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: id, action: "archive", before });
+  dispatchSync("position", id);
   return ok({ message: "Gearchiveerd" });
 });
