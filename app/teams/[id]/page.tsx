@@ -13,6 +13,7 @@ import { formatDate, formatCurrency, prorateCost } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { TransferPositionButton } from "@/components/ui/TransferPositionButton";
+import { RemoveFundingButton } from "@/components/ui/RemoveFundingButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableTeamMembersTable } from "@/components/ui/FilterableTeamMembersTable";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
@@ -263,10 +264,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                               ? ` · ${sa.financialType.type} ${sa.financialType.year}`
                               : "";
                             return (
-                              <div key={fa.id} style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>
-                                <span style={{ color: "var(--rvo-color-groen-700)", marginRight: "0.25rem" }}>✓</span>
+                              <div key={fa.id} style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                                <span style={{ color: "var(--rvo-color-groen-700)" }}>✓</span>
                                 {sa?.financialSource.name ?? "—"}{typeSuffix}
-                                {fa.amount && <span style={{ marginLeft: "0.375rem", color: "var(--rvo-color-grijs-600)" }}>(<CurrencyDisplay value={fa.amount} />)</span>}
+                                {fa.amount && <span style={{ color: "var(--rvo-color-grijs-600)" }}>(<CurrencyDisplay value={fa.amount} />)</span>}
+                                {!isArchived && <RemoveFundingButton allocationId={fa.id} sourceName={sa?.financialSource.name ?? "—"} />}
                               </div>
                             );
                           })}

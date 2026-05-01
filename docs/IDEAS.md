@@ -14,5 +14,6 @@
 - Export function for the entire database to an excel document
 - Import function for the entire database from an excel document
 - Easy backup functionality
+- Make pages adaptive to smaller screen sizes
 
 ~~- Make positions transferable to other teams~~

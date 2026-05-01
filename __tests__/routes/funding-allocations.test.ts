@@ -32,6 +32,7 @@ vi.mock('@/lib/auth', () => ({
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn().mockResolvedValue(undefined) }))
 
 import { GET, POST } from '@/app/api/funding-allocations/route'
+import { DELETE } from '@/app/api/funding-allocations/[id]/route'
 import { auth } from '@/lib/auth'
 
 const FSA_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
@@ -163,5 +164,29 @@ describe('POST /api/funding-allocations', () => {
       body: { financialSourceAmountId: FSA_ID, positionId: POSITION_ID },
     })
     expect((await POST(req)).status).toBe(401)
+  })
+})
+
+// --- DELETE /api/funding-allocations/[id] ---
+// Route: select (before) → hard delete (no deletedAt column)
+
+describe('DELETE /api/funding-allocations/[id]', () => {
+  it('deletes the allocation and returns 200', async () => {
+    dbMock.set([ALLOCATION])
+    const res = await DELETE(makeRequest('/api/funding-allocations/alloc-1'), { params: Promise.resolve({ id: 'alloc-1' }) })
+    expect(res.status).toBe(200)
+    expect((await res.json()).data.message).toBe('Verwijderd')
+  })
+
+  it('returns 404 when allocation does not exist', async () => {
+    dbMock.set([])
+    const res = await DELETE(makeRequest('/api/funding-allocations/missing'), { params: Promise.resolve({ id: 'missing' }) })
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
+    const res = await DELETE(makeRequest('/api/funding-allocations/alloc-1'), { params: Promise.resolve({ id: 'alloc-1' }) })
+    expect(res.status).toBe(401)
   })
 })
