@@ -78,7 +78,10 @@ export default async function TeamsPage({
       <Breadcrumbs crumbs={[{ label: "Teams" }]} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <Heading level={1} style={{ margin: 0 }}>Teams</Heading>
-        <Link href="/teams/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuw team</Link>
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <Link href="/teams/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuw team</Link>
+          <Link href="/bezetting" className="utrecht-button utrecht-button--primary-action">Bezetting</Link>
+        </div>
       </div>
 
       {/* Filters */}

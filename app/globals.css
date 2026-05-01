@@ -4,7 +4,7 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: "Fira Sans", Arial, sans-serif;
-  color: var(--rvo-color-hemelblauw-800, #003d83);
+  color: var(--rvo-color-hemelblauw-700, #154273);
   background-color: var(--rvo-color-white, #ffffff);
 }
 
