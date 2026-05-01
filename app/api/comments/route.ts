@@ -1,15 +1,9 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { comments } from "@/lib/db/schema";
 import { ok, created, badRequest, unauthorized, requireAuth, withErrorHandling } from "@/lib/api";
+import { CommentSchema } from "@/lib/schemas";
 import type { CommentableType } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-
-const Schema = z.object({
-  body: z.string().min(1),
-  commentableType: z.enum(["team", "employee", "position", "financialSource", "fundingAllocation"]),
-  commentableId: z.string().uuid(),
-});
 
 export const GET = withErrorHandling(async (req: Request) => {
   await requireAuth();
@@ -33,7 +27,7 @@ export const POST = withErrorHandling(async (req: Request) => {
   if (!userId) return unauthorized();
 
   const body = await req.json();
-  const parsed = Schema.safeParse(body);
+  const parsed = CommentSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [row] = await db.insert(comments).values({ ...parsed.data, createdBy: userId }).returning();

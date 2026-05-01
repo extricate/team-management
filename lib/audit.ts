@@ -8,8 +8,8 @@ interface AuditParams {
   entityType: string;
   entityId: string;
   action: AuditAction;
-  before?: Record<string, unknown> | null;
-  after?: Record<string, unknown> | null;
+  before?: unknown;
+  after?: unknown;
   reason?: string;
 }
 
@@ -19,8 +19,13 @@ export async function logAudit(params: AuditParams) {
     entityType: params.entityType,
     entityId: params.entityId,
     action: params.action,
-    beforeJson: params.before ?? null,
-    afterJson: params.after ?? null,
+    beforeJson: (params.before ?? null) as Record<string, unknown> | null,
+    afterJson: (params.after ?? null) as Record<string, unknown> | null,
     reason: params.reason,
   });
+}
+
+export function createAuditLogger(actorUserId: string | undefined) {
+  return (params: Omit<AuditParams, "actorUserId">) =>
+    logAudit({ ...params, actorUserId });
 }

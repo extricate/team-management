@@ -1,14 +1,8 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { ok, created, badRequest, err, requireAuth, withErrorHandling } from "@/lib/api";
+import { CreateUserSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
-
-const CreateUserSchema = z.object({
-  name: z.string().min(1).max(100),
-  email: z.string().email(),
-  role: z.enum(["admin", "manager", "viewer"]).default("viewer"),
-});
 
 export const GET = withErrorHandling(async () => {
   await requireAuth();

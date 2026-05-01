@@ -3,15 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import {
-  organisations, teams, employees, positions,
-  financialSourceAmounts, auditEvents, teamMemberships, positionAssignments,
-} from "@/lib/db/schema";
-import { isNull, desc } from "drizzle-orm";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
-import { detectPositionConflicts, collectUpcomingEvents } from "@/lib/dashboard";
+import { loadDashboardData } from "@/lib/loaders/dashboard";
 
 export const metadata: Metadata = { title: "Dashboard – Teambeheer" };
 
@@ -38,63 +32,20 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
-  const [
-    allOrgs, allTeams, allEmployees, allPositions, allAmounts, recentActivity,
-    activeMemberships, activeAssignments,
-  ] = await Promise.all([
-    db.select({ id: organisations.id }).from(organisations).where(isNull(organisations.deletedAt)),
-    db.select({ id: teams.id }).from(teams).where(isNull(teams.deletedAt)),
-    db.select({ id: employees.id }).from(employees).where(isNull(employees.deletedAt)),
-    db.query.positions.findMany({
-      where: isNull(positions.deletedAt),
-      with: {
-        team: true,
-        fundingAllocations: true,
-      },
-    }),
-    db.select({ amount: financialSourceAmounts.amount, status: financialSourceAmounts.status }).from(financialSourceAmounts),
-    db.query.auditEvents.findMany({
-      with: { actorUser: true },
-      orderBy: [desc(auditEvents.createdAt)],
-      limit: 8,
-    }),
-    db.query.teamMemberships.findMany({
-      where: isNull(teamMemberships.endDate),
-      with: { employee: true, team: true },
-    }),
-    db.query.positionAssignments.findMany({
-      where: isNull(positionAssignments.endDate),
-      with: { employee: true, position: { with: { team: true } } },
-    }),
-  ]);
+  const { stats, conflicts, upcomingEvents, recentActivity } = await loadDashboardData();
 
-  const filledPositions = allPositions.filter(p => p.status === "filled").length;
-  const openPositions   = allPositions.filter(p => p.status === "open").length;
-  const totalPositions  = allPositions.length;
-
-  const releasedBudget = allAmounts
-    .filter(a => a.status === "released")
-    .reduce((sum, a) => sum + Number(a.amount), 0);
-  const conceptBudget = allAmounts
-    .filter(a => a.status === "concept")
-    .reduce((sum, a) => sum + Number(a.amount), 0);
-
-  const conflicts = detectPositionConflicts(allPositions);
   const lateStartConflicts = conflicts.filter(c => c.type === "late_start");
   const unfundedConflicts  = conflicts.filter(c => c.type === "unfunded");
 
-  const now = new Date();
-  const upcomingEvents = collectUpcomingEvents(allPositions, activeMemberships, activeAssignments, now, 0, 90);
-
-  const stats = [
-    { label: "Organisaties",    value: allOrgs.length,    href: "/organisaties", color: "var(--rvo-color-hemelblauw-700)" },
-    { label: "Teams",           value: allTeams.length,   href: "/teams",        color: "var(--rvo-color-hemelblauw-700)" },
-    { label: "Medewerkers",     value: allEmployees.length, href: "/medewerkers", color: "var(--rvo-color-hemelblauw-700)" },
-    { label: "Posities bezet",  value: `${filledPositions}/${totalPositions}`, href: null,
-      color: filledPositions === totalPositions && totalPositions > 0 ? "var(--rvo-color-groen-700)" : "var(--rvo-color-hemelblauw-700)" },
-    { label: "Open posities",   value: openPositions, href: null,
-      color: openPositions > 0 ? "var(--rvo-color-oranje-600, #e17000)" : "var(--rvo-color-groen-700)" },
-    { label: "Budget vrijgegeven", value: CurrencyDisplay({ value: releasedBudget }), href: "/financiering",
+  const statTiles = [
+    { label: "Organisaties",    value: stats.orgCount,      href: "/organisaties", color: "var(--rvo-color-hemelblauw-700)" },
+    { label: "Teams",           value: stats.teamCount,     href: "/teams",        color: "var(--rvo-color-hemelblauw-700)" },
+    { label: "Medewerkers",     value: stats.employeeCount, href: "/medewerkers",  color: "var(--rvo-color-hemelblauw-700)" },
+    { label: "Posities bezet",  value: `${stats.filledPositions}/${stats.totalPositions}`, href: null,
+      color: stats.filledPositions === stats.totalPositions && stats.totalPositions > 0 ? "var(--rvo-color-groen-700)" : "var(--rvo-color-hemelblauw-700)" },
+    { label: "Open posities",   value: stats.openPositions, href: null,
+      color: stats.openPositions > 0 ? "var(--rvo-color-oranje-600, #e17000)" : "var(--rvo-color-groen-700)" },
+    { label: "Budget vrijgegeven", value: CurrencyDisplay({ value: stats.releasedBudget }), href: "/financiering",
       color: "var(--rvo-color-groen-700)" },
   ];
 
@@ -117,7 +68,7 @@ export default async function DashboardPage() {
 
       {/* Stat tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: "1rem", marginBottom: "2.5rem" }}>
-        {stats.map(({ label, value, href, color }) => (
+        {statTiles.map(({ label, value, href, color }) => (
           <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50, #eef4fb)", borderRadius: "4px", padding: "1.25rem", textAlign: "center", border: "1px solid var(--rvo-color-hemelblauw-100, #d3e4f5)" }}>
             {href ? (
               <Link href={href} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
@@ -204,9 +155,9 @@ export default async function DashboardPage() {
           <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "1rem" }}>Financieringsoverzicht</Heading>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
             {[
-              { label: "Vrijgegeven budget", value: formatCurrency(releasedBudget), color: "var(--rvo-color-groen-700)" },
-              { label: "Concept budget",     value: formatCurrency(conceptBudget),  color: "var(--rvo-color-oranje-600, #e17000)" },
-              { label: "Totaal",             value: formatCurrency(releasedBudget + conceptBudget), color: "var(--rvo-color-hemelblauw-700)" },
+              { label: "Vrijgegeven budget", value: formatCurrency(stats.releasedBudget), color: "var(--rvo-color-groen-700)" },
+              { label: "Concept budget",     value: formatCurrency(stats.conceptBudget),  color: "var(--rvo-color-oranje-600, #e17000)" },
+              { label: "Totaal",             value: formatCurrency(stats.releasedBudget + stats.conceptBudget), color: "var(--rvo-color-hemelblauw-700)" },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <span style={{ fontSize: "0.875rem", color: "var(--rvo-color-grijs-700)" }}>{label}</span>

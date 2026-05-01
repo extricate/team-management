@@ -1,17 +1,10 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { financialSources, organisations } from "@/lib/db/schema";
-import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
+import { ok, notFound, badRequest, requireAuth, withErrorHandling, assertOrgAccess, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { syncFinancialSource, removeFromIndex } from "@/lib/search/sync";
-import { INDEXES } from "@/lib/search/client";
+import { dispatchSync } from "@/lib/search/sync";
+import { FinancialSourceUpdateSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
-
-const UpdateSchema = z.object({
-  projectId: z.string().min(1).max(100).optional(),
-  name: z.string().min(1).max(200).optional(),
-  organisationId: z.string().uuid().optional(),
-});
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   await requireAuth();
@@ -40,9 +33,10 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
   const { id } = await ctx.params;
   const [before] = await db.select().from(financialSources).where(eq(financialSources.id, id));
   if (!before || before.deletedAt) return notFound();
+  assertOrgAccess(session, before.organisationId);
 
   const body = await req.json();
-  const parsed = UpdateSchema.safeParse(body);
+  const parsed = FinancialSourceUpdateSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   if (parsed.data.organisationId) {
@@ -51,8 +45,8 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
   }
 
   const [after] = await db.update(financialSources).set({ ...parsed.data, updatedAt: new Date() }).where(eq(financialSources.id, id)).returning();
-  await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: id, action: "update", before: before as Record<string, unknown>, after: after as Record<string, unknown> });
-  syncFinancialSource(id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: id, action: "update", before, after });
+  dispatchSync("financialSource", id);
   return ok(after);
 });
 
@@ -61,9 +55,10 @@ export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext)
   const { id } = await ctx.params;
   const [before] = await db.select().from(financialSources).where(eq(financialSources.id, id));
   if (!before || before.deletedAt) return notFound();
+  assertOrgAccess(session, before.organisationId);
 
   await db.update(financialSources).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(financialSources.id, id));
-  await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: id, action: "archive", before: before as Record<string, unknown> });
-  removeFromIndex(INDEXES.financialSources, id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: id, action: "archive", before });
+  dispatchSync("financialSource", id);
   return ok({ message: "Gearchiveerd" });
 });

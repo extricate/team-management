@@ -1,23 +1,14 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { financialSourceAmounts, financialSources } from "@/lib/db/schema";
 import { ok, created, badRequest, notFound, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
+import { FinancialSourceAmountSchema, parseDate } from "@/lib/schemas";
 import { eq, isNull } from "drizzle-orm";
-
-const Schema = z.object({
-  financialSourceId: z.string().uuid(),
-  financialTypeId: z.string().uuid(),
-  amount: z.number().positive(),
-  status: z.enum(["concept", "released"]).default("concept"),
-  effectiveDate: z.string().datetime().optional(),
-  releaseDate: z.string().datetime().optional(),
-});
 
 export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
   const body = await req.json();
-  const parsed = Schema.safeParse(body);
+  const parsed = FinancialSourceAmountSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [source] = await db
@@ -31,8 +22,8 @@ export const POST = withErrorHandling(async (req: Request) => {
     financialTypeId: parsed.data.financialTypeId,
     amount: String(parsed.data.amount),
     status: parsed.data.status,
-    effectiveDate: parsed.data.effectiveDate ? new Date(parsed.data.effectiveDate) : undefined,
-    releaseDate: parsed.data.releaseDate ? new Date(parsed.data.releaseDate) : undefined,
+    effectiveDate: parseDate(parsed.data.effectiveDate),
+    releaseDate: parseDate(parsed.data.releaseDate),
   }).returning();
 
   await logAudit({
@@ -40,7 +31,7 @@ export const POST = withErrorHandling(async (req: Request) => {
     entityType: "financialSource",
     entityId: parsed.data.financialSourceId,
     action: "create",
-    after: row as Record<string, unknown>,
+    after: row,
   });
 
   return created(row);

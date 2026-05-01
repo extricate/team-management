@@ -1,17 +1,10 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { employees } from "@/lib/db/schema";
 import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { syncEmployee } from "@/lib/search/sync";
+import { dispatchSync } from "@/lib/search/sync";
+import { EmployeeSchema } from "@/lib/schemas";
 import { isNull } from "drizzle-orm";
-
-const Schema = z.object({
-  organisationId: z.string().uuid(),
-  firstName: z.string().min(1).max(100),
-  lastName: z.string().min(1).max(100),
-  prefixName: z.string().max(20).optional(),
-});
 
 export const GET = withErrorHandling(async () => {
   await requireAuth();
@@ -28,11 +21,11 @@ export const GET = withErrorHandling(async () => {
 export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
   const body = await req.json();
-  const parsed = Schema.safeParse(body);
+  const parsed = EmployeeSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [row] = await db.insert(employees).values(parsed.data).returning();
-  await logAudit({ actorUserId: session.user?.id, entityType: "employee", entityId: row.id, action: "create", after: row as Record<string, unknown> });
-  syncEmployee(row.id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "employee", entityId: row.id, action: "create", after: row });
+  dispatchSync("employee", row.id);
   return created(row);
 });

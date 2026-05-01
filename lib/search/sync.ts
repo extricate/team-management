@@ -114,3 +114,17 @@ export async function removeFromIndex(indexName: string, id: string): Promise<vo
     // Document may not exist; ignore
   }
 }
+
+export type SyncableEntity = "team" | "employee" | "organisation" | "position" | "financialSource";
+
+const syncFns: Record<SyncableEntity, (id: string) => Promise<void>> = {
+  team: syncTeam,
+  employee: syncEmployee,
+  organisation: syncOrganisation,
+  position: syncPosition,
+  financialSource: syncFinancialSource,
+};
+
+export function dispatchSync(entity: SyncableEntity, id: string): void {
+  syncFns[entity](id).catch(err => console.error(`[search sync] ${entity}:${id}`, err));
+}

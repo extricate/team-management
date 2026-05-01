@@ -30,7 +30,7 @@ export const POST = withErrorHandling(async (req: Request) => {
     entityType: "financialSource",
     entityId: parsed.data.financialSourceId,
     action: "update",
-    after: row as Record<string, unknown>,
+    after: row,
   });
 
   return created(row);

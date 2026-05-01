@@ -1,16 +1,10 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { financialSources } from "@/lib/db/schema";
 import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { syncFinancialSource } from "@/lib/search/sync";
+import { dispatchSync } from "@/lib/search/sync";
+import { FinancialSourceSchema } from "@/lib/schemas";
 import { isNull } from "drizzle-orm";
-
-const Schema = z.object({
-  organisationId: z.string().uuid(),
-  projectId: z.string().min(1).max(100),
-  name: z.string().min(1).max(200),
-});
 
 export const GET = withErrorHandling(async () => {
   await requireAuth();
@@ -28,11 +22,11 @@ export const GET = withErrorHandling(async () => {
 export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
   const body = await req.json();
-  const parsed = Schema.safeParse(body);
+  const parsed = FinancialSourceSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
   const [row] = await db.insert(financialSources).values(parsed.data).returning();
-  await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: row.id, action: "create", after: row as Record<string, unknown> });
-  syncFinancialSource(row.id).catch(err => console.error("[search sync]", err));
+  await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: row.id, action: "create", after: row });
+  dispatchSync("financialSource", row.id);
   return created(row);
 });
