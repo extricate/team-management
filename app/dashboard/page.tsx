@@ -15,6 +15,7 @@ const actionLabels: Record<string, string> = {
   archive: "Gearchiveerd",
   assign: "Toegewezen",
   reallocate: "Herverdeeld",
+  delete: "Verwijderd",
 };
 
 const entityLabels: Record<string, string> = {
