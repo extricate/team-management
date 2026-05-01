@@ -17,3 +17,4 @@
 - Make pages adaptive to smaller screen sizes
 
 ~~- Make positions transferable to other teams~~
+~~- add ability to remove funding~~

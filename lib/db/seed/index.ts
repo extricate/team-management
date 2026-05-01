@@ -23,7 +23,7 @@ import { OPF_TYPES } from "../../opf-types";
 const ORG_DEFINITIONS = [
   // ── OS1: Secties ──────────────────────────────────────────────────────────────
   {
-    name: "Plan & BITA",
+    name: "Plan",
     type: "OS1" as const,
     employeeCount: 18,
     teams: [
@@ -50,7 +50,7 @@ const ORG_DEFINITIONS = [
     ],
   },
   {
-    name: "Projecten & Ontwikkeling",
+    name: "Projecten",
     type: "OS1" as const,
     employeeCount: 24,
     teams: [
@@ -77,7 +77,7 @@ const ORG_DEFINITIONS = [
     ],
   },
   {
-    name: "Systeemmanagement & Beheer",
+    name: "Beheer",
     type: "OS1" as const,
     employeeCount: 30,
     teams: [
@@ -106,7 +106,7 @@ const ORG_DEFINITIONS = [
 
   // ── OS2: Subdomeinen ──────────────────────────────────────────────────────────
   {
-    name: "B2C2&G",
+    name: "Domein A",
     type: "OS2" as const,
     employeeCount: 16,
     teams: [
@@ -128,7 +128,7 @@ const ORG_DEFINITIONS = [
     ],
   },
   {
-    name: "HOI&D",
+    name: "Domein B",
     type: "OS2" as const,
     employeeCount: 14,
     teams: [
@@ -150,12 +150,12 @@ const ORG_DEFINITIONS = [
     ],
   },
   {
-    name: "G&M",
+    name: "Domein C",
     type: "OS2" as const,
     employeeCount: 14,
     teams: [
       {
-        name: "Grens",
+        name: "MIlitaire Grondsystemen",
         description: "IT-systemen en communicatieoplossingen voor de grenssystemen.",
       },
       {
@@ -172,21 +172,13 @@ const ORG_DEFINITIONS = [
     ],
   },
   {
-    name: "Inlichtingen",
+    name: "Domein D",
     type: "OS2" as const,
     employeeCount: 12,
     teams: [
       {
-        name: "Inlichtingensystemen",
-        description: "Beheer van gespecialiseerde systemen voor inlichtingenverzameling en -verwerking.",
-      },
-      {
         name: "OSINT & Data-analyse",
         description: "Open-source inlichtingen en geavanceerde data-analysetechnieken voor defensie.",
-      },
-      {
-        name: "Technische Inlichtingenverzameling",
-        description: "Technische sensoren en systemen voor SIGINT- en IMINT-verzameling.",
       },
     ],
     financialSources: [
@@ -194,14 +186,10 @@ const ORG_DEFINITIONS = [
     ],
   },
   {
-    name: "CEMA",
+    name: "Domein E",
     type: "OS2" as const,
     employeeCount: 12,
     teams: [
-      {
-        name: "Cyberoperaties",
-        description: "Offensieve en defensieve cyberoperaties en ontwikkeling van cybercapaciteiten.",
-      },
       {
         name: "Elektromagnetisch Spectrumbeheer",
         description: "Beheer en coördinatie van het elektromagnetisch spectrum voor militaire operaties.",
