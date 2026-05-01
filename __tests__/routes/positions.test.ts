@@ -36,6 +36,7 @@ import { GET as GetById, PATCH, DELETE } from '@/app/api/positions/[id]/route'
 import { auth } from '@/lib/auth'
 
 const TEAM_ID = 'b1b2c3d4-0000-0000-0000-000000000001'
+const TARGET_TEAM_ID = 'b1b2c3d4-0000-0000-0000-000000000002'
 const POSITION = {
   id: 'pos-1',
   teamId: TEAM_ID,
@@ -255,6 +256,21 @@ describe('PATCH /api/positions/[id]', () => {
   it('returns 400 for an invalid status value', async () => {
     dbMock.set([POSITION])
     const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { status: 'invalid' } })
+    expect((await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })).status).toBe(400)
+  })
+
+  it('transfers position to another team and returns 200 with updated teamId', async () => {
+    const transferred = { ...POSITION, teamId: TARGET_TEAM_ID }
+    dbMock.set([POSITION], [transferred])
+    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { teamId: TARGET_TEAM_ID } })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
+    expect(res.status).toBe(200)
+    expect((await res.json()).data.teamId).toBe(TARGET_TEAM_ID)
+  })
+
+  it('returns 400 when teamId is not a valid UUID', async () => {
+    dbMock.set([POSITION])
+    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { teamId: 'not-a-uuid' } })
     expect((await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })).status).toBe(400)
   })
 })

@@ -12,6 +12,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatDate, formatCurrency, prorateCost } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
+import { TransferPositionButton } from "@/components/ui/TransferPositionButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableTeamMembersTable } from "@/components/ui/FilterableTeamMembersTable";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
@@ -190,6 +191,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                         <Link href={`/teams/${team.id}/posities/${pos.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
                           Bewerken
                         </Link>
+                        <TransferPositionButton positionId={pos.id} positionName={pos.type} currentTeamId={team.id} />
                         <ArchiveButton
                           entityName={pos.type}
                           apiPath={`/api/positions/${pos.id}`}

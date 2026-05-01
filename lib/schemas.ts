@@ -76,6 +76,7 @@ export const PositionSchema = z.object({
 });
 
 export const PositionUpdateSchema = z.object({
+  teamId: optionalUuid,
   type: z.string().min(1).optional(),
   opfType: z.string().optional().nullable(),
   positionCode: z.string().optional().nullable(),
