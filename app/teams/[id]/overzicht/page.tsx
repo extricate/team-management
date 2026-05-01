@@ -5,13 +5,13 @@ import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { teams, positions } from "@/lib/db/schema";
-import { eq, isNull, and } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatFullName, formatDate } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const team = await db.query.teams.findFirst({ where: and(eq(teams.id, id), isNull(teams.deletedAt)) });
+  const team = await db.query.teams.findFirst({ where: eq(teams.id, id) });
   return { title: team ? `${team.name} – Overzicht – Teambeheer` : "Teamoverzicht – Teambeheer" };
 }
 
@@ -21,7 +21,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
   if (!session?.user) redirect("/inloggen");
 
   const team = await db.query.teams.findFirst({
-    where: and(eq(teams.id, id), isNull(teams.deletedAt)),
+    where: eq(teams.id, id),
     with: {
       organisation: true,
       positions: {

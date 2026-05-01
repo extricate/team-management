@@ -4,18 +4,19 @@ import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { employees, comments, auditEvents } from "@/lib/db/schema";
-import { eq, isNull, desc, and } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
+import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableMembershipsTable } from "@/components/ui/FilterableMembershipsTable";
 import { formatFullName, formatDate } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const emp = await db.query.employees.findFirst({ where: and(eq(employees.id, id), isNull(employees.deletedAt)) });
+  const emp = await db.query.employees.findFirst({ where: eq(employees.id, id) });
   return { title: emp ? `${emp.firstName} ${emp.lastName} – Teambeheer` : "Medewerker – Teambeheer" };
 }
 
@@ -25,7 +26,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
   if (!session?.user) redirect("/inloggen");
 
   const emp = await db.query.employees.findFirst({
-    where: and(eq(employees.id, id), isNull(employees.deletedAt)),
+    where: eq(employees.id, id),
     with: {
       organisation: true,
       memberships: { with: { team: true, createdByUser: true }, orderBy: (m, { desc }) => [desc(m.startDate)] },
@@ -34,6 +35,8 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
   });
 
   if (!emp) notFound();
+
+  const isArchived = !!emp.deletedAt;
 
   const empComments = await db.query.comments.findMany({
     where: and(eq(comments.commentableType, "employee"), eq(comments.commentableId, id)),
@@ -55,6 +58,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
   return (
     <div>
       <Breadcrumbs crumbs={[{ label: "Medewerkers", href: "/medewerkers" }, { label: fullName }]} />
+      {isArchived && <ArchivedBanner deletedAt={emp.deletedAt!} entityLabel={fullName} />}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
         <div>
           <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{fullName}</Heading>
@@ -63,15 +67,17 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
             {activePos && <> · Positie: <strong>{activePos.position.type}</strong></>}
           </Paragraph>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Link href={`/medewerkers/${emp.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
-          <ArchiveButton
-            entityName={fullName}
-            apiPath={`/api/employees/${emp.id}`}
-            redirectTo="/medewerkers"
-            warningText="Actieve teamlidmaatschappen en positietoewijzingen worden afgesloten."
-          />
-        </div>
+        {!isArchived && (
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href={`/medewerkers/${emp.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+            <ArchiveButton
+              entityName={fullName}
+              apiPath={`/api/employees/${emp.id}`}
+              redirectTo="/medewerkers"
+              warningText="Actieve teamlidmaatschappen en positietoewijzingen worden afgesloten."
+            />
+          </div>
+        )}
       </div>
 
       {/* Current status */}
@@ -107,9 +113,11 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <Heading level={2}>Positiegeschiedenis</Heading>
-          <Link href={`/medewerkers/${emp.id}/posities/toewijzen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-            + Positie toewijzen
-          </Link>
+          {!isArchived && (
+            <Link href={`/medewerkers/${emp.id}/posities/toewijzen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+              + Positie toewijzen
+            </Link>
+          )}
         </div>
         <table className="utrecht-table">
           <thead className="utrecht-table__header">
@@ -152,9 +160,11 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <Heading level={2}>Teamlidmaatschappen</Heading>
-          <Link href={`/medewerkers/${emp.id}/teams/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-            + Team toevoegen
-          </Link>
+          {!isArchived && (
+            <Link href={`/medewerkers/${emp.id}/teams/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+              + Team toevoegen
+            </Link>
+          )}
         </div>
         <FilterableMembershipsTable employeeId={emp.id} memberships={emp.memberships} />
       </section>

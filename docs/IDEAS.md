@@ -15,3 +15,5 @@ Auth: remove resend and implement basic username/password for management (includ
 - Export function for the entire database to an excel document
 - Import function for the entire database from an excel document
 - Easy backup functionality
+
+- Make positions transferable to other teams

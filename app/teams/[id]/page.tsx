@@ -12,12 +12,13 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatDate, formatCurrency, prorateCost } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
+import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableTeamMembersTable } from "@/components/ui/FilterableTeamMembersTable";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const team = await db.query.teams.findFirst({ where: and(eq(teams.id, id), isNull(teams.deletedAt)) });
+  const team = await db.query.teams.findFirst({ where: eq(teams.id, id) });
   return { title: team ? `${team.name} – Teambeheer` : "Team – Teambeheer" };
 }
 
@@ -27,7 +28,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
   if (!session?.user) redirect("/inloggen");
 
   const team = await db.query.teams.findFirst({
-    where: and(eq(teams.id, id), isNull(teams.deletedAt)),
+    where: eq(teams.id, id),
     with: {
       organisation: true,
       positions: {
@@ -47,6 +48,8 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
   });
 
   if (!team) notFound();
+
+  const isArchived = !!team.deletedAt;
 
   // Load source amounts separately to avoid the deep-join alias collision
   const allAmountIds = Array.from(new Set(
@@ -82,6 +85,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
   return (
     <div>
       <Breadcrumbs crumbs={[{ label: "Teams", href: "/teams" }, { label: team.name }]} />
+      {isArchived && <ArchivedBanner deletedAt={team.deletedAt!} entityLabel={team.name} />}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
         <div>
           <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{team.name}</Heading>
@@ -89,17 +93,19 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
             {team.organisation.name} · {team.organisation.type}
           </Paragraph>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Link href={`/teams/${team.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
-            Bewerken
-          </Link>
-          <ArchiveButton
-            entityName={team.name}
-            apiPath={`/api/teams/${team.id}`}
-            redirectTo="/teams"
-            warningText="Bijbehorende posities worden ook gearchiveerd."
-          />
-        </div>
+        {!isArchived && (
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href={`/teams/${team.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
+              Bewerken
+            </Link>
+            <ArchiveButton
+              entityName={team.name}
+              apiPath={`/api/teams/${team.id}`}
+              redirectTo="/teams"
+              warningText="Bijbehorende posities worden ook gearchiveerd."
+            />
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -122,9 +128,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <Heading level={2}>Posities</Heading>
-          <Link href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-            + Positie toevoegen
-          </Link>
+          {!isArchived && (
+            <Link href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+              + Positie toevoegen
+            </Link>
+          )}
         </div>
         {team.positions.length === 0 ? (
           <Paragraph style={{ color: "var(--rvo-color-grijs-600)" }}>Geen posities gevonden.</Paragraph>
@@ -174,19 +182,21 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                       )}
                       <StatusBadge label={pos.status} color={pos.status === "filled" ? "green" : pos.status === "open" ? "orange" : "grey"} />
                     </div>
-                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                      <Link href={`/teams/${team.id}/posities/${pos.id}/financieren`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
-                        + Financieren
-                      </Link>
-                      <Link href={`/teams/${team.id}/posities/${pos.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
-                        Bewerken
-                      </Link>
-                      <ArchiveButton
-                        entityName={pos.type}
-                        apiPath={`/api/positions/${pos.id}`}
-                        warningText="Actieve toewijzingen worden afgesloten."
-                      />
-                    </div>
+                    {!isArchived && (
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        <Link href={`/teams/${team.id}/posities/${pos.id}/financieren`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
+                          + Financieren
+                        </Link>
+                        <Link href={`/teams/${team.id}/posities/${pos.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
+                          Bewerken
+                        </Link>
+                        <ArchiveButton
+                          entityName={pos.type}
+                          apiPath={`/api/positions/${pos.id}`}
+                          warningText="Actieve toewijzingen worden afgesloten."
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Position body */}
@@ -273,9 +283,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <Heading level={2}>Teamleden</Heading>
-          <Link href={`/teams/${team.id}/leden/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-            + Lid toevoegen
-          </Link>
+          {!isArchived && (
+            <Link href={`/teams/${team.id}/leden/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+              + Lid toevoegen
+            </Link>
+          )}
         </div>
         <FilterableTeamMembersTable teamId={team.id} memberships={team.memberships} />
       </section>

@@ -4,13 +4,14 @@ import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { financialSources, comments, auditEvents } from "@/lib/db/schema";
-import { eq, isNull, desc, and } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
+import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { TransferButton } from "@/components/ui/TransferButton";
 import { BudgetGridEditor, type GridInitialEntry } from "@/components/ui/BudgetGridEditor";
 import { formatCurrency, formatDate, prorateCost } from "@/lib/utils";
@@ -18,7 +19,7 @@ import { detectFinancialConflicts, type FinancialConflict as Conflict } from "@/
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const source = await db.query.financialSources.findFirst({ where: and(eq(financialSources.id, id), isNull(financialSources.deletedAt)) });
+  const source = await db.query.financialSources.findFirst({ where: eq(financialSources.id, id) });
   return { title: source ? `${source.name} – Teambeheer` : "Financieringsbron – Teambeheer" };
 }
 
@@ -28,7 +29,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
   if (!session?.user) redirect("/inloggen");
 
   const source = await db.query.financialSources.findFirst({
-    where: and(eq(financialSources.id, id), isNull(financialSources.deletedAt)),
+    where: eq(financialSources.id, id),
     with: {
       organisation: true,
       types: { orderBy: (t, { asc }) => [asc(t.year), asc(t.type)] },
@@ -50,6 +51,8 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
   });
 
   if (!source) notFound();
+
+  const isArchived = !!source.deletedAt;
 
   const sourceComments = await db.query.comments.findMany({
     where: and(eq(comments.commentableType, "financialSource"), eq(comments.commentableId, id)),
@@ -102,6 +105,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
   return (
     <div>
       <Breadcrumbs crumbs={[{ label: "Financiering", href: "/financiering" }, { label: source.name }]} />
+      {isArchived && <ArchivedBanner deletedAt={source.deletedAt!} entityLabel={source.name} />}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
         <div>
           <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{source.name}</Heading>
@@ -109,20 +113,22 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
             Project: <code>{source.projectId}</code> · {source.organisation.name}
           </Paragraph>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
-          <TransferButton
-            sourceId={source.id}
-            sourceName={source.name}
-            currentOrgId={source.organisationId}
-          />
-          <ArchiveButton
-            entityName={source.name}
-            apiPath={`/api/financial-sources/${source.id}`}
-            redirectTo="/financiering"
-            warningText="Alle actieve budgettoewijzingen worden gedeactiveerd."
-          />
-        </div>
+        {!isArchived && (
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href={`/financiering/${source.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
+            <TransferButton
+              sourceId={source.id}
+              sourceName={source.name}
+              currentOrgId={source.organisationId}
+            />
+            <ArchiveButton
+              entityName={source.name}
+              apiPath={`/api/financial-sources/${source.id}`}
+              redirectTo="/financiering"
+              warningText="Alle actieve budgettoewijzingen worden gedeactiveerd."
+            />
+          </div>
+        )}
       </div>
 
       {/* Conflict warnings */}
@@ -184,12 +190,14 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
             Gedetailleerd overzicht per type & bedrag
           </summary>
           <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginBottom: "0.25rem" }}>
-              <Link href={`/financiering/${source.id}/types/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Type toevoegen</Link>
-              {source.types.length > 0 && (
-                <Link href={`/financiering/${source.id}/bedragen/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Bedrag toevoegen</Link>
-              )}
-            </div>
+            {!isArchived && (
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginBottom: "0.25rem" }}>
+                <Link href={`/financiering/${source.id}/types/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Type toevoegen</Link>
+                {source.types.length > 0 && (
+                  <Link href={`/financiering/${source.id}/bedragen/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Bedrag toevoegen</Link>
+                )}
+              </div>
+            )}
             {source.types.map((t) => {
               const typeAmounts = source.amounts.filter(a => a.financialTypeId === t.id);
               const typeTotal = typeAmounts.reduce((s, a) => s + Number(a.amount), 0);

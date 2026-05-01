@@ -10,12 +10,13 @@ import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
+import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { formatCurrency } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const org = await db.query.organisations.findFirst({ where: and(eq(organisations.id, id), isNull(organisations.deletedAt)) });
+  const org = await db.query.organisations.findFirst({ where: eq(organisations.id, id) });
   return { title: org ? `${org.name} – Teambeheer` : "Organisatie – Teambeheer" };
 }
 
@@ -25,7 +26,7 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
   if (!session?.user) redirect("/inloggen");
 
   const org = await db.query.organisations.findFirst({
-    where: and(eq(organisations.id, id), isNull(organisations.deletedAt)),
+    where: eq(organisations.id, id),
     with: {
       teams: {
         where: isNull(teams.deletedAt),
@@ -48,6 +49,8 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
   });
 
   if (!org) notFound();
+
+  const isArchived = !!org.deletedAt;
 
   const orgComments = await db.query.comments.findMany({
     where: and(eq(comments.commentableType, "team"), eq(comments.commentableId, id)),
@@ -73,6 +76,7 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
         { label: "Organisaties", href: "/organisaties" },
         { label: org.name },
       ]} />
+      {isArchived && <ArchivedBanner deletedAt={org.deletedAt!} entityLabel={org.name} />}
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
@@ -86,17 +90,19 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
             {org.employees.length} medewerker{org.employees.length !== 1 ? "s" : ""}
           </Paragraph>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Link href={`/organisaties/${org.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
-            Bewerken
-          </Link>
-          <ArchiveButton
-            entityName={org.name}
-            apiPath={`/api/organisations/${org.id}`}
-            redirectTo="/organisaties"
-            warningText="Alle bijbehorende teams en medewerkers worden ook gearchiveerd."
-          />
-        </div>
+        {!isArchived && (
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href={`/organisaties/${org.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
+              Bewerken
+            </Link>
+            <ArchiveButton
+              entityName={org.name}
+              apiPath={`/api/organisations/${org.id}`}
+              redirectTo="/organisaties"
+              warningText="Alle bijbehorende teams en medewerkers worden ook gearchiveerd."
+            />
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -120,9 +126,11 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <Heading level={2}>Teams</Heading>
-          <Link href="/teams/nieuw" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-            + Nieuw team
-          </Link>
+          {!isArchived && (
+            <Link href="/teams/nieuw" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+              + Nieuw team
+            </Link>
+          )}
         </div>
         <table className="utrecht-table">
           <thead className="utrecht-table__header">
@@ -171,9 +179,11 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
       <section style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <Heading level={2}>Financieringsbronnen</Heading>
-          <Link href="/financiering/nieuw" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-            + Nieuwe bron
-          </Link>
+          {!isArchived && (
+            <Link href="/financiering/nieuw" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+              + Nieuwe bron
+            </Link>
+          )}
         </div>
         <table className="utrecht-table">
           <thead className="utrecht-table__header">

@@ -50,7 +50,8 @@ export class ForbiddenError extends Error {
 }
 
 // Throws ForbiddenError when the session user's organisation differs from the entity's organisation.
-// Admins bypass this check. Pass null/undefined entityOrgId to skip (entity is not org-scoped).
+// Bypassed for admins and for users with no organisationId (application-level owners with global access).
+// Pass null/undefined entityOrgId to skip (entity is not org-scoped).
 export function assertOrgAccess(
   session: { user?: { role?: string | null; organisationId?: string | null } | null },
   entityOrgId: string | null | undefined,
@@ -58,7 +59,8 @@ export function assertOrgAccess(
   if (!entityOrgId) return;
   const user = session.user;
   if (user?.role === "admin") return;
-  if (user?.organisationId !== entityOrgId) {
+  if (!user?.organisationId) return;
+  if (user.organisationId !== entityOrgId) {
     throw new ForbiddenError("Toegang geweigerd: u hebt geen toegang tot deze organisatie.");
   }
 }
