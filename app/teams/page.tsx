@@ -80,7 +80,8 @@ export default async function TeamsPage({
         <Heading level={1} style={{ margin: 0 }}>Teams</Heading>
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <Link href="/teams/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuw team</Link>
-          <Link href="/bezetting" className="utrecht-button utrecht-button--primary-action">Bezetting</Link>
+          <Link href="/bezetting" className="utrecht-button utrecht-button--secondary-action">Bezetting</Link>
+          <Link href="/indelen" className="utrecht-button utrecht-button--secondary-action">Indeling</Link>
         </div>
       </div>
 

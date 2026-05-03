@@ -19,7 +19,7 @@ export type PositionStatus = "planned" | "open" | "filled" | "closed";
 export type MembershipStatus = "active" | "ended";
 export type AllocationStatus = "active" | "reallocated" | "expired";
 export type AmountStatus = "concept" | "released";
-export type FinancialTypeCategory = "PERSEX" | "MATEX" | "Investeringen";
+export type FinancialTypeCategory = "PERSEX" | "MATEX" | "Investeringen" | "geen";
 export type CommentableType =
   | "team"
   | "employee"

@@ -81,6 +81,13 @@ export const OPF_TYPES: OPFTypeDef[] = [
     isExternal: false,
     hint: "Stageplekken. Gefinancierd uit personeelsbudget (PERSEX).",
   },
+  {
+    key: "Neventaak/rol",
+    label: "Neventaak of rol - ongefinancieerd",
+    naturalCategory: "geen",
+    isExternal: false,
+    hint: "Neventaken en rollen, worden niet gefinancierd.",
+  },
 ];
 
 export function getOPFType(key: string | null | undefined): OPFTypeDef | undefined {
@@ -92,6 +99,7 @@ export const CATEGORY_LABELS: Record<OPFNaturalCategory, string> = {
   PERSEX: "PERSEX",
   MATEX: "MATEX",
   Investeringen: "Investeringen",
+  geen: "Geen",
   extern: "Extern",
 };
 
@@ -132,5 +140,6 @@ export const CATEGORY_COLORS: Record<OPFNaturalCategory, { bg: string; text: str
   PERSEX: { bg: "var(--rvo-color-hemelblauw-100, #d3e4f5)", text: "var(--rvo-color-hemelblauw-800)" },
   MATEX: { bg: "var(--rvo-color-groen-100, #c7e9c0)", text: "var(--rvo-color-groen-800, #005a00)" },
   Investeringen: { bg: "var(--rvo-color-geel-100, #fff9e6)", text: "var(--rvo-color-oranje-800, #7a3b00)" },
+  geen: { bg: "var(--rvo-color-grijs-100, #f0f0f0)", text: "var(--rvo-color-grijs-600)" },
   extern: { bg: "var(--rvo-color-grijs-100, #f0f0f0)", text: "var(--rvo-color-grijs-700)" },
 };
