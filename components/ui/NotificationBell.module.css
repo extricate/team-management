@@ -1,0 +1,137 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bell {
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--rvo-color-white, #ffffff);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+  border-radius: 2px;
+}
+
+.bell:hover {
+  opacity: 1;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background: var(--rvo-color-rood-600, #c0392b);
+  color: #ffffff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid var(--rvo-color-grijs-200, #d4d4d4);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  color: var(--rvo-color-grijs-800, #1a1a1a);
+}
+
+.header {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-100, #f1f1f1);
+  color: var(--rvo-color-grijs-800, #1a1a1a);
+}
+
+.empty {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--rvo-color-grijs-600, #5e5e5e);
+}
+
+.list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.625rem 1rem;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--rvo-color-grijs-100, #f1f1f1);
+  font-size: 0.8125rem;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.itemRed {
+  background: var(--rvo-color-rood-50, #fdf2f2);
+  border-left-color: var(--rvo-color-rood-500, #e74c3c);
+}
+
+.itemYellow {
+  background: var(--rvo-color-geel-50, #fffae6);
+  border-left-color: var(--rvo-color-geel-500, #f9b000);
+}
+
+.itemLabel {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--rvo-color-grijs-600, #5e5e5e);
+}
+
+.teamLink {
+  color: var(--rvo-color-hemelblauw-700, #154273);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.teamLink:hover {
+  color: var(--rvo-color-hemelblauw-900, #0a2540);
+}
+
+.itemType {
+  color: var(--rvo-color-grijs-700, #3e3e3e);
+  font-style: italic;
+}
+
+.footer {
+  padding: 0.625rem 1rem;
+  border-top: 1px solid var(--rvo-color-grijs-100, #f1f1f1);
+  text-align: right;
+}
+
+.footerLink {
+  font-size: 0.8125rem;
+  color: var(--rvo-color-hemelblauw-700, #154273);
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
+}

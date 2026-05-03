@@ -1,13 +1,40 @@
 .container {
   position: relative;
-  flex: 1;
-  max-width: 20rem;
+  display: flex;
+  align-items: center;
 }
+
+.containerExpanded {
+  flex: 1;
+  max-width: 22rem;
+}
+
+/* ── Icon-only state ──────────────────────────────────────────────────────── */
+
+.iconButton {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  transition: color 0.15s;
+}
+
+.iconButton:hover {
+  color: #ffffff;
+}
+
+/* ── Expanded input state ─────────────────────────────────────────────────── */
 
 .inputWrapper {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .searchIcon {
@@ -49,6 +76,8 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Results dropdown ─────────────────────────────────────────────────────── */
 
 .dropdown {
   position: absolute;

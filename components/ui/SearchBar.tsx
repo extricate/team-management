@@ -22,6 +22,7 @@ const INDEX_ORDER = [
 ];
 
 export function SearchBar() {
+  const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -32,27 +33,40 @@ export function SearchBar() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const router = useRouter();
 
+  // Auto-focus when expanding
+  useEffect(() => {
+    if (expanded) inputRef.current?.focus();
+  }, [expanded]);
+
+  // Ctrl+K → expand and focus
   useEffect(() => {
     function onKeydown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
-        inputRef.current?.focus();
-        inputRef.current?.select();
+        setExpanded(true);
       }
     }
     document.addEventListener("keydown", onKeydown);
     return () => document.removeEventListener("keydown", onKeydown);
   }, []);
 
+  // Click outside → collapse + clear
   useEffect(() => {
-    function onMousedown(e: MouseEvent) {
+    function onPointerDown(e: PointerEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
+        collapse();
       }
     }
-    document.addEventListener("mousedown", onMousedown);
-    return () => document.removeEventListener("mousedown", onMousedown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
   }, []);
+
+  function collapse() {
+    setExpanded(false);
+    setOpen(false);
+    setQuery("");
+    setResults([]);
+  }
 
   const search = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); setOpen(false); return; }
@@ -88,18 +102,15 @@ export function SearchBar() {
       setActiveIndex(i => Math.max(i - 1, -1));
     } else if (e.key === "Enter") {
       const target = flatResults[activeIndex];
-      if (target) { navigate(target.url); }
+      if (target) navigate(target.url);
     } else if (e.key === "Escape") {
-      setOpen(false);
-      inputRef.current?.blur();
+      collapse();
     }
   }
 
   function navigate(url: string) {
     router.push(url);
-    setOpen(false);
-    setQuery("");
-    setResults([]);
+    collapse();
   }
 
   const grouped = INDEX_ORDER
@@ -113,29 +124,37 @@ export function SearchBar() {
   const flatResults = grouped.flatMap(g => g.items);
 
   return (
-    <div className={styles.container} ref={containerRef}>
-      <div className={styles.inputWrapper}>
-        <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-        <input
-          ref={inputRef}
-          type="search"
-          className={styles.input}
-          placeholder="Zoeken… (Ctrl+K)"
-          value={query}
-          onChange={handleInput}
-          onKeyDown={handleKeyDown}
-          onFocus={() => results.length > 0 && setOpen(true)}
-          aria-label="Zoeken"
-          aria-expanded={open}
-          aria-autocomplete="list"
-          role="combobox"
-          autoComplete="off"
-        />
-        {loading && <div className={styles.spinner} aria-hidden="true" />}
-      </div>
+    <div className={`${styles.container}${expanded ? ` ${styles.containerExpanded}` : ""}`} ref={containerRef}>
+      {!expanded ? (
+        <button
+          className={styles.iconButton}
+          onClick={() => setExpanded(true)}
+          aria-label="Zoeken openen (Ctrl+K)"
+          title="Zoeken (Ctrl+K)"
+        >
+          <SearchIcon />
+        </button>
+      ) : (
+        <div className={styles.inputWrapper}>
+          <SearchIcon className={styles.searchIcon} />
+          <input
+            ref={inputRef}
+            type="search"
+            className={styles.input}
+            placeholder="Zoeken…"
+            value={query}
+            onChange={handleInput}
+            onKeyDown={handleKeyDown}
+            onFocus={() => results.length > 0 && setOpen(true)}
+            aria-label="Zoeken"
+            aria-expanded={open}
+            aria-autocomplete="list"
+            role="combobox"
+            autoComplete="off"
+          />
+          {loading && <div className={styles.spinner} aria-hidden="true" />}
+        </div>
+      )}
 
       {open && flatResults.length > 0 && (
         <div className={styles.dropdown} role="listbox" aria-label="Zoekresultaten">
@@ -172,5 +191,24 @@ export function SearchBar() {
         </div>
       )}
     </div>
+  );
+}
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
   );
 }

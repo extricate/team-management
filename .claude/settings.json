@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -r \"transfer\" /home/hsfnelissen/code/team-management --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" ! -path \"*/node_modules/*\" -l)"
+      "Bash(grep -r \"transfer\" /home/hsfnelissen/code/team-management --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" ! -path \"*/node_modules/*\" -l)",
+      "Read(//home/hsfnelissen/.claude/skills/**)",
+      "Read(//home/hsfnelissen/.claude/**)"
     ]
   }
 }

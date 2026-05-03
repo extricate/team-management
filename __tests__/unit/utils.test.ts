@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatCurrency, formatCompactCurrency, formatDate, formatFullName } from '@/lib/utils'
+import { formatCurrency, formatCompactCurrency, formatDate, formatFullName, getInitials } from '@/lib/utils'
 
 describe('formatCurrency', () => {
   it('formats a positive integer as Dutch EUR', () => {
@@ -92,6 +92,36 @@ describe('formatDate', () => {
 
   it('returns em-dash for undefined', () => {
     expect(formatDate(undefined)).toBe('—')
+  })
+})
+
+describe('getInitials', () => {
+  it('returns first and last initial for a two-word name', () => {
+    expect(getInitials('Jan Jansen')).toBe('JJ')
+  })
+
+  it('uses the first and last word only for longer names', () => {
+    expect(getInitials('Jan van der Berg')).toBe('JB')
+  })
+
+  it('returns a single initial for a one-word name', () => {
+    expect(getInitials('Jan')).toBe('J')
+  })
+
+  it('uppercases lowercase letters', () => {
+    expect(getInitials('jan jansen')).toBe('JJ')
+  })
+
+  it('returns ? for an empty string', () => {
+    expect(getInitials('')).toBe('?')
+  })
+
+  it('returns ? for a whitespace-only string', () => {
+    expect(getInitials('   ')).toBe('?')
+  })
+
+  it('handles an email address as a single token (uses first character)', () => {
+    expect(getInitials('jan@voorbeeld.nl')).toBe('J')
   })
 })
 

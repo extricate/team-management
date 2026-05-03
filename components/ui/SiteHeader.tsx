@@ -3,14 +3,22 @@ import { signOut } from "@/lib/auth";
 import styles from "./SiteHeader.module.css";
 import { SiteHeaderNav } from "./SiteHeaderNav";
 import { SearchBar } from "./SearchBar";
+import { NotificationBell } from "./NotificationBell";
+import { UserMenu } from "./UserMenu";
 
 interface SiteHeaderProps { userName?: string; }
 
 export function SiteHeader({ userName }: SiteHeaderProps) {
+  async function logout() {
+    "use server";
+    await signOut({ redirectTo: "/" });
+  }
+
   return (
     <header className={styles.header}>
       <div className={styles.colorBand} aria-hidden="true" />
       <div className={styles.inner}>
+        <div className={styles.innerGrouped}>
         <Link href="/" className={styles.logo} aria-label="Teambeheer — naar startpagina">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
             <rect width="32" height="32" rx="2" fill="#F9B000" />
@@ -19,21 +27,12 @@ export function SiteHeader({ userName }: SiteHeaderProps) {
           <span className={styles.logoText}>Teambeheer</span>
         </Link>
         <SiteHeaderNav />
-        <SearchBar />
-        <div className={styles.userArea}>
+        </div>
+        <div className={styles.actions}>
+          <SearchBar />
+          <NotificationBell />
           {userName ? (
-            <>
-              <span className={styles.userName} aria-label={`Ingelogd als ${userName}`}>{userName}</span>
-              <form
-                className={styles.signOutForm}
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
-                <button type="submit">Uitloggen</button>
-              </form>
-            </>
+            <UserMenu userName={userName} onLogout={logout} />
           ) : (
             <Link href="/inloggen" className={styles.navLink}>Inloggen</Link>
           )}
