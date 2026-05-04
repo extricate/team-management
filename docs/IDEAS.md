@@ -1,6 +1,9 @@
 # Ideas
 - Auth: remove resend and implement basic username/password for management (include offline MFA); take into consideration this application will be used offline without access to external services (aside from docker).
 
+- Vacature publiceren: ja/nee als wens toevoegen in positie
+- Posities (arbeidsplaatsen) loskoppelen van teams (je financieert een positie en koppelt die aan een team)
+
 - Add notifications (with access through the navbar) with notifications regarding the conflicts (which are currently in the dashboard).
 - Change color scheme from Rijksoverheid to Defensie color scheme (Defense Orange instead of Blue)
 - Add sorting (on table headers?) on pages like employees, teams, finance sources, etc.

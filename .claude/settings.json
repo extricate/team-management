@@ -3,7 +3,11 @@
     "allow": [
       "Bash(grep -r \"transfer\" /home/hsfnelissen/code/team-management --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" ! -path \"*/node_modules/*\" -l)",
       "Read(//home/hsfnelissen/.claude/skills/**)",
-      "Read(//home/hsfnelissen/.claude/**)"
+      "Read(//home/hsfnelissen/.claude/**)",
+      "Read(//home/hsfnelissen/code/team-management/**)",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/**)",
+      "Read(///wsl.localhost/Ubuntu//**)",
+      "Bash(wslpath -u \"\\\\\\\\\\\\\\\\wsl.localhost\\\\\\\\Ubuntu\\\\\\\\home\\\\\\\\hsfnelissen\\\\\\\\code\\\\\\\\team-management\")"
     ]
   }
 }
