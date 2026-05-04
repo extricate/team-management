@@ -1,5 +1,6 @@
 import { createHmac } from "crypto";
 import { eq, and, isNull } from "drizzle-orm";
+import QRCode from "qrcode";
 import { db } from "@/lib/db";
 import { users, totpRecoveryCodes } from "@/lib/db/schema";
 import {
@@ -43,8 +44,9 @@ export const POST = withErrorHandling(async (req: Request) => {
 
   const [user] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId));
   const uri = getTotpUri(rawSecret, user?.email ?? userId, "Teambeheer");
+  const qrSvg = await QRCode.toString(uri, { type: "svg", margin: 1 });
 
-  return ok({ secret: rawSecret, uri });
+  return ok({ secret: rawSecret, uri, qrSvg });
 });
 
 // PUT /api/users/totp  — confirm TOTP setup with a valid code; returns recovery codes

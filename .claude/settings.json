@@ -27,7 +27,30 @@
       "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/password.test.ts 2>&1\")",
       "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/totp.test.ts 2>&1\")",
       "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/authenticate.test.ts 2>&1\")",
-      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/drizzle/**)"
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/drizzle/**)",
+      "Bash(ls -la \"\\\\\\\\wsl.localhost\\\\Ubuntu\\\\home\\\\hsfnelissen\\\\code\\\\team-management\")",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/**)",
+      "Bash(grep -r \"callbackUrl\" \"\\\\\\\\wsl.localhost\\\\Ubuntu\\\\home\\\\hsfnelissen\\\\code\\\\team-management\\\\app\" --include=\"*.tsx\" --include=\"*.ts\")",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/components/**)",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/components/ui/**)",
+      "Read(//home/hsfnelissen/code/team-management/components/ui/**)",
+      "Read(//home/hsfnelissen/code/team-management/app/instellingen/**)",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/app/instellingen/**)",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/**)",
+      "Bash(dir \"\\\\\\\\\\\\\\\\wsl.localhost\\\\\\\\Ubuntu\\\\\\\\home\\\\\\\\hsfnelissen\\\\\\\\code\\\\\\\\team-management\")",
+      "Bash(wsl -e bash -c \"find /home/hsfnelissen/code/team-management/app/inloggen /home/hsfnelissen/code/team-management/app/instellingen /home/hsfnelissen/code/team-management/__tests__ -type f 2>/dev/null | sort\")",
+      "Bash(wsl -e bash -c \"cat /home/hsfnelissen/code/team-management/package.json | grep -E '\\(test|vitest|jest\\)' | head -20\")",
+      "Bash(wsl -e bash -c \"find /home/hsfnelissen/code/team-management/app/api/users -type f | sort\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm install qrcode @types/qrcode 2>&1 | tail -5\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm install qrcode @types/qrcode --legacy-peer-deps 2>&1 | tail -10\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm ls qrcode 2>/dev/null\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1 | grep -v 'password.ts'\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1 | grep -v 'password.ts' | grep -v '^$'\")",
+      "Bash(Select-String -NotMatch \"password\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1 | grep -v 'password'\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1; echo 'DONE'\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && node -e \\\\\"const QRCode = require\\('qrcode'\\); QRCode.toString\\('otpauth://totp/test?secret=JBSWY3DPEHPK3PXP&issuer=Teambeheer', { type: 'svg', margin: 1 }\\).then\\(svg => console.log\\('SVG length:', svg.length, 'starts with:', svg.slice\\(0,30\\)\\)\\)\\\\\"\")"
     ]
   }
 }

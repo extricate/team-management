@@ -6,6 +6,7 @@ import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 interface SetupState {
   secret: string;
   uri: string;
+  qrSvg: string;
 }
 
 interface ConfirmState {
@@ -66,14 +67,24 @@ export function TotpSetupClient() {
         <Heading level={2}>Stap 1: Scan de QR-code</Heading>
         <Paragraph>Scan de onderstaande code met uw authenticator-app.</Paragraph>
 
-        {/* QR-code rendered via an external-free approach: link + manual entry */}
-        <div style={{ margin: "1.5rem 0", padding: "1rem", background: "var(--rvo-color-grijs-100)", borderRadius: "4px" }}>
-          <Paragraph style={{ marginBottom: "0.5rem", fontWeight: "600" }}>Handmatige invoer (als QR-code niet werkt):</Paragraph>
-          <code style={{ wordBreak: "break-all", fontSize: "1.1em", letterSpacing: "0.1em" }}>{setupData.secret}</code>
-          <Paragraph style={{ marginTop: "0.5rem", fontSize: "0.85em", color: "var(--rvo-color-grijs-600)" }}>
-            Algoritme: SHA1 | Cijfers: 6 | Periode: 30s
-          </Paragraph>
-        </div>
+        <div
+          style={{ width: 200, height: 200, margin: "1.5rem 0" }}
+          dangerouslySetInnerHTML={{ __html: setupData.qrSvg }}
+          aria-label="QR-code voor authenticator-app"
+          role="img"
+        />
+
+        <details style={{ margin: "0 0 1.5rem" }}>
+          <summary style={{ cursor: "pointer", fontSize: "0.875rem", color: "var(--rvo-color-hemelblauw-700)" }}>
+            QR-code werkt niet? Voer handmatig in
+          </summary>
+          <div style={{ marginTop: "0.75rem", padding: "1rem", background: "var(--rvo-color-grijs-100)", borderRadius: "4px" }}>
+            <code style={{ wordBreak: "break-all", fontSize: "1.1em", letterSpacing: "0.1em" }}>{setupData.secret}</code>
+            <Paragraph style={{ marginTop: "0.5rem", fontSize: "0.85em", color: "var(--rvo-color-grijs-600)", margin: "0.5rem 0 0" }}>
+              Algoritme: SHA1 | Cijfers: 6 | Periode: 30s
+            </Paragraph>
+          </div>
+        </details>
 
         <Heading level={2}>Stap 2: Voer de code in</Heading>
         <Paragraph>Voer de 6-cijferige code uit uw authenticator-app in ter bevestiging.</Paragraph>

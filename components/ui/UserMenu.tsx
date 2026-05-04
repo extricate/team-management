@@ -12,8 +12,8 @@ interface UserMenuProps {
 }
 
 const userNavLinks = [
-  { href: "/beheer/gebruikers", label: "Gebruikers"   },
-  { href: "/instellingen",      label: "Instellingen" }
+  { href: "/beheer/gebruikers", label: "Gebruikers" },
+  { href: "/instellingen", label: "Instellingen" },
 ]
 
 export function UserMenu({ userName, onLogout }: UserMenuProps) {
@@ -53,12 +53,6 @@ export function UserMenu({ userName, onLogout }: UserMenuProps) {
               {userName}
             </div>
           )}
-          <form action={onLogout} className={styles.logoutForm}>
-            <button type="submit" className={styles.logoutButton}>
-              Uitloggen
-            </button>
-          </form>
-
           <nav aria-label="Gebruikersmenu navigatie">
             {userNavLinks.map((link) => {
               const active = pathname === link.href || pathname.startsWith(link.href + "/");
@@ -74,6 +68,12 @@ export function UserMenu({ userName, onLogout }: UserMenuProps) {
               );
             })}
           </nav>
+
+          <form action={onLogout} className={styles.logoutForm}>
+            <button type="submit" className={styles.logoutButton}>
+              Uitloggen
+            </button>
+          </form>
         </div>
       )}
     </div>
