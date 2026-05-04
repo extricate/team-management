@@ -50,7 +50,17 @@
       "Bash(Select-String -NotMatch \"password\")",
       "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1 | grep -v 'password'\")",
       "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1; echo 'DONE'\")",
-      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && node -e \\\\\"const QRCode = require\\('qrcode'\\); QRCode.toString\\('otpauth://totp/test?secret=JBSWY3DPEHPK3PXP&issuer=Teambeheer', { type: 'svg', margin: 1 }\\).then\\(svg => console.log\\('SVG length:', svg.length, 'starts with:', svg.slice\\(0,30\\)\\)\\)\\\\\"\")"
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && node -e \\\\\"const QRCode = require\\('qrcode'\\); QRCode.toString\\('otpauth://totp/test?secret=JBSWY3DPEHPK3PXP&issuer=Teambeheer', { type: 'svg', margin: 1 }\\).then\\(svg => console.log\\('SVG length:', svg.length, 'starts with:', svg.slice\\(0,30\\)\\)\\)\\\\\"\")",
+      "Bash(find \"\\\\\\\\wsl.localhost\\\\Ubuntu\\\\home\\\\hsfnelissen\\\\code\\\\team-management\" -type f -name \"*.tsx\" -o -name \"*.ts\")",
+      "Bash(xargs grep *)",
+      "Bash(npx tsc *)",
+      "PowerShell(wsl -e bash -c \"cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\")",
+      "PowerShell(wsl -e bash -ic \"cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\")",
+      "PowerShell(wsl -e bash -c \"export NVM_DIR='/home/hsfnelissen/.nvm' && [ -s \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" ] && . \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\" | Select-Object -First 40)"
+    ],
+    "additionalDirectories": [
+      "\\home\\hsfnelissen\\code\\team-management\\components\\ui",
+      "\\\\wsl.localhost\\Ubuntu\\home\\hsfnelissen\\code\\team-management\\components\\ui"
     ]
   }
 }
