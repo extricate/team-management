@@ -4,6 +4,7 @@ import {
   timestamp,
   uuid,
   integer,
+  boolean,
   primaryKey,
   numeric,
   jsonb,
@@ -36,8 +37,26 @@ export const users = pgTable("users", {
   image: text("image"),
   role: text("role").$type<UserRole>().notNull().default("viewer"),
   organisationId: uuid("organisation_id").references(() => organisations.id),
+  // Credentials auth
+  passwordHash: text("password_hash"),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
+  lockedUntil: timestamp("locked_until", { mode: "date" }),
+  // TOTP — secret stored AES-256-GCM encrypted
+  totpSecret: text("totp_secret"),
+  totpEnabled: boolean("totp_enabled").notNull().default(false),
+  lastTotpCounter: integer("last_totp_counter"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+// ── TOTP recovery codes ────────────────────────────────────────────────────────
+export const totpRecoveryCodes = pgTable("totp_recovery_codes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  codeHash: text("code_hash").notNull(),
+  usedAt: timestamp("used_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
 // ── Auth.js adapter tables ─────────────────────────────────────────────────────
@@ -299,8 +318,13 @@ export const fundingAllocationsRelations = relations(fundingAllocations, ({ one 
   createdByUser: one(users, { fields: [fundingAllocations.createdBy], references: [users.id] }),
 }));
 
-export const usersRelations = relations(users, ({ one }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   organisation: one(organisations, { fields: [users.organisationId], references: [organisations.id] }),
+  totpRecoveryCodes: many(totpRecoveryCodes),
+}));
+
+export const totpRecoveryCodesRelations = relations(totpRecoveryCodes, ({ one }) => ({
+  user: one(users, { fields: [totpRecoveryCodes.userId], references: [users.id] }),
 }));
 
 // ── TypeScript row types ───────────────────────────────────────────────────────
@@ -321,6 +345,7 @@ export type FundingAllocation = typeof fundingAllocations.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 export type AuditEvent = typeof auditEvents.$inferSelect;
 export type User = typeof users.$inferSelect;
+export type TotpRecoveryCode = typeof totpRecoveryCodes.$inferSelect;
 
 // FinancialTypeEnum kept as alias for the renamed FinancialTypeCategory (backwards compat)
 export type FinancialTypeEnum = FinancialTypeCategory;

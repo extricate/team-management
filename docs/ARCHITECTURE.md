@@ -1,7 +1,7 @@
 # Teambeheer — Architectural Design Document
 
-**Version:** 1.1  
-**Last updated:** April 2026  
+**Version:** 1.2  
+**Last updated:** May 2026  
 **Audience:** Engineers, tech leads
 
 ---
@@ -27,11 +27,11 @@ The application is scoped to authenticated internal users. It does not expose a 
 | Language | TypeScript 5 | Strict mode |
 | Database | PostgreSQL | Via Supabase or direct connection |
 | ORM | Drizzle ORM | Type-safe, schema-first |
-| Auth | NextAuth.js v5 (beta) | Resend magic links + GitHub OAuth |
+| Auth | NextAuth.js v5 (beta) | Credentials (username/password + TOTP MFA). No external mail service — fully offline. |
 | UI Library | @rijkshuisstijl-community/components-react v15 | NL Design System / Rijksoverheid |
 | Validation | Zod | Schema validation at API boundary |
 | Testing | Vitest | Unit + route integration tests |
-| Deployment | Vercel (assumed) | Edge-compatible |
+| Deployment | Docker (self-hosted) | Offline enterprise network — no external services required |
 
 ---
 
@@ -276,6 +276,7 @@ A "Afdrukken" button triggers `window.print()` via an inline `<script>`. `@media
 /api/audit-events           GET (by entityType+entityId)
 /api/users                  GET, POST
 /api/users/[id]             GET, PATCH, DELETE
+/api/users/totp             POST (start TOTP setup — returns secret + URI), PUT (confirm setup + get recovery codes), DELETE (disable TOTP)
 ```
 
 ### 5.2 Request Handling Pattern
@@ -329,25 +330,64 @@ await logAudit({
 
 ## 6. Authentication & Authorization
 
-### 6.1 NextAuth v5 Setup
+### 6.1 Design Constraints
 
-Authentication providers:
-- **Resend** — magic link email (primary, production-ready)
-- **GitHub** — OAuth (secondary, developer convenience)
+The application is deployed on an **offline enterprise network** with no access to external services (no email relay, no OAuth providers, no internet). All authentication is self-contained.
 
-Sessions are stored in the database via `DrizzleAdapter`.
+### 6.2 NextAuth v5 Setup
 
-### 6.2 User Roles
+NextAuth is used **only for session management** (reading sessions via `auth()`, signing out, storing sessions in the DB via `DrizzleAdapter`). It has no providers configured. The actual authentication flow is handled by server actions in `app/inloggen/actions.ts` that create sessions manually.
+
+**Why this split:** NextAuth's `CredentialsProvider` does not cleanly support a two-step password + TOTP flow. Manual session creation (same `sessions` table the adapter uses) gives full control over the flow while keeping the session-reading infrastructure of NextAuth intact.
+
+### 6.3 Credential Authentication Flow
+
+```
+1. User submits email + password  →  signInWithPassword() server action
+2. authenticate() in lib/auth/authenticate.ts:
+     a. Fetch user by email
+     b. Check isEnabled and lockedUntil
+     c. Verify password with crypto.scrypt
+     d. If wrong: increment failedLoginAttempts; lock after 5 (15 min)
+     e. If correct + TOTP disabled: create session → redirect to dashboard
+     f. If correct + TOTP enabled: set signed pending cookie → redirect to ?stap=totp
+3. User submits 6-digit TOTP code (or 8-char recovery code)  →  signInWithTotp() server action
+4. Verify pending cookie (HMAC-SHA256, 5-min TTL) to confirm step 2 was completed
+5. Verify code against decrypted TOTP secret; reject replays via lastTotpCounter
+6. Create session → redirect to dashboard
+```
+
+**Security properties:**
+- **Password hashing:** `crypto.scrypt` (N=32768, r=8, p=1, 64-byte key, 32-byte salt). No external library.
+- **TOTP:** RFC 6238 HMAC-SHA1, implemented with `crypto.createHmac`. No external library.
+- **TOTP secret at rest:** AES-256-GCM encrypted before DB storage. Key derived from `AUTH_SECRET` via HMAC-SHA256.
+- **Replay prevention:** `lastTotpCounter` stored per user; codes at or before the last-used counter are rejected.
+- **Brute-force protection:** 5 failed password attempts → 15-minute lockout (`lockedUntil` column).
+- **Recovery codes:** 8 one-time codes issued on TOTP setup. Stored as scrypt hashes. Essential for offline deployments where email reset is unavailable.
+- **Timing safety:** `timingSafeEqual` used for all HMAC signature comparisons.
+- **Pending cookie:** httpOnly, sameSite=strict, scoped to `/inloggen`, 5-minute TTL.
+
+### 6.4 User Management
+
+Admins manage accounts at `/beheer/gebruikers`. Operations:
+- Create account (name, email, initial password ≥12 chars, role, organisation)
+- Enable / disable account (`isEnabled` flag — disabled accounts cannot log in)
+- Change password, change role, change organisation assignment
+- Disable a user's TOTP (e.g. when they lose their authenticator app)
+
+Users set up their own TOTP at `/instellingen/mfa` after first login.
+
+### 6.5 User Roles
 
 | Role | Access |
 |---|---|
-| `admin` | Full access: create, read, update, archive all entities |
+| `admin` | Full access + user management (`/beheer/gebruikers`) |
 | `manager` | Read/write within their organisation |
 | `viewer` | Read-only access |
 
-> **Note:** Role-based access control at the API route level is not yet enforced (as of v1.0). All authenticated users can perform any operation. Role enforcement is the next security milestone.
+> **Note:** Role-based access control at the API route level is not yet enforced. All authenticated users can perform any operation. Role enforcement is the next security milestone.
 
-### 6.3 Organisation Scoping
+### 6.6 Organisation Scoping
 
 Users have an `organisationId` FK. Future versions will scope all API queries to the user's organisation. Currently, all authenticated users can see all organisations.
 
@@ -454,16 +494,17 @@ npm install
 
 # Environment variables
 cp .env.example .env.local
-# Set DATABASE_URL, NEXTAUTH_SECRET, RESEND_API_KEY, GITHUB_ID, GITHUB_SECRET
+# Required: DATABASE_URL, AUTH_SECRET (min 32 random chars — used to sign sessions and
+#   derive the TOTP encryption key; changing this invalidates all sessions and TOTP secrets)
 
 # Database
-npx drizzle-kit push    # apply schema to DB
-npm run db:seed         # optional: seed with test data
+npx drizzle-kit migrate  # apply all migrations (including auth columns)
+npm run db:seed          # optional: seed with test data
 
 # Dev server
-npm run dev             # http://localhost:3000
-npm run test            # run Vitest suite
-npm run test:watch      # watch mode
+npm run dev              # http://localhost:3000 — "Dev: direct inloggen als admin" button available
+npm run test             # run Vitest suite
+npm run test:watch       # watch mode
 ```
 
 ### 10.2 Code Conventions
@@ -499,7 +540,11 @@ __tests__/
 ├── unit/
 │   ├── api.test.ts          — lib/api.ts helpers (17 tests)
 │   ├── audit.test.ts        — lib/audit.ts (3 tests)
-│   └── dashboard.test.ts    — lib/dashboard.ts: detectPositionConflicts + collectUpcomingEvents (20 tests)
+│   ├── dashboard.test.ts    — lib/dashboard.ts: detectPositionConflicts + collectUpcomingEvents (20 tests)
+│   └── auth/
+│       ├── password.test.ts    — hashPassword / verifyPassword (7 tests)
+│       ├── totp.test.ts        — generateTotpSecret, generateTotpCode, verifyTotpCode, encrypt/decrypt (17 tests)
+│       └── authenticate.test.ts — full auth flow with mocked DB (11 tests)
 └── routes/
     ├── organisations.test.ts
     ├── teams.test.ts
@@ -533,7 +578,16 @@ dbMock.set([EXISTING], [UPDATED])   // two DB calls: first returns [EXISTING], s
 - `<title>` tags on every page via `metadata` / `generateMetadata`
 - Unit tests for dashboard business logic
 
-### v1.2 — Access Control
+### v1.2 — Offline Auth & User Management ✅ (complete)
+- Replaced Resend magic-link auth with offline username/password credentials
+- TOTP MFA (RFC 6238) with scrypt-hashed one-time recovery codes
+- AES-256-GCM encrypted TOTP secrets at rest; TOTP replay prevention
+- Brute-force lockout (5 attempts → 15-minute lockout)
+- Admin user management UI (`/beheer/gebruikers`): create, enable/disable, reset MFA
+- Self-service TOTP setup (`/instellingen/mfa`)
+- Two-step login flow with signed short-lived pending cookie
+
+### v1.3 — Access Control
 - Enforce role-based permissions at API route level
 - Scope queries to `user.organisationId`
 - Viewer role: disable all mutation buttons in UI
@@ -591,3 +645,11 @@ dbMock.set([EXISTING], [UPDATED])   // two DB calls: first returns [EXISTING], s
 ### ADR-009: Dashboard analytics as pure functions in `lib/dashboard.ts`
 **Decision:** Conflict detection and upcoming-event aggregation are plain TypeScript functions that take typed arrays and return typed arrays, with no DB access.  
 **Rationale:** The dashboard page already fetches all required data from the DB. Keeping the aggregation logic as pure functions makes it trivially testable in Vitest without needing DB mocks, and keeps the page component thin.
+
+### ADR-010: Zero-dependency offline credentials auth
+**Decision:** All cryptographic primitives (password hashing, TOTP, AES-256-GCM secret encryption, HMAC signing) are implemented using only Node.js built-in `crypto`. No new npm packages added.  
+**Rationale:** The application runs on an offline enterprise network with no access to external package registries post-deployment. Minimising the dependency surface also reduces the supply-chain attack risk and eliminates the need for runtime native compilation. `crypto.scrypt` (OWASP-recommended, memory-hard) and HMAC-SHA1 TOTP (RFC 6238) are well-specified and do not require a library.
+
+### ADR-011: Manual session creation; NextAuth for session reading only
+**Decision:** Login server actions create sessions manually (insert into `sessions` table + set `authjs.session-token` cookie). NextAuth is configured with zero providers; it only reads sessions via `auth()`.  
+**Rationale:** NextAuth's `CredentialsProvider.authorize()` is a single synchronous step. A two-step password + TOTP flow requires an intermediate "pending" state (signed cookie) between steps — something that doesn't fit the NextAuth credential provider model cleanly. Manual session creation reuses the exact same schema and cookie that NextAuth reads, so `auth()`, `signOut()`, and all session callbacks continue to work unchanged.

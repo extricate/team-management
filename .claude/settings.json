@@ -7,7 +7,27 @@
       "Read(//home/hsfnelissen/code/team-management/**)",
       "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/**)",
       "Read(///wsl.localhost/Ubuntu//**)",
-      "Bash(wslpath -u \"\\\\\\\\\\\\\\\\wsl.localhost\\\\\\\\Ubuntu\\\\\\\\home\\\\\\\\hsfnelissen\\\\\\\\code\\\\\\\\team-management\")"
+      "Bash(wslpath -u \"\\\\\\\\\\\\\\\\wsl.localhost\\\\\\\\Ubuntu\\\\\\\\home\\\\\\\\hsfnelissen\\\\\\\\code\\\\\\\\team-management\")",
+      "Bash(git -C \"\\\\\\\\\\\\\\\\wsl.localhost\\\\\\\\Ubuntu\\\\\\\\home\\\\\\\\hsfnelissen\\\\\\\\code\\\\\\\\team-management\" diff HEAD)",
+      "Bash(ls \"\\\\\\\\wsl.localhost\\\\Ubuntu\\\\home\\\\hsfnelissen\\\\code\\\\team-management\\\\app\\\\api\\\\users\")",
+      "PowerShell(wsl -e bash -c \"mkdir -p /home/hsfnelissen/code/team-management/__tests__/unit/auth && echo done\")",
+      "PowerShell(wsl -e bash -c \"mkdir -p /home/hsfnelissen/code/team-management/lib/auth && echo done\")",
+      "PowerShell(wsl -e bash -c \"cd /home/hsfnelissen/code/team-management && npx vitest run __tests__/unit/auth/password.test.ts 2>&1\")",
+      "PowerShell(wsl -e bash -lc \"cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/password.test.ts 2>&1\")",
+      "PowerShell(wsl -e bash -c \"export NVM_DIR=\\\\$HOME/.nvm && [ -s \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" ] && . \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" && which npm && which node\" 2>&1)",
+      "PowerShell(wsl bash -c \"source ~/.bashrc; which npm; echo node: $\\(which node\\); ls ~/.nvm/versions/node/ 2>/dev/null | head -3\" 2>&1)",
+      "Bash(npm run *)",
+      "Bash(node_modules/.bin/vitest run *)",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/node_modules/.bin/**)",
+      "Bash(\"C:\\\\Program Files\\\\Git\\\\bin\\\\bash.exe\" -lc \"cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/password.test.ts 2>&1\")",
+      "Bash(\"C:\\\\Program Files\\\\Git\\\\bin\\\\bash.exe\" -c \"pwd && ls /home 2>&1 | head -5\")",
+      "Bash(\"C:\\\\Program Files\\\\Git\\\\bin\\\\bash.exe\" -c \"ls /c/Users 2>&1 | head -3; ls 2>&1 | head -5\")",
+      "Bash('C:\\\\Program Files\\\\Git\\\\bin\\\\bash.exe' -c 'export PATH=\"/c/Users/hsfne/.nvm/versions/node/v25.5.0/bin:$PATH\" && node --version && npm run test -- __tests__/unit/auth/password.test.ts 2>&1')",
+      "Bash(wsl -e bash -c \"cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/password.test.ts 2>&1\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/password.test.ts 2>&1\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/totp.test.ts 2>&1\")",
+      "Bash(wsl -e bash -c \"source /home/hsfnelissen/.nvm/nvm.sh && cd /home/hsfnelissen/code/team-management && npm run test -- __tests__/unit/auth/authenticate.test.ts 2>&1\")",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/drizzle/**)"
     ]
   }
 }

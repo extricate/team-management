@@ -7,8 +7,8 @@ import {
 } from '@/lib/opf-types'
 
 describe('OPF_TYPES', () => {
-  it('contains exactly 10 types', () => {
-    expect(OPF_TYPES).toHaveLength(10)
+  it('contains exactly 11 types', () => {
+    expect(OPF_TYPES).toHaveLength(11)
   })
 
   it('every type has a unique key', () => {
@@ -24,7 +24,7 @@ describe('OPF_TYPES', () => {
   })
 
   it('naturalCategory is always one of the four allowed values', () => {
-    const allowed = new Set(['PERSEX', 'MATEX', 'Investeringen', 'extern'])
+    const allowed = new Set(['PERSEX', 'MATEX', 'Investeringen', 'extern', 'geen'])
     for (const t of OPF_TYPES) {
       expect(allowed.has(t.naturalCategory)).toBe(true)
     }

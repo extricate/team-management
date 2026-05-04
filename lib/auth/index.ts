@@ -1,19 +1,11 @@
 import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import Resend from "next-auth/providers/resend";
 import { db } from "@/lib/db";
 import { accounts, sessions, users, verificationTokens } from "@/lib/db/schema";
 import { authConfig } from "@/auth.config";
 
-function getEmailProvider() {
-  return Resend({
-    apiKey: process.env.RESEND_API_KEY,
-    from: process.env.SMTP_FROM,
-  });
-}
-
-// Full config — extends the edge-safe config with the DB adapter and providers.
-// Only imported in server components and API routes (Node.js runtime).
+// No email provider — auth is handled by server actions using credentials + TOTP.
+// NextAuth is kept only for session management (auth(), signOut(), session cookie).
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter: DrizzleAdapter(db, {
@@ -22,9 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     sessionsTable: sessions as any,
     verificationTokensTable: verificationTokens as any,
   }),
-  providers: [
-    getEmailProvider(),
-  ],
+  providers: [],
   callbacks: {
     session({ session, user }) {
       session.user.id = user.id;

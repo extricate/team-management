@@ -168,7 +168,9 @@ export const CommentSchema = z.object({
 export const CreateUserSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email(),
+  password: z.string().min(12, "Wachtwoord moet minimaal 12 tekens bevatten"),
   role: z.enum(["admin", "manager", "viewer"]).default("viewer"),
+  organisationId: optionalUuid,
 });
 
 export const UpdateUserSchema = z.object({
@@ -176,4 +178,6 @@ export const UpdateUserSchema = z.object({
   email: z.string().email().optional(),
   role: z.enum(["admin", "manager", "viewer"]).optional(),
   organisationId: optionalUuid,
+  isEnabled: z.boolean().optional(),
+  password: z.string().min(12, "Wachtwoord moet minimaal 12 tekens bevatten").optional(),
 });

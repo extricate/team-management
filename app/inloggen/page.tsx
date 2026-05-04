@@ -1,60 +1,63 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
-import { auth, signIn } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+import { devSignIn } from "./actions";
+import { PasswordLoginForm } from "./PasswordLoginForm";
+import { TotpLoginForm } from "./TotpLoginForm";
 
 export const metadata: Metadata = { title: "Inloggen – Teambeheer" };
 
-interface SearchParams { error?: string; callbackUrl?: string; }
-
-const errorMessages: Record<string, string> = {
-  OAuthSignin:   "Er is een fout opgetreden bij het inloggen. Probeer het opnieuw.",
-  OAuthCallback: "Er is een fout opgetreden bij het verwerken van uw inlogpoging.",
-  Default:       "Er is een onbekende fout opgetreden.",
-};
+interface SearchParams { stap?: string; callbackUrl?: string; fout?: string }
 
 function sanitizeRedirect(url?: string): string {
   if (url && url.startsWith("/") && !url.startsWith("//")) return url;
   return "/dashboard";
 }
 
+const sessionErrors: Record<string, string> = {
+  "sessie-verlopen": "Uw inlogsessie is verlopen. Probeer opnieuw in te loggen.",
+};
+
 export default async function InloggenPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const session = await auth();
-  const { error, callbackUrl } = await searchParams;
+  const { stap, callbackUrl, fout } = await searchParams;
   if (session?.user) redirect(sanitizeRedirect(callbackUrl));
 
-  const errorMessage = error
-    ? (errorMessages[error] ?? errorMessages.Default)
-    : null;
+  const isTotpStep = stap === "totp";
+  const sessionError = fout ? (sessionErrors[fout] ?? "Er is een fout opgetreden.") : null;
 
   return (
     <div style={{ maxWidth: "480px", margin: "0 auto" }}>
       <Heading level={1}>Inloggen</Heading>
-      <Paragraph>Log in om toegang te krijgen tot Teambeheer.</Paragraph>
 
-      {errorMessage && (
+      {!isTotpStep && (
+        <Paragraph>Log in om toegang te krijgen tot Teambeheer.</Paragraph>
+      )}
+
+      {isTotpStep && (
+        <Paragraph>Voer uw twee-factor verificatiecode in.</Paragraph>
+      )}
+
+      {sessionError && (
         <div role="alert" style={{ padding: "1rem", marginBottom: "1.5rem", borderLeft: "4px solid var(--rvo-color-rood-600)", background: "var(--rvo-color-rood-100)" }}>
-          <Paragraph style={{ margin: 0 }}>{errorMessage}</Paragraph>
+          <Paragraph style={{ margin: 0 }}>{sessionError}</Paragraph>
         </div>
       )}
 
-      <form
-        action={async (formData: FormData) => {
-          "use server";
-          await signIn("resend", { email: formData.get("email") as string, redirectTo: sanitizeRedirect(callbackUrl) });
-        }}
-        style={{ marginBottom: "2rem" }}
-      >
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="email" className="utrecht-form-label">E-mailadres</label>
-          <input id="email" name="email" type="email" required autoComplete="email"
-            className="utrecht-textbox" style={{ display: "block", width: "100%", marginTop: "0.5rem" }}
-            placeholder="naam@organisatie.nl" />
-        </div>
-        <button type="submit" className="utrecht-button utrecht-button--primary-action">
-          Stuur inloglink
-        </button>
-      </form>
+      {isTotpStep
+        ? <TotpLoginForm callbackUrl={callbackUrl} />
+        : <PasswordLoginForm callbackUrl={callbackUrl} />
+      }
+
+      {process.env.NODE_ENV === "development" && !isTotpStep && (
+        <form action={devSignIn} style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid var(--rvo-color-grijs-300)" }}>
+          <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/dashboard"} />
+          <button type="submit" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.85em" }}>
+            Dev: direct inloggen als admin
+          </button>
+        </form>
+      )}
     </div>
   );
 }
