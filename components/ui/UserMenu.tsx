@@ -3,11 +3,18 @@
 import { useState, useRef, useEffect } from "react";
 import { getInitials } from "@/lib/utils";
 import styles from "./UserMenu.module.css";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 interface UserMenuProps {
   userName?: string;
   onLogout: () => Promise<void>;
 }
+
+const userNavLinks = [
+  { href: "/beheer/gebruikers", label: "Gebruikers"   },
+  { href: "/instellingen",      label: "Instellingen" }
+]
 
 export function UserMenu({ userName, onLogout }: UserMenuProps) {
   const [open, setOpen] = useState(false);
@@ -25,6 +32,7 @@ export function UserMenu({ userName, onLogout }: UserMenuProps) {
   }, [open]);
 
   const initials = userName ? getInitials(userName) : "?";
+  const pathname = usePathname();
 
   return (
     <div ref={wrapperRef} className={styles.wrapper}>
@@ -50,6 +58,22 @@ export function UserMenu({ userName, onLogout }: UserMenuProps) {
               Uitloggen
             </button>
           </form>
+
+          <nav aria-label="Gebruikersmenu navigatie">
+            {userNavLinks.map((link) => {
+              const active = pathname === link.href || pathname.startsWith(link.href + "/");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`${styles.navLink}${active ? ` ${styles.navLinkActive}` : ""}`}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
       )}
     </div>
