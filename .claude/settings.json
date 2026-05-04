@@ -56,11 +56,16 @@
       "Bash(npx tsc *)",
       "PowerShell(wsl -e bash -c \"cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\")",
       "PowerShell(wsl -e bash -ic \"cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\")",
-      "PowerShell(wsl -e bash -c \"export NVM_DIR='/home/hsfnelissen/.nvm' && [ -s \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" ] && . \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\" | Select-Object -First 40)"
+      "PowerShell(wsl -e bash -c \"export NVM_DIR='/home/hsfnelissen/.nvm' && [ -s \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" ] && . \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\" | Select-Object -First 40)",
+      "Read(//home/hsfnelissen/code/team-management/lib/auth/**)",
+      "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/lib/auth/**)",
+      "PowerShell(wsl -e bash -c $cmd)"
     ],
     "additionalDirectories": [
       "\\home\\hsfnelissen\\code\\team-management\\components\\ui",
-      "\\\\wsl.localhost\\Ubuntu\\home\\hsfnelissen\\code\\team-management\\components\\ui"
+      "\\\\wsl.localhost\\Ubuntu\\home\\hsfnelissen\\code\\team-management\\components\\ui",
+      "\\home\\hsfnelissen\\code\\team-management\\lib\\auth",
+      "\\\\wsl.localhost\\Ubuntu\\home\\hsfnelissen\\code\\team-management\\lib\\auth"
     ]
   }
 }

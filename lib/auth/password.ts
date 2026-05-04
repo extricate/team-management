@@ -1,7 +1,12 @@
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
-const scryptAsync = promisify(scrypt);
+const scryptAsync = promisify(scrypt) as (
+  password: string | Buffer,
+  salt: string | Buffer,
+  keylen: number,
+  options: { N: number; r: number; p: number; maxmem: number }
+) => Promise<Buffer>;
 
 // OWASP-recommended scrypt parameters (N=2^15, r=8, p=1).
 // maxmem is set explicitly because OpenSSL 3 defaults to 32MB — exactly
@@ -15,7 +20,7 @@ const MAXMEM = 64 * 1024 * 1024;
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(SALT_BYTES);
-  const hash = await scryptAsync(password, salt, KEYLEN, { N, r, p, maxmem: MAXMEM }) as Buffer;
+  const hash = await scryptAsync(password, salt, KEYLEN, { N, r, p, maxmem: MAXMEM });
   return `${salt.toString("hex")}:${hash.toString("hex")}`;
 }
 
@@ -27,7 +32,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   try {
     const salt = Buffer.from(saltHex, "hex");
     const expected = Buffer.from(hashHex, "hex");
-    const actual = await scryptAsync(password, salt, KEYLEN, { N, r, p, maxmem: MAXMEM }) as Buffer;
+    const actual = await scryptAsync(password, salt, KEYLEN, { N, r, p, maxmem: MAXMEM });
     return timingSafeEqual(actual, expected);
   } catch {
     return false;
