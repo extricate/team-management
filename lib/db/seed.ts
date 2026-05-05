@@ -3,8 +3,8 @@ import { users } from "./schema";
 import { eq } from "drizzle-orm";
 
 async function seed() {
-  const adminEmail = "hsfnelissen@gmail.com";
-  const adminName = "Herman Nelissen";
+  const adminEmail  = process.env.ADMIN_EMAIL;
+  const adminName   = process.env.ADMIN_NAME;
 
   try {
     // Check if admin user already exists

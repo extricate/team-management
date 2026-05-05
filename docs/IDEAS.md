@@ -4,14 +4,14 @@
 ~~-- Add user management interface (creating and enabling management accounts);~~
 ~~-- Add MFA OTA code in the auth process;~~
 
-- Vacature publiceren: ja/nee als wens toevoegen in positie
+- Vacature publiceren: ja/nee als wens toevoegen in positie 
+- Vositiestatus: gewenst/toegezegd/gepland/etc.?
 - Posities (arbeidsplaatsen) loskoppelen van teams (je financieert een positie en koppelt die aan een team)
 - Add unique arbeidsplaatsnummers to positions
 - Add unique personnel ID to employees
 - When funding a position for the first time, store the intial funding source seperately from any future funding sources (to refer to later).
 
 - Audit log entries currently just store the basic crud operations. Please also store the actual change to the relevant data fields (in plain text). Or figure out a better solution.
-
 
 - Add user management interface (creating and enabling management accounts)
 - Add notifications (with access through the navbar) with notifications regarding the conflicts (which are currently in the dashboard).
