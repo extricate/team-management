@@ -3,8 +3,13 @@ import { users } from "./schema";
 import { eq } from "drizzle-orm";
 
 async function seed() {
-  const adminEmail  = process.env.ADMIN_EMAIL;
-  const adminName   = process.env.ADMIN_NAME;
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminName  = process.env.ADMIN_NAME;
+
+  if (!adminEmail) {
+    console.error("✗ ADMIN_EMAIL environment variable is required");
+    process.exit(1);
+  }
 
   try {
     // Check if admin user already exists
