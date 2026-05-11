@@ -18,7 +18,7 @@ interface Props {
   currentUserId: string;
 }
 
-export function CommentSection({ comments: initial, commentableType, commentableId, currentUserId }: Props) {
+export function CommentSection({ comments: initial = [], commentableType, commentableId, currentUserId }: Props) {
   const [comments, setComments] = useState(initial);
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);

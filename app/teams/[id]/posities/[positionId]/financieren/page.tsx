@@ -25,7 +25,7 @@ export default async function FinancierPositiePage({ params }: { params: Promise
     with: {
       fundingAllocations: {
         where: eq(fundingAllocations.status, "active"),
-        with: { financialSourceAmount: { with: { financialSource: true, financialType: true } } },
+        with: { financialSourceAmount: { with: { financialSource: true, type: true } } },
       },
     },
   });
@@ -44,7 +44,7 @@ export default async function FinancierPositiePage({ params }: { params: Promise
         ),
         with: {
           financialSource: { with: { organisation: true } },
-          financialType: true,
+          type: true,
           allocations: { where: eq(fundingAllocations.status, "active") },
         },
         orderBy: (a, { asc }) => [asc(a.financialSourceId)],
@@ -54,7 +54,7 @@ export default async function FinancierPositiePage({ params }: { params: Promise
   // Sort: preferred-category amounts first, then others
   const preferredCategory = opfDef?.naturalCategory;
   const availableAmounts = [...rawAmounts].sort((a, b) => {
-    const aMatch = preferredCategory && a.financialType?.type === preferredCategory ? 0 : 1;
+    const aMatch = preferredCategory && a.type?.type === preferredCategory ? 0 : 1;
     const bMatch = preferredCategory && b.financialType?.type === preferredCategory ? 0 : 1;
     return aMatch - bMatch;
   });

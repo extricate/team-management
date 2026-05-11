@@ -14,7 +14,7 @@ interface SourceAmount {
   amount: string;
   status: string;
   financialSource: { id: string; name: string; organisation: { name: string } };
-  financialType: FinancialType | null;
+  type: FinancialType | null;
   allocations: Allocation[];
 }
 interface Bestelling { id: string; atbNummer: string; geraamdBedrag: string | null; }
@@ -130,7 +130,7 @@ export function AllocateBestellingForm({ bestelling, availableAmounts, alreadyAl
               {availableAmounts.map(a => {
                 const used = a.allocations.filter(al => al.status === "active").reduce((s, al) => s + Number(al.amount ?? 0), 0);
                 const avail = Number(a.amount) - used;
-                const label = `${a.financialSource.name} – ${a.financialType?.type ?? "?"} ${a.financialType?.year ?? ""} (beschikbaar: €${avail.toLocaleString("nl-NL")})`;
+                const label = `${a.financialSource.name} – ${a.type?.type ?? "?"} ${a.type?.year ?? ""} (beschikbaar: €${avail.toLocaleString("nl-NL")})`;
                 return <option key={a.id} value={a.id}>{label}</option>;
               })}
             </select>
@@ -138,7 +138,7 @@ export function AllocateBestellingForm({ bestelling, availableAmounts, alreadyAl
             {selectedAmount && (
               <p className="form-hint" style={{ marginTop: "0.5rem" }}>
                 Beschikbaar in dit bedrag: <strong><CurrencyDisplay value={remainingBudget} /></strong>
-                {" "}({selectedAmount.financialType?.type} {selectedAmount.financialType?.year}, {selectedAmount.financialSource.organisation.name})
+                {" "}({selectedAmount.type?.type} {selectedAmount.type?.year}, {selectedAmount.financialSource.organisation.name})
               </p>
             )}
           </div>

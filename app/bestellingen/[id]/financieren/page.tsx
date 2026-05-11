@@ -19,7 +19,7 @@ export default async function FinancierBestellingPage({ params }: { params: Prom
       type: true,
       fundingAllocations: {
         where: eq(fundingAllocations.status, "active"),
-        with: { financialSourceAmount: { with: { financialSource: true, financialType: true } } },
+        with: { financialSourceAmount: { with: { financialSource: true, type: true } } },
       },
     },
   });
@@ -35,7 +35,7 @@ export default async function FinancierBestellingPage({ params }: { params: Prom
         ),
         with: {
           financialSource: { with: { organisation: true } },
-          financialType: true,
+          type: true,
           allocations: { where: eq(fundingAllocations.status, "active") },
         },
         orderBy: (a, { asc }) => [asc(a.financialSourceId)],
@@ -44,7 +44,7 @@ export default async function FinancierBestellingPage({ params }: { params: Prom
 
   // Only MATEX and Investeringen are valid for bestellingen
   const validAmounts = availableAmounts.filter(a =>
-    a.financialType?.type === "MATEX" || a.financialType?.type === "Investeringen"
+    a.type?.type === "MATEX" || a.type?.type === "Investeringen"
   );
 
   const alreadyAllocated = bestelling.fundingAllocations.reduce(

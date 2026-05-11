@@ -17,7 +17,7 @@ interface SourceAmount {
   amount: string;
   status: string;
   financialSource: { id: string; name: string; organisation: { name: string } };
-  financialType: FinancialType | null;
+  type: FinancialType | null;
   allocations: Allocation[];
 }
 interface Position {
@@ -97,7 +97,7 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
   const opfDef = getOPFType(position.opfType);
   const annualCost = Number(position.annualCost ?? 0);
   const selectedAmount = availableAmounts.find(a => a.id === selectedAmountId);
-  const selectedYear = selectedAmount?.financialType?.year ?? new Date().getFullYear();
+  const selectedYear = selectedAmount?.type?.year ?? new Date().getFullYear();
   const startDate = position.expectedStart ? new Date(position.expectedStart) : null;
   const endDate = position.expectedEnd ? new Date(position.expectedEnd) : null;
   const effectiveCost = annualCost > 0 ? prorateCost(annualCost, startDate, endDate, selectedYear) : 0;
@@ -108,7 +108,7 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
     : 0;
   const freeOnSelected = selectedAmount ? Number(selectedAmount.amount) - usedOnSelected : 0;
 
-  const selectedCategory = selectedAmount?.financialType?.type as FinancialTypeCategory | undefined;
+  const selectedCategory = selectedAmount?.type?.type as FinancialTypeCategory | undefined;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -249,8 +249,8 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
               {availableAmounts.map(a => {
                 const used = a.allocations.reduce((s, al) => s + Number(al.amount ?? 0), 0);
                 const free = Number(a.amount) - used;
-                const typeLabel = a.financialType ? ` · ${a.financialType.type} ${a.financialType.year}` : "";
-                const isPreferred = opfDef && a.financialType?.type === opfDef.naturalCategory;
+                const typeLabel = a.type ? ` · ${a.type.type} ${a.type.year}` : "";
+                const isPreferred = opfDef && a.type?.type === opfDef.naturalCategory;
                 return (
                   <option key={a.id} value={a.id}>
                     {isPreferred ? "✓ " : ""}{a.financialSource.name}{typeLabel} [{a.financialSource.organisation.name}] — {formatCurrency(free)} beschikbaar
@@ -261,7 +261,7 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
             {selectedAmount && (
               <p className="form-hint">
                 Totaal: {formatCurrency(Number(selectedAmount.amount))} · Gealloceerd: {formatCurrency(usedOnSelected)} · Vrij: {formatCurrency(freeOnSelected)}
-                {selectedAmount.financialType && (
+                {selectedAmount.type && (
                   <>
                     {" · "}
                     <span style={{
@@ -269,10 +269,10 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
                       padding: "0.0625rem 0.5rem",
                       fontSize: "0.75rem",
                       fontWeight: 600,
-                      background: CATEGORY_COLORS[(selectedAmount.financialType.type as OPFNaturalCategory) ?? "PERSEX"]?.bg,
-                      color: CATEGORY_COLORS[(selectedAmount.financialType.type as OPFNaturalCategory) ?? "PERSEX"]?.text,
+                      background: CATEGORY_COLORS[(selectedAmount.type.type as OPFNaturalCategory) ?? "PERSEX"]?.bg,
+                      color: CATEGORY_COLORS[(selectedAmount.type.type as OPFNaturalCategory) ?? "PERSEX"]?.text,
                     }}>
-                      {selectedAmount.financialType.type} {selectedAmount.financialType.year}
+                      {selectedAmount.type.type} {selectedAmount.type.year}
                     </span>
                   </>
                 )}

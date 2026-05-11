@@ -8,7 +8,7 @@ export const GET = withErrorHandling(async () => {
   await requireAuth();
   const rows = await db.query.fundingAllocations.findMany({
     with: {
-      financialSourceAmount: { with: { financialSource: true, financialType: true } },
+      financialSourceAmount: { with: { financialSource: true, type: true } },
       position: { with: { team: true } },
       team: true,
       createdByUser: true,

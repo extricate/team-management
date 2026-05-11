@@ -35,7 +35,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
       types: { orderBy: (t, { asc }) => [asc(t.year), asc(t.type)] },
       amounts: {
         with: {
-          financialType: true,
+          type: true,
           allocations: {
             with: {
               position: { with: { team: true } },
@@ -72,7 +72,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
   const totalBudget = source.amounts.reduce((s, a) => s + Number(a.amount), 0);
   const releasedBudget = source.amounts.filter(a => a.status === "released").reduce((s, a) => s + Number(a.amount), 0);
   const allocatedBudget = source.amounts.reduce((total, a) => {
-    const year = a.financialType?.year;
+    const year = a.type?.year;
     return total + a.allocations
       .filter(al => al.status === "active")
       .reduce((s, al) => {
@@ -284,7 +284,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
                       </div>
                     </td>
                     <td className="utrecht-table__cell" style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", whiteSpace: "nowrap" }}>
-                      {a.financialType ? `${a.financialType.type} ${a.financialType.year}` : "—"}
+                      {a.type ? `${a.type.type} ${a.type.year}` : "—"}
                     </td>
                     <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}><CurrencyDisplay value={al.amount} /></td>
                     <td className="utrecht-table__cell">{al.percentage ? `${al.percentage}%` : "—"}</td>

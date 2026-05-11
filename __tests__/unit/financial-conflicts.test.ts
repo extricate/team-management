@@ -6,7 +6,7 @@ function makeAmount(overrides: Partial<ConflictAmount> = {}): ConflictAmount {
     amount: 100_000,
     status: 'released',
     releaseDate: null,
-    financialType: { type: 'PERSEX', year: 2025 },
+    type: { type: 'PERSEX', year: 2025 },
     allocations: [],
     ...overrides,
   }
@@ -122,7 +122,7 @@ describe('detectFinancialConflicts', () => {
   })
 
   it('uses "Ongetypeerd bedrag" label when financialType is null', () => {
-    const amount = makeAmount({ financialType: null, amount: 5_000, allocations: [activeAlloc(9_000)] })
+    const amount = makeAmount({ type: null, amount: 5_000, allocations: [activeAlloc(9_000)] })
     const result = detectFinancialConflicts([amount])
     expect(result[0].message).toContain('Ongetypeerd bedrag')
   })

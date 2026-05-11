@@ -13,7 +13,7 @@ export const GET = withErrorHandling(async () => {
       type: true,
       organisation: true,
       fundingAllocations: {
-        with: { financialSourceAmount: { with: { financialSource: true, financialType: true } } },
+        with: { financialSourceAmount: { with: { financialSource: true, type: true } } },
       },
       positions: true,
     },

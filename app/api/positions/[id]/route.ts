@@ -14,7 +14,7 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
     with: {
       team: { with: { organisation: true } },
       assignments: { with: { employee: true, createdByUser: true } },
-      fundingAllocations: { with: { financialSourceAmount: { with: { financialSource: true, financialType: true } } } },
+      fundingAllocations: { with: { financialSourceAmount: { with: { financialSource: true, type: true } } } },
     },
   });
   if (!row || row.deletedAt) return notFound();

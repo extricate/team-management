@@ -9,7 +9,7 @@ export interface ConflictAmount {
   amount: string | number;
   status: "concept" | "released";
   releaseDate: Date | null | undefined;
-  financialType: { type: string; year: number } | null | undefined;
+  type: { type: string; year: number } | null | undefined;
   allocations: Array<{
     status: string;
     amount: string | number | null;
@@ -34,12 +34,12 @@ export function detectFinancialConflicts(amounts: ConflictAmount[]): FinancialCo
   const conflicts: FinancialConflict[] = [];
 
   for (const amount of amounts) {
-    const year = amount.financialType?.year;
+    const year = amount.type?.year;
     const activeAllocs = amount.allocations.filter(al => al.status === "active");
     const totalAllocated = activeAllocs.reduce((s, al) => s + effectiveAllocationAmount(al, year), 0);
     const amountVal = Number(amount.amount);
-    const label = amount.financialType
-      ? `${amount.financialType.type} ${amount.financialType.year}`
+    const label = amount.type
+      ? `${amount.type.type} ${amount.type.year}`
       : "Ongetypeerd bedrag";
 
     if (activeAllocs.length > 0 && totalAllocated > amountVal) {

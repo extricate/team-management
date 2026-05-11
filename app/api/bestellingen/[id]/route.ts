@@ -15,7 +15,7 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
       organisation: true,
       fundingAllocations: {
         with: {
-          financialSourceAmount: { with: { financialSource: true, financialType: true } },
+          financialSourceAmount: { with: { financialSource: true, type: true } },
           createdByUser: true,
         },
       },

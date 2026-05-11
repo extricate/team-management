@@ -329,7 +329,7 @@ export const financialTypesRelations = relations(financialTypes, ({ one }) => ({
 
 export const financialSourceAmountsRelations = relations(financialSourceAmounts, ({ one, many }) => ({
   financialSource: one(financialSources, { fields: [financialSourceAmounts.financialSourceId], references: [financialSources.id] }),
-  financialType: one(financialTypes, { fields: [financialSourceAmounts.financialTypeId], references: [financialTypes.id] }),
+  type: one(financialTypes, { fields: [financialSourceAmounts.financialTypeId], references: [financialTypes.id] }),
   allocations: many(fundingAllocations),
 }));
 

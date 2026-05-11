@@ -61,7 +61,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
   const sourceAmounts = allAmountIds.length > 0
     ? await db.query.financialSourceAmounts.findMany({
         where: inArray(financialSourceAmounts.id, allAmountIds),
-        with: { financialSource: true, financialType: true },
+        with: { financialSource: true, type: true },
       })
     : [];
   const sourceAmountMap = new Map(sourceAmounts.map(a => [a.id, a]));
@@ -266,8 +266,8 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                           {activeAllocations.map(fa => {
                             const sa = sourceAmountMap.get(fa.financialSourceAmountId);
-                            const typeSuffix = sa?.financialType
-                              ? ` · ${sa.financialType.type} ${sa.financialType.year}`
+                            const typeSuffix = sa?.type
+                              ? ` · ${sa.type.type} ${sa.type.year}`
                               : "";
                             return (
                               <div key={fa.id} style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)", display: "flex", alignItems: "center", gap: "0.25rem" }}>

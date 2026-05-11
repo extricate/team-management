@@ -32,7 +32,7 @@ export default async function BestellingDetailPage({ params }: { params: Promise
       organisation: true,
       fundingAllocations: {
         with: {
-          financialSourceAmount: { with: { financialSource: true, financialType: true } },
+          financialSourceAmount: { with: { financialSource: true, type: true } },
           createdByUser: true,
         },
         orderBy: (al, { desc }) => [desc(al.createdAt)],
@@ -71,8 +71,8 @@ export default async function BestellingDetailPage({ params }: { params: Promise
     .map(al => ({
       id: al.financialSourceAmount!.id,
       status: al.financialSourceAmount!.status as "concept" | "released",
-      financialType: al.financialSourceAmount!.financialType
-        ? { type: al.financialSourceAmount!.financialType.type, year: al.financialSourceAmount!.financialType.year }
+      financialType: al.financialSourceAmount!.type
+        ? { type: al.financialSourceAmount!.type.type, year: al.financialSourceAmount!.type.year }
         : undefined,
     }));
 
@@ -182,8 +182,8 @@ export default async function BestellingDetailPage({ params }: { params: Promise
                       : "—"}
                   </td>
                   <td className="utrecht-table__cell">
-                    {al.financialSourceAmount?.financialType
-                      ? `${al.financialSourceAmount.financialType.type} ${al.financialSourceAmount.financialType.year}`
+                    {al.financialSourceAmount?.type
+                      ? `${al.financialSourceAmount.type.type} ${al.financialSourceAmount.type.year}`
                       : "—"}
                   </td>
                   <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>
@@ -246,14 +246,15 @@ export default async function BestellingDetailPage({ params }: { params: Promise
       )}
 
       <CommentSection
-        commentableType="bestelling"
-        commentableId={id}
-        initialComments={rowComments.map(c => ({
+        comments={rowComments.map(c => ({
           id: c.id,
           body: c.body,
-          createdAt: c.createdAt.toISOString(),
+          createdAt: c.createdAt,
           createdByUser: { name: c.createdByUser.name, email: c.createdByUser.email },
         }))}
+        commentableType="bestelling"
+        commentableId={id}
+        currentUserId={session.user.id!}
       />
 
       <AuditLog events={audit} />
