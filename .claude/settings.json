@@ -59,22 +59,14 @@
       "PowerShell(wsl -e bash -c \"export NVM_DIR='/home/hsfnelissen/.nvm' && [ -s \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" ] && . \\\\\"\\\\$NVM_DIR/nvm.sh\\\\\" && cd /home/hsfnelissen/code/team-management && npx tsc --noEmit 2>&1\" | Select-Object -First 40)",
       "Read(//home/hsfnelissen/code/team-management/lib/auth/**)",
       "Read(///wsl.localhost/Ubuntu/home/hsfnelissen/code/team-management/lib/auth/**)",
-      "PowerShell(wsl -e bash -c $cmd)"
-    ],
-    "additionalDirectories": [
-      "\\home\\hsfnelissen\\code\\team-management\\components\\ui",
-      "\\\\wsl.localhost\\Ubuntu\\home\\hsfnelissen\\code\\team-management\\components\\ui",
-      "\\home\\hsfnelissen\\code\\team-management\\lib\\auth",
-      "\\\\wsl.localhost\\Ubuntu\\home\\hsfnelissen\\code\\team-management\\lib\\auth"
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(list\\(d.get\\('tables',{}\\).keys\\(\\)\\), indent=2\\)\\)\")",
-      "Bash(mkdir -p /home/hsfnelissen/code/team-management/app/bestellingen/nieuw \\\\ *)",
-      "Bash(python3 -c ' *)",
-      "Bash(node --env-file=.env --env-file=.env.local -e ' *)",
-      "Bash(node --env-file=.env --env-file=.env.local --input-type=module)",
-      "WebFetch(domain:orm.drizzle.team)",
-      "Bash(docker compose *)",
-      "Bash(npm run *)",
-      "Bash(xxd)"
+      "PowerShell(wsl -e bash -c $cmd)",
+      "Bash(git fetch *)",
+      "Bash(git ls-tree *)",
+      "Bash(git checkout *)",
+      "Bash(git rm *)",
+      "Bash(kill 48324)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/inloggen)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "/home/hsfnelissen/code/team-management/app/bestellingen/[id]"

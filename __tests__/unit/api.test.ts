@@ -114,9 +114,11 @@ describe('withErrorHandling', () => {
   })
 
   it('converts unexpected errors into a 500 response', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const handler = vi.fn().mockRejectedValue(new Error('DB timeout'))
     const res = await withErrorHandling(handler)()
     expect(res.status).toBe(500)
+    consoleSpy.mockRestore()
   })
 })
 
