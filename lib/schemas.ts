@@ -77,6 +77,7 @@ export const PositionSchema = z.object({
 
 export const PositionUpdateSchema = z.object({
   teamId: optionalUuid,
+  bestellingId: z.string().uuid().optional().nullable(),
   type: z.string().min(1).optional(),
   opfType: z.string().optional().nullable(),
   positionCode: z.string().optional().nullable(),
@@ -136,17 +137,40 @@ export const FinancialSourceAmountSchema = z.object({
   releaseDate: optionalDatetime,
 });
 
+// ── Bestelling ─────────────────────────────────────────────────────────────────
+export const BestellingSchema = z.object({
+  organisationId: uuidField,
+  typeId: uuidField,
+  atbNummer: z.string().min(1).max(100),
+  omschrijving: z.string().min(1).max(500),
+  geraamdBedrag: z.number().positive().optional(),
+  werkelijkBedrag: z.number().positive().optional(),
+  aanvraagDatum: optionalDatetime,
+  notities: z.string().optional(),
+});
+
+export const BestellingUpdateSchema = z.object({
+  typeId: optionalUuid,
+  atbNummer: z.string().min(1).max(100).optional(),
+  omschrijving: z.string().min(1).max(500).optional(),
+  geraamdBedrag: z.number().positive().optional().nullable(),
+  werkelijkBedrag: z.number().positive().optional().nullable(),
+  aanvraagDatum: nullableDatetime,
+  notities: z.string().optional().nullable(),
+});
+
 // ── FundingAllocation ──────────────────────────────────────────────────────────
 export const FundingAllocationSchema = z.object({
   financialSourceAmountId: uuidField,
   positionId: optionalUuid,
   teamId: optionalUuid,
+  bestellingId: optionalUuid,
   amount: z.string().optional(),
   percentage: z.string().optional(),
   startDate: optionalDatetime,
   endDate: optionalDatetime,
   reason: z.string().optional(),
-}).refine(d => d.positionId || d.teamId, { message: "positionId or teamId required" });
+}).refine(d => d.positionId || d.teamId || d.bestellingId, { message: "positionId, teamId, or bestellingId required" });
 
 export const FundingAllocationUpdateSchema = z.object({
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional().nullable(),

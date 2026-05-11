@@ -37,6 +37,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
         where: isNull(positions.deletedAt),
         with: {
           assignments: { with: { employee: true } },
+          bestelling: true,
           // Load allocations without nested source amount to avoid alias collision
           // (teams_positions_fundingAllocations_financialSourceAmount_financialSource/Type
           // both truncate to the same 63-char PostgreSQL identifier)
@@ -217,6 +218,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                           {pos.expectedStart && <>Start: {formatDate(pos.expectedStart)}</>}
                           {pos.expectedStart && pos.expectedEnd && " · "}
                           {pos.expectedEnd && <>Einde: {formatDate(pos.expectedEnd)}</>}
+                        </div>
+                      )}
+                      {pos.bestelling && (
+                        <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginTop: "0.375rem" }}>
+                          ATB: <Link href={`/bestellingen/${pos.bestelling.id}`} className="utrecht-link"><code>{pos.bestelling.atbNummer}</code></Link>
                         </div>
                       )}
                     </div>

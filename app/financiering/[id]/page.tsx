@@ -40,6 +40,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
             with: {
               position: { with: { team: true } },
               team: true,
+              bestelling: true,
               createdByUser: true,
             },
             orderBy: (al, { desc }) => [desc(al.createdAt)],
@@ -277,6 +278,8 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
                           ? <><strong>{al.position.type}</strong> in <Link href={`/teams/${al.position.team.id}`} className="utrecht-link">{al.position.team.name}</Link></>
                           : al.team
                           ? <><Link href={`/teams/${al.team.id}`} className="utrecht-link">{al.team.name}</Link> (team)</>
+                          : al.bestelling
+                          ? <><Link href={`/bestellingen/${al.bestelling.id}`} className="utrecht-link"><code>{al.bestelling.atbNummer}</code></Link> (bestelling)</>
                           : "—"}
                       </div>
                     </td>

@@ -16,6 +16,9 @@
 - Add user management interface (creating and enabling management accounts)
 - Add notifications (with access through the navbar) with notifications regarding the conflicts (which are currently in the dashboard).
 - Add sorting (on table headers?) on pages like employees, teams, finance sources, etc.
+~~- Add notifications (with access through the navbar) with notifications regarding the conflicts (which are currently in the dashboard).~~
+~~- Add sorting (on table headers?) on pages like employees, teams, finance sources, etc.~~
+- Add financial requests other than personnel (which does deduct from financial sources, i.e. investeringen or matex): ATBs, etc.
 - Export function for the entire database to an excel document
 - Import function for the entire database from an excel document
 - Easy backup functionality

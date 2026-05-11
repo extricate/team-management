@@ -26,7 +26,8 @@ export type CommentableType =
   | "employee"
   | "position"
   | "financialSource"
-  | "fundingAllocation";
+  | "fundingAllocation"
+  | "bestelling";
 
 // ── Users ──────────────────────────────────────────────────────────────────────
 export const users = pgTable("users", {
@@ -127,10 +128,36 @@ export const employees = pgTable("employees", {
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+// ── Bestelling Types ───────────────────────────────────────────────────────────
+export const bestellingTypes = pgTable("bestelling_types", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  naam: text("naam").notNull(),
+  omschrijving: text("omschrijving"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+// ── Bestellingen ───────────────────────────────────────────────────────────────
+export const bestellingen = pgTable("bestellingen", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  typeId: uuid("type_id").notNull().references(() => bestellingTypes.id),
+  atbNummer: text("atb_nummer").notNull(),
+  omschrijving: text("omschrijving").notNull(),
+  geraamdBedrag: numeric("geraamd_bedrag", { precision: 15, scale: 2 }),
+  werkelijkBedrag: numeric("werkelijk_bedrag", { precision: 15, scale: 2 }),
+  aanvraagDatum: timestamp("aanvraag_datum", { mode: "date" }),
+  notities: text("notities"),
+  deletedAt: timestamp("deleted_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 // ── Positions ──────────────────────────────────────────────────────────────────
 export const positions = pgTable("positions", {
   id: uuid("id").primaryKey().defaultRandom(),
   teamId: uuid("team_id").notNull().references(() => teams.id),
+  bestellingId: uuid("bestelling_id").references(() => bestellingen.id),
   type: text("type").notNull(), // identifying name, e.g. "Product Owner", "Scrum Master"
   opfType: text("opf_type"), // OPF classification key, e.g. "OPF1", "OPF9-inhuur"
   positionCode: text("position_code"),
@@ -207,12 +234,13 @@ export const financialSourceAmounts = pgTable("financial_source_amounts", {
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-// ── Funding Allocations (source amount → position or team) ────────────────────
+// ── Funding Allocations (source amount → position, team, or bestelling) ──────
 export const fundingAllocations = pgTable("funding_allocations", {
   id: uuid("id").primaryKey().defaultRandom(),
   financialSourceAmountId: uuid("financial_source_amount_id").notNull().references(() => financialSourceAmounts.id),
   positionId: uuid("position_id").references(() => positions.id),
   teamId: uuid("team_id").references(() => teams.id),
+  bestellingId: uuid("bestelling_id").references(() => bestellingen.id),
   amount: numeric("amount", { precision: 15, scale: 2 }),
   percentage: numeric("percentage", { precision: 5, scale: 2 }),
   startDate: timestamp("start_date", { mode: "date" }),
@@ -254,6 +282,7 @@ export const organisationsRelations = relations(organisations, ({ many }) => ({
   employees: many(employees),
   financialSources: many(financialSources),
   users: many(users),
+  bestellingen: many(bestellingen),
 }));
 
 export const teamsRelations = relations(teams, ({ one, many }) => ({
@@ -271,6 +300,7 @@ export const employeesRelations = relations(employees, ({ one, many }) => ({
 
 export const positionsRelations = relations(positions, ({ one, many }) => ({
   team: one(teams, { fields: [positions.teamId], references: [teams.id] }),
+  bestelling: one(bestellingen, { fields: [positions.bestellingId], references: [bestellingen.id] }),
   assignments: many(positionAssignments),
   fundingAllocations: many(fundingAllocations),
 }));
@@ -315,7 +345,19 @@ export const fundingAllocationsRelations = relations(fundingAllocations, ({ one 
   financialSourceAmount: one(financialSourceAmounts, { fields: [fundingAllocations.financialSourceAmountId], references: [financialSourceAmounts.id] }),
   position: one(positions, { fields: [fundingAllocations.positionId], references: [positions.id] }),
   team: one(teams, { fields: [fundingAllocations.teamId], references: [teams.id] }),
+  bestelling: one(bestellingen, { fields: [fundingAllocations.bestellingId], references: [bestellingen.id] }),
   createdByUser: one(users, { fields: [fundingAllocations.createdBy], references: [users.id] }),
+}));
+
+export const bestellingTypesRelations = relations(bestellingTypes, ({ many }) => ({
+  bestellingen: many(bestellingen),
+}));
+
+export const bestellingenRelations = relations(bestellingen, ({ one, many }) => ({
+  organisation: one(organisations, { fields: [bestellingen.organisationId], references: [organisations.id] }),
+  type: one(bestellingTypes, { fields: [bestellingen.typeId], references: [bestellingTypes.id] }),
+  fundingAllocations: many(fundingAllocations),
+  positions: many(positions),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -328,6 +370,10 @@ export const totpRecoveryCodesRelations = relations(totpRecoveryCodes, ({ one })
 }));
 
 // ── TypeScript row types ───────────────────────────────────────────────────────
+export type BestellingType = typeof bestellingTypes.$inferSelect;
+export type NewBestellingType = typeof bestellingTypes.$inferInsert;
+export type Bestelling = typeof bestellingen.$inferSelect;
+export type NewBestelling = typeof bestellingen.$inferInsert;
 export type Organisation = typeof organisations.$inferSelect;
 export type NewOrganisation = typeof organisations.$inferInsert;
 export type Team = typeof teams.$inferSelect;
