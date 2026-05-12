@@ -41,6 +41,7 @@ export default async function MedewerkersPage({
         ilike(employees.firstName, `%${q}%`),
         ilike(employees.lastName, `%${q}%`),
         ilike(employees.prefixName, `%${q}%`),
+        ilike(employees.personeelsnummer, `%${q}%`),
       )!,
     );
   }

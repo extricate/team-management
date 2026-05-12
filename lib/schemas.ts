@@ -49,6 +49,7 @@ export const TeamUpdateSchema = z.object({
 // ── Employee ───────────────────────────────────────────────────────────────────
 export const EmployeeSchema = z.object({
   organisationId: uuidField,
+  personeelsnummer: z.string().min(1).max(50).optional(),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
   prefixName: z.string().max(20).optional(),
@@ -58,6 +59,7 @@ export const EmployeeUpdateSchema = z.object({
   firstName: z.string().min(1).max(100).optional(),
   lastName: z.string().min(1).max(100).optional(),
   prefixName: z.string().max(20).optional().nullable(),
+  personeelsnummer: z.string().min(1).max(50).optional().nullable(),
   organisationId: optionalUuid,
 });
 

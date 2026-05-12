@@ -21,11 +21,13 @@ export function NieuweMedewerkerForm({ orgs, defaultOrganisationId }: Props) {
     setSaving(true);
     setError(null);
     try {
+      const personeelsnummer = (fd.get("personeelsnummer") as string) || undefined;
       const res = await fetch("/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organisationId: fd.get("organisationId"),
+          personeelsnummer,
           firstName: fd.get("firstName"),
           prefixName: (fd.get("prefixName") as string) || undefined,
           lastName: fd.get("lastName"),
@@ -65,6 +67,11 @@ export function NieuweMedewerkerForm({ orgs, defaultOrganisationId }: Props) {
             <option value="">— Kies een organisatie —</option>
             {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="personeelsnummer" className="utrecht-form-label">Personeelsnummer</label>
+          <input id="personeelsnummer" name="personeelsnummer" type="text" className="utrecht-textbox" maxLength={50} />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "1rem", alignItems: "end" }}>

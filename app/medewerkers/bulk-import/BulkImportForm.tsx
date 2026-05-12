@@ -11,7 +11,7 @@ interface ImportResults {
   errors: string[];
 }
 
-const CSV_TEMPLATE = "voornaam,tussenvoegsel,achternaam,organisatie\nJan,,Jansen,Mijn Organisatie\nMarie,van der,Berg,Mijn Organisatie\n";
+const CSV_TEMPLATE = "personeelsnummer,voornaam,tussenvoegsel,achternaam,organisatie\nP001,Jan,,Jansen,Mijn Organisatie\nP002,Marie,van der,Berg,Mijn Organisatie\n";
 
 function downloadTemplate() {
   const blob = new Blob([CSV_TEMPLATE], { type: "text/csv;charset=utf-8;" });
@@ -85,7 +85,7 @@ export function BulkImportForm() {
       <section style={{ marginBottom: "2rem", padding: "1.25rem", background: "var(--rvo-color-grijs-100, #f5f5f5)", borderRadius: "4px" }}>
         <strong style={{ display: "block", marginBottom: "0.5rem" }}>CSV-formaat</strong>
         <p style={{ fontSize: "0.875rem", marginBottom: "0.75rem", color: "var(--rvo-color-grijs-700)" }}>
-          Vereiste kolommen: <code>voornaam</code>, <code>achternaam</code>, <code>organisatie</code>. Optioneel: <code>tussenvoegsel</code>.
+          Vereiste kolommen: <code>voornaam</code>, <code>achternaam</code>, <code>organisatie</code>. Optioneel: <code>tussenvoegsel</code>, <code>personeelsnummer</code>.
           De kolom <code>organisatie</code> moet overeenkomen met een bestaande organisatienaam.
         </p>
         <button type="button" onClick={downloadTemplate} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>

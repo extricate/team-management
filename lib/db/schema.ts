@@ -121,6 +121,7 @@ export const teams = pgTable("teams", {
 export const employees = pgTable("employees", {
   id: uuid("id").primaryKey().defaultRandom(),
   organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  personeelsnummer: text("personeelsnummer").unique(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   prefixName: text("prefix_name"),

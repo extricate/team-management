@@ -64,6 +64,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
           <Heading level={1} style={{ margin: "0 0 0.25rem 0" }}>{fullName}</Heading>
           <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
             {emp.organisation.name}
+            {emp.personeelsnummer && <> · <span title="Personeelsnummer">{emp.personeelsnummer}</span></>}
             {activePos && <> · Positie: <strong>{activePos.position.type}</strong></>}
           </Paragraph>
         </div>

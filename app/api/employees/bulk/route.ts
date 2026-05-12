@@ -65,6 +65,7 @@ export const POST = withErrorHandling(async (req: Request) => {
 
   const col = (name: string) => headers.indexOf(name);
   const tussenIdx = col("tussenvoegsel");
+  const persNrIdx = col("personeelsnummer");
 
   const allOrgs = await db.select().from(organisations).where(isNull(organisations.deletedAt));
   const orgByName = new Map(allOrgs.map(o => [o.name.toLowerCase(), o]));
@@ -74,10 +75,11 @@ export const POST = withErrorHandling(async (req: Request) => {
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    const firstName  = row[col("voornaam")]?.trim();
-    const lastName   = row[col("achternaam")]?.trim();
-    const prefixName = tussenIdx >= 0 ? (row[tussenIdx]?.trim() || null) : null;
-    const orgRef     = row[col("organisatie")]?.trim();
+    const firstName       = row[col("voornaam")]?.trim();
+    const lastName        = row[col("achternaam")]?.trim();
+    const prefixName      = tussenIdx >= 0 ? (row[tussenIdx]?.trim() || null) : null;
+    const personeelsnummer = persNrIdx >= 0 ? (row[persNrIdx]?.trim() || null) : null;
+    const orgRef          = row[col("organisatie")]?.trim();
 
     if (!firstName || !lastName || !orgRef) {
       results.errors.push(`Rij ${i + 1}: voornaam, achternaam en organisatie zijn verplicht.`);
@@ -105,6 +107,7 @@ export const POST = withErrorHandling(async (req: Request) => {
       firstName,
       lastName,
       prefixName,
+      personeelsnummer,
       organisationId: org.id,
     }).returning();
 

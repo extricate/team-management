@@ -27,6 +27,7 @@ export function MedewerkerEditForm({ emp, orgs }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organisationId: fd.get("organisationId"),
+          personeelsnummer: (fd.get("personeelsnummer") as string) || null,
           firstName: fd.get("firstName"),
           prefixName: (fd.get("prefixName") as string) || null,
           lastName: fd.get("lastName"),
@@ -71,6 +72,11 @@ export function MedewerkerEditForm({ emp, orgs }: Props) {
           <select id="organisationId" name="organisationId" className="utrecht-select" required defaultValue={emp.organisationId}>
             {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="personeelsnummer" className="utrecht-form-label">Personeelsnummer</label>
+          <input id="personeelsnummer" name="personeelsnummer" type="text" className="utrecht-textbox" maxLength={50} defaultValue={emp.personeelsnummer ?? ""} />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "1rem", alignItems: "end" }}>
