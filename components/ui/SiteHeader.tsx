@@ -18,7 +18,6 @@ export function SiteHeader({ userName }: SiteHeaderProps) {
     <header className={styles.header}>
       <div className={styles.colorBand} aria-hidden="true" />
       <div className={styles.inner}>
-        <div className={styles.innerGrouped}>
         <Link href="/" className={styles.logo} aria-label="Teambeheer — naar startpagina">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
             <rect width="32" height="32" rx="2" fill="#F9B000" />
@@ -26,8 +25,6 @@ export function SiteHeader({ userName }: SiteHeaderProps) {
           </svg>
           <span className={styles.logoText}>Teambeheer</span>
         </Link>
-        <SiteHeaderNav />
-        </div>
         <div className={styles.actions}>
           <SearchBar />
           <NotificationBell />
@@ -36,6 +33,11 @@ export function SiteHeader({ userName }: SiteHeaderProps) {
           ) : (
             <Link href="/inloggen" className={styles.navLink}>Inloggen</Link>
           )}
+        </div>
+      </div>
+      <div className={styles.navRow}>
+        <div className={styles.navInner}>
+          <SiteHeaderNav />
         </div>
       </div>
     </header>

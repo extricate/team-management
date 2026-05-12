@@ -80,7 +80,8 @@
       "Bash(python3 -c ' *)",
       "Bash(xargs cat)",
       "Bash(./node_modules/.bin/tsc --noEmit)",
-      "Bash(mkdir -p /home/hsfnelissen/code/team-management/app/api/company-persex/\\\\[id\\\\])"
+      "Bash(mkdir -p /home/hsfnelissen/code/team-management/app/api/company-persex/\\\\[id\\\\])",
+      "WebSearch"
     ],
     "additionalDirectories": [
       "/home/hsfnelissen/code/team-management/app/bestellingen/[id]",
