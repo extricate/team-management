@@ -127,6 +127,18 @@ export const FinancialSourceUpdateSchema = z.object({
   organisationId: optionalUuid,
 });
 
+// ── CompanyPersexBudget ────────────────────────────────────────────────────────
+export const CompanyPersexBudgetSchema = z.object({
+  year: z.number().int().min(2000).max(2100),
+  amount: z.number().nonnegative(),
+  status: z.enum(["concept", "released"]).default("concept"),
+});
+
+export const CompanyPersexBudgetUpdateSchema = z.object({
+  amount: z.number().nonnegative().optional(),
+  status: z.enum(["concept", "released"]).optional(),
+});
+
 // ── FinancialSourceAmount ──────────────────────────────────────────────────────
 export const FinancialSourceAmountSchema = z.object({
   financialSourceId: uuidField,
@@ -161,7 +173,8 @@ export const BestellingUpdateSchema = z.object({
 
 // ── FundingAllocation ──────────────────────────────────────────────────────────
 export const FundingAllocationSchema = z.object({
-  financialSourceAmountId: uuidField,
+  financialSourceAmountId: optionalUuid,
+  companyPersexBudgetId: optionalUuid,
   positionId: optionalUuid,
   teamId: optionalUuid,
   bestellingId: optionalUuid,
@@ -170,7 +183,9 @@ export const FundingAllocationSchema = z.object({
   startDate: optionalDatetime,
   endDate: optionalDatetime,
   reason: z.string().optional(),
-}).refine(d => d.positionId || d.teamId || d.bestellingId, { message: "positionId, teamId, or bestellingId required" });
+})
+  .refine(d => d.positionId || d.teamId || d.bestellingId, { message: "positionId, teamId, or bestellingId required" })
+  .refine(d => !!(d.financialSourceAmountId) !== !!(d.companyPersexBudgetId), { message: "exactly one of financialSourceAmountId or companyPersexBudgetId required" });
 
 export const FundingAllocationUpdateSchema = z.object({
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional().nullable(),

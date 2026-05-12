@@ -200,6 +200,16 @@ export const positionAssignments = pgTable("position_assignments", {
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+// ── Company Persex (singleton government-wide personnel budget) ───────────────
+export const companyPersexBudgets = pgTable("company_persex_budgets", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  year: integer("year").notNull().unique(),
+  amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
+  status: text("status").$type<AmountStatus>().notNull().default("concept"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 // ── Financial Sources ──────────────────────────────────────────────────────────
 export const financialSources = pgTable("financial_sources", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -234,10 +244,11 @@ export const financialSourceAmounts = pgTable("financial_source_amounts", {
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-// ── Funding Allocations (source amount → position, team, or bestelling) ──────
+// ── Funding Allocations (source amount or company persex → position, team, or bestelling) ──
 export const fundingAllocations = pgTable("funding_allocations", {
   id: uuid("id").primaryKey().defaultRandom(),
-  financialSourceAmountId: uuid("financial_source_amount_id").notNull().references(() => financialSourceAmounts.id),
+  financialSourceAmountId: uuid("financial_source_amount_id").references(() => financialSourceAmounts.id),
+  companyPersexBudgetId: uuid("company_persex_budget_id").references(() => companyPersexBudgets.id),
   positionId: uuid("position_id").references(() => positions.id),
   teamId: uuid("team_id").references(() => teams.id),
   bestellingId: uuid("bestelling_id").references(() => bestellingen.id),
@@ -333,6 +344,10 @@ export const financialSourceAmountsRelations = relations(financialSourceAmounts,
   allocations: many(fundingAllocations),
 }));
 
+export const companyPersexBudgetsRelations = relations(companyPersexBudgets, ({ many }) => ({
+  allocations: many(fundingAllocations),
+}));
+
 export const commentsRelations = relations(comments, ({ one }) => ({
   createdByUser: one(users, { fields: [comments.createdBy], references: [users.id] }),
 }));
@@ -343,6 +358,7 @@ export const auditEventsRelations = relations(auditEvents, ({ one }) => ({
 
 export const fundingAllocationsRelations = relations(fundingAllocations, ({ one }) => ({
   financialSourceAmount: one(financialSourceAmounts, { fields: [fundingAllocations.financialSourceAmountId], references: [financialSourceAmounts.id] }),
+  companyPersexBudget: one(companyPersexBudgets, { fields: [fundingAllocations.companyPersexBudgetId], references: [companyPersexBudgets.id] }),
   position: one(positions, { fields: [fundingAllocations.positionId], references: [positions.id] }),
   team: one(teams, { fields: [fundingAllocations.teamId], references: [teams.id] }),
   bestelling: one(bestellingen, { fields: [fundingAllocations.bestellingId], references: [bestellingen.id] }),
@@ -384,6 +400,8 @@ export type Position = typeof positions.$inferSelect;
 export type NewPosition = typeof positions.$inferInsert;
 export type TeamMembership = typeof teamMemberships.$inferSelect;
 export type PositionAssignment = typeof positionAssignments.$inferSelect;
+export type CompanyPersexBudget = typeof companyPersexBudgets.$inferSelect;
+export type NewCompanyPersexBudget = typeof companyPersexBudgets.$inferInsert;
 export type FinancialSource = typeof financialSources.$inferSelect;
 export type FinancialType = typeof financialTypes.$inferSelect;
 export type FinancialSourceAmount = typeof financialSourceAmounts.$inferSelect;

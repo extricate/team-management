@@ -15,13 +15,6 @@ RUN mkdir -p public
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# Stage: Migrator
-FROM node:20-alpine AS migrator
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-# Drizzle migration logic here
-
 # Stage 3: Production runner
 FROM node:20-alpine AS runner
 WORKDIR /app

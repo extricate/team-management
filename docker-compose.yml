@@ -16,21 +16,6 @@ services:
       timeout: 5s
       retries: 5
 
-  migrate:
-    env_file:
-      - .env
-    build: 
-      context: .
-      target: migrator # Or 'builder' if you need the source code
-    command: npx drizzle-kit migrate --config=drizzle.config.js
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/team_management
-      ENV: ${ENV}
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: on-failure
-
   # app:
   #   env_file:
   #     - .env

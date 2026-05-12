@@ -21,6 +21,11 @@ export interface ConflictAmount {
   }>;
 }
 
+export function calcUtilizationPercent(allocated: number, budget: number): number {
+  if (budget === 0) return 0;
+  return Math.round((allocated / budget) * 100);
+}
+
 function effectiveAllocationAmount(
   al: ConflictAmount["allocations"][number],
   year: number | undefined,

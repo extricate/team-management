@@ -4,7 +4,7 @@ import { redirect, notFound } from "next/navigation";
 export const metadata: Metadata = { title: "Positie financieren – Teambeheer" };
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { teams, positions, financialSourceAmounts, financialSources, fundingAllocations } from "@/lib/db/schema";
+import { teams, positions, financialSourceAmounts, financialSources, fundingAllocations, companyPersexBudgets } from "@/lib/db/schema";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { AllocatePositionForm } from "./AllocatePositionForm";
 import { getOPFType } from "@/lib/opf-types";
@@ -25,7 +25,10 @@ export default async function FinancierPositiePage({ params }: { params: Promise
     with: {
       fundingAllocations: {
         where: eq(fundingAllocations.status, "active"),
-        with: { financialSourceAmount: { with: { financialSource: true, type: true } } },
+        with: {
+          financialSourceAmount: { with: { financialSource: true, type: true } },
+          companyPersexBudget: true,
+        },
       },
     },
   });
@@ -33,10 +36,9 @@ export default async function FinancierPositiePage({ params }: { params: Promise
 
   const opfDef = getOPFType(position.opfType);
 
-  // All released source amounts across all non-deleted financial sources
+  // Released financial source amounts
   const allSourceIds = (await db.select({ id: financialSources.id }).from(financialSources).where(isNull(financialSources.deletedAt))).map(s => s.id);
-
-  const rawAmounts = allSourceIds.length > 0
+  const availableAmounts = allSourceIds.length > 0
     ? await db.query.financialSourceAmounts.findMany({
         where: and(
           eq(financialSourceAmounts.status, "released"),
@@ -51,11 +53,17 @@ export default async function FinancierPositiePage({ params }: { params: Promise
       })
     : [];
 
-  // Sort: preferred-category amounts first, then others
+  // All company persex budgets (soft cap — always available regardless of status)
+  const persexBudgets = await db.query.companyPersexBudgets.findMany({
+    with: { allocations: { where: eq(fundingAllocations.status, "active") } },
+    orderBy: (b, { asc }) => [asc(b.year)],
+  });
+
+  // Sort source amounts: preferred category first
   const preferredCategory = opfDef?.naturalCategory;
-  const availableAmounts = [...rawAmounts].sort((a, b) => {
+  const sortedAmounts = [...availableAmounts].sort((a, b) => {
     const aMatch = preferredCategory && a.type?.type === preferredCategory ? 0 : 1;
-    const bMatch = preferredCategory && b.financialType?.type === preferredCategory ? 0 : 1;
+    const bMatch = preferredCategory && b.type?.type === preferredCategory ? 0 : 1;
     return aMatch - bMatch;
   });
 
@@ -69,7 +77,14 @@ export default async function FinancierPositiePage({ params }: { params: Promise
       position={position}
       teamId={team.id}
       teamName={team.name}
-      availableAmounts={availableAmounts}
+      availableAmounts={sortedAmounts}
+      persexBudgets={persexBudgets.map(b => ({
+        id: b.id,
+        year: b.year,
+        amount: b.amount,
+        status: b.status,
+        allocated: b.allocations.reduce((s, a) => s + Number(a.amount ?? 0), 0),
+      }))}
       alreadyAllocated={alreadyAllocated}
     />
   );

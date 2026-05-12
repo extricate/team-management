@@ -9,8 +9,9 @@ const navLinks = [
   { href: "/organisaties", label: "Organisaties" },
   { href: "/teams",        label: "Teams" },
   { href: "/medewerkers",  label: "Medewerkers" },
-  { href: "/financiering", label: "Financiering" },
-  { href: "/bestellingen", label: "Bestellingen" },
+  { href: "/financiering",   label: "Financiering" },
+  { href: "/bedrijfspersex", label: "Bedrijfspersex" },
+  { href: "/bestellingen",   label: "Bestellingen" },
 ];
 
 export function SiteHeaderNav() {

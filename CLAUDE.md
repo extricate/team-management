@@ -25,12 +25,25 @@ Use modern software engineering testing conventions.
 
 ## Database / Drizzle
 
+### Check migration state first
+
+Before assuming migrations failed or succeeded, run:
+
+```bash
+npm run db:status
+```
+
+This prints `[OK]` or `[PENDING]` for every migration and exits non-zero if anything is pending. Use it whenever you're unsure whether `db:migrate` actually did something — Drizzle's own output gives no feedback when migrations are already up-to-date.
+
+**Important**: `npm run dev:start` auto-runs `db:migrate` on startup. If you start the dev server first and then run `db:migrate` manually, Drizzle will show no output because there is nothing left to do. `db:status` makes this unambiguous.
+
 ### The only correct flow for schema changes
 
 1. Edit `lib/db/schema.ts`
 2. `npm run db:generate` — drizzle-kit diffs the schema against the latest snapshot and writes a new SQL file + snapshot into `drizzle/`
 3. Review the generated SQL in `drizzle/`
-4. `npm run db:migrate` (or just use `npm run dev:start` which runs it automatically)
+4. Stop the dev server, then: `npm run db:migrate && npm run db:status`
+5. `db:status` should show all `[OK]` — only then restart the dev server
 
 ### Hard rules — never break these
 
@@ -40,7 +53,9 @@ Use modern software engineering testing conventions.
 
 ### If `drizzle-kit migrate` silently fails (exit code 1, spinner never clears)
 
-It is not hanging — it fails silently. Diagnose by running each pending SQL manually:
+First run `npm run db:status` — if all show `[OK]`, the migration already ran (e.g. via `dev:start`) and there is nothing wrong.
+
+If `[PENDING]` migrations exist, it is failing silently. Diagnose by running each pending SQL manually:
 
 ```js
 // node --env-file=.env --env-file=.env.local --input-type=module

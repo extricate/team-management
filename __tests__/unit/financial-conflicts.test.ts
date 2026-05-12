@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { detectFinancialConflicts, type ConflictAmount } from '@/lib/financial-conflicts'
+import { detectFinancialConflicts, calcUtilizationPercent, type ConflictAmount } from '@/lib/financial-conflicts'
+
 
 function makeAmount(overrides: Partial<ConflictAmount> = {}): ConflictAmount {
   return {
@@ -132,5 +133,24 @@ describe('detectFinancialConflicts', () => {
     const concept = makeAmount({ status: 'concept', financialType: { type: 'MATEX', year: 2025 }, allocations: [activeAlloc(500)] })
     const result = detectFinancialConflicts([over, concept])
     expect(result).toHaveLength(2)
+  })
+})
+
+
+describe('calcUtilizationPercent', () => {
+  it('returns 0 when nothing is allocated', () => {
+    expect(calcUtilizationPercent(0, 100_000)).toBe(0)
+  })
+
+  it('returns 100 at full utilization', () => {
+    expect(calcUtilizationPercent(100_000, 100_000)).toBe(100)
+  })
+
+  it('returns >100 when over budget', () => {
+    expect(calcUtilizationPercent(150_000, 100_000)).toBe(150)
+  })
+
+  it('returns 0 when budget is zero', () => {
+    expect(calcUtilizationPercent(50_000, 0)).toBe(0)
   })
 })
