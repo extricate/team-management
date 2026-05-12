@@ -41,34 +41,29 @@ export default async function BedrijfspersexPage() {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      <div className="stat-tiles">
         {[
           { label: "Totaal budget", value: summary.totalBudget, color: "var(--rvo-color-hemelblauw-700)" },
           { label: "Gealloceerd", value: summary.totalAllocated, color: "var(--rvo-color-oranje-600, #e17000)" },
           { label: "Resterend", value: summary.totalBudget - summary.totalAllocated, color: summary.totalAllocated <= summary.totalBudget ? "var(--rvo-color-groen-700)" : "var(--rvo-color-grijs-600)" },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
-            <div className="rhc-card__content">
-              <div style={{ fontSize: "1.375rem", fontWeight: 700, color }}><CurrencyDisplay value={value} /></div>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
-            </div>
+          <div key={label} className="stat-tile">
+            <strong className="stat-tile__value" style={{ color }}><CurrencyDisplay value={value} /></strong>
+            <span className="stat-tile__label">{label}</span>
           </div>
         ))}
         {summary.totalBudget > 0 && (
-          <div className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
-            <div className="rhc-card__content">
-              <div style={{
-                fontSize: "1.375rem", fontWeight: 700,
-                color: summary.utilizationPercent > 100
-                  ? "var(--rvo-color-rood-600)"
-                  : summary.utilizationPercent > 80
-                  ? "var(--rvo-color-oranje-600, #e17000)"
-                  : "var(--rvo-color-groen-700)",
-              }}>
-                {summary.utilizationPercent}%
-              </div>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>Benutting</div>
-            </div>
+          <div className="stat-tile">
+            <strong className="stat-tile__value" style={{
+              color: summary.utilizationPercent > 100
+                ? "var(--rvo-color-rood-600)"
+                : summary.utilizationPercent > 80
+                ? "var(--rvo-color-oranje-600, #e17000)"
+                : "var(--rvo-color-groen-700)",
+            }}>
+              {summary.utilizationPercent}%
+            </strong>
+            <span className="stat-tile__label">Benutting</span>
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Alert, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Alert, Card, Heading, LinkList, LinkListCard, LinkListLink, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
@@ -51,10 +51,10 @@ export default async function DashboardPage() {
   ];
 
   const quickLinks = [
-    { href: "/organisaties/nieuw",  label: "+ Nieuwe organisatie" },
-    { href: "/teams/nieuw",         label: "+ Nieuw team" },
-    { href: "/medewerkers/nieuw",   label: "+ Nieuwe medewerker" },
-    { href: "/financiering/nieuw",  label: "+ Nieuwe financieringsbron" },
+    { href: "/organisaties/nieuw",  label: "Nieuwe organisatie" },
+    { href: "/teams/nieuw",         label: "Nieuw team" },
+    { href: "/medewerkers/nieuw",   label: "Nieuwe medewerker" },
+    { href: "/financiering/nieuw",  label: "Nieuwe financieringsbron" },
     { href: "/indelen",             label: "Teamleden indelen" },
   ];
 
@@ -68,20 +68,16 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stat tiles */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: "1rem", marginBottom: "2.5rem" }}>
+      <div className="stat-tiles">
         {statTiles.map(({ label, value, href, color }) => href ? (
-          <Link key={label} href={href} className="rhc-card rhc-card--default" style={{ display: "flex", flexDirection: "column", width: "100%", textAlign: "center", textDecoration: "none" }}>
-            <div className="rhc-card__content">
-              <div className="rhc-card__heading" style={{ fontSize: "2rem", fontWeight: 700, color, lineHeight: 1.1, display: "block" }}>{value}</div>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
-            </div>
+          <Link key={label} href={href} className="stat-tile">
+            <strong className="stat-tile__value" style={{ color }}>{value}</strong>
+            <span className="stat-tile__label">{label}</span>
           </Link>
         ) : (
-          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
-            <div className="rhc-card__content">
-              <div style={{ fontSize: "2rem", fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
-            </div>
+          <div key={label} className="stat-tile">
+            <strong className="stat-tile__value" style={{ color }}>{value}</strong>
+            <span className="stat-tile__label">{label}</span>
           </div>
         ))}
       </div>
@@ -89,8 +85,8 @@ export default async function DashboardPage() {
       {/* Conflicts */}
       {conflicts.length > 0 && (
         <section style={{ marginBottom: "2.5rem" }}>
-          <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "1rem" }}>
-            ⚠️ Conflicten ({conflicts.length})
+          <Heading level={2} style={{ marginBottom: "1rem" }}>
+            Conflicten ({conflicts.length})
           </Heading>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {lateStartConflicts.map(c => (
@@ -123,7 +119,7 @@ export default async function DashboardPage() {
       {/* Upcoming events */}
       {upcomingEvents.length > 0 && (
         <section style={{ marginBottom: "2.5rem" }}>
-          <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "1rem" }}>
+          <Heading level={2} style={{ marginBottom: "1rem" }}>
             Aankomende gebeurtenissen (90 dagen)
           </Heading>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
@@ -144,44 +140,42 @@ export default async function DashboardPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "start" }}>
         {/* Quick actions */}
-        <div>
-          <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "1rem" }}>Snel toevoegen</Heading>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <LinkListCard headingLevel={2} heading="Snel toevoegen">
+          <LinkList>
             {quickLinks.map(({ href, label }) => (
-              <Link key={href} href={href} className="utrecht-button utrecht-button--secondary-action" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
-                {label}
-              </Link>
+              <LinkListLink key={href} href={href}>{label}</LinkListLink>
             ))}
-          </div>
-        </div>
+          </LinkList>
+        </LinkListCard>
 
         {/* Financiering overzicht */}
-        <div className="rhc-card rhc-card--default" style={{ width: "100%" }}>
-          <div className="rhc-card__content">
-            <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "1rem" }}>Financieringsoverzicht</Heading>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-              {[
-                { label: "Vrijgegeven budget", value: formatCurrency(stats.releasedBudget), color: "var(--rvo-color-groen-700)" },
-                { label: "Concept budget",     value: formatCurrency(stats.conceptBudget),  color: "var(--rvo-color-oranje-600, #e17000)" },
-                { label: "Totaal",             value: formatCurrency(stats.releasedBudget + stats.conceptBudget), color: "var(--rvo-color-hemelblauw-700)" },
-              ].map(({ label, value, color }) => (
-                <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontSize: "0.875rem", color: "var(--rvo-color-grijs-700)" }}>{label}</span>
-                  <span style={{ fontWeight: 700, color }}>{value}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: "1rem" }}>
-              <Link href="/financiering" className="utrecht-link" style={{ fontSize: "0.875rem" }}>Naar financieringsoverzicht →</Link>
-            </div>
+        <Card
+          heading="Financieringsoverzicht"
+          headingLevel={2}
+          style={{ maxInlineSize: "none", width: "100%" }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+            {[
+              { label: "Vrijgegeven budget", value: formatCurrency(stats.releasedBudget), color: "var(--rvo-color-groen-700)" },
+              { label: "Concept budget",     value: formatCurrency(stats.conceptBudget),  color: "var(--rvo-color-oranje-600, #e17000)" },
+              { label: "Totaal",             value: formatCurrency(stats.releasedBudget + stats.conceptBudget), color: "inherit" },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span style={{ fontSize: "0.875rem", color: "var(--rvo-color-grijs-700)" }}>{label}</span>
+                <strong style={{ color }}>{value}</strong>
+              </div>
+            ))}
           </div>
-        </div>
+          <div style={{ marginTop: "1rem" }}>
+            <Link href="/financiering" className="utrecht-link" style={{ fontSize: "0.875rem" }}>Naar financieringsoverzicht</Link>
+          </div>
+        </Card>
       </div>
 
       {/* Recent activity */}
       {recentActivity.length > 0 && (
         <div style={{ marginTop: "2.5rem" }}>
-          <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "1rem" }}>Recente activiteit</Heading>
+          <Heading level={2} style={{ marginBottom: "1rem" }}>Recente activiteit</Heading>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {recentActivity.map((ev) => (
               <div key={ev.id} style={{ display: "flex", gap: "1rem", alignItems: "baseline", padding: "0.625rem 0", borderBottom: "1px solid var(--rvo-color-grijs-100, #f1f1f1)", fontSize: "0.875rem" }}>

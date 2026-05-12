@@ -121,7 +121,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      <div className="stat-tiles">
         {[
           { label: "Actieve leden",   value: activeMembers.length },
           { label: "Totaal posities", value: totalPositions },
@@ -129,11 +129,9 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
           { label: "Open",            value: openPositions },
           { label: "Gefinancierd",    value: fundedPositions },
         ].map(({ label, value }) => (
-          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
-            <div className="rhc-card__content">
-              <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--rvo-color-hemelblauw-700)" }}>{value}</div>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
-            </div>
+          <div key={label} className="stat-tile">
+            <strong className="stat-tile__value">{value}</strong>
+            <span className="stat-tile__label">{label}</span>
           </div>
         ))}
       </div>
@@ -144,7 +142,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
           <Heading level={2}>Posities</Heading>
           {!isArchived && (
             <Link href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-              + Positie toevoegen
+              Positie toevoegen
             </Link>
           )}
         </div>
@@ -166,9 +164,9 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
               const opfDef = getOPFType(pos.opfType);
 
               return (
-                <div key={pos.id} style={{ border: "1px solid var(--rvo-color-hemelblauw-200, #b3d0ec)", borderRadius: "6px", overflow: "hidden" }}>
+                <div key={pos.id} className="position-card">
                   {/* Position header */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", background: "var(--rvo-color-hemelblauw-50, #eef4fb)", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <div className="position-card__header">
                     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
                       <strong style={{ fontSize: "1rem" }}>{pos.type}</strong>
                       {pos.positionCode && (
@@ -188,7 +186,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                     {!isArchived && (
                       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                         <Link href={`/teams/${team.id}/posities/${pos.id}/financieren`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
-                          + Financieren
+                          Financieren
                         </Link>
                         <Link href={`/teams/${team.id}/posities/${pos.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
                           Bewerken
@@ -205,10 +203,10 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                   </div>
 
                   {/* Position body */}
-                  <div style={{ padding: "0.875rem 1rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem 2rem" }}>
+                  <div className="position-card__body">
                     {/* Left: occupant + dates */}
                     <div>
-                      <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>Bezet door</div>
+                      <div className="field-label">Bezet door</div>
                       {activeAssignment
                         ? <Link href={`/medewerkers/${activeAssignment.employee.id}`} className="utrecht-link" style={{ fontWeight: 500 }}>
                             {activeAssignment.employee.firstName} {activeAssignment.employee.lastName}
@@ -230,7 +228,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
 
                     {/* Right: cost + coverage */}
                     <div>
-                      <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>Financiering</div>
+                      <div className="field-label">Financiering</div>
                       {annualCost > 0 ? (
                         <>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem" }}>
@@ -252,8 +250,8 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                             </div>
                           )}
                           {/* Progress bar */}
-                          <div style={{ height: "6px", background: "var(--rvo-color-grijs-200)", borderRadius: "3px", overflow: "hidden", marginBottom: "0.5rem" }}>
-                            <div style={{ height: "100%", width: `${coveragePct ?? 0}%`, background: coveragePct! >= 100 ? "var(--rvo-color-groen-600)" : "var(--rvo-color-hemelblauw-500)", borderRadius: "3px", transition: "width 0.2s" }} />
+                          <div className="progress-bar">
+                            <div className="progress-bar__fill" style={{ width: `${coveragePct ?? 0}%`, background: coveragePct! >= 100 ? "var(--rvo-color-groen-600)" : "var(--rvo-color-hemelblauw-500)" }} />
                           </div>
                         </>
                       ) : (
@@ -272,11 +270,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                             return (
                               <div key={fa.id} style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
                                 <span style={{ color: "var(--rvo-color-groen-700)" }}>✓</span>
-                                {pb && (
-                                  <span style={{ borderRadius: "10px", padding: "0.0625rem 0.4rem", fontSize: "0.7rem", fontWeight: 700, background: "var(--rvo-color-lila-100, #ede8f7)", color: "var(--rvo-color-lila-700, #4b2c8a)" }}>
-                                    BP
-                                  </span>
-                                )}
+                                {pb && <StatusBadge label="BP" color="purple" />}
                                 {label}{typeSuffix}
                                 {fa.amount && <span style={{ color: "var(--rvo-color-grijs-600)" }}>(<CurrencyDisplay value={fa.amount} />)</span>}
                                 {!isArchived && <RemoveFundingButton allocationId={fa.id} sourceName={label} />}
@@ -300,7 +294,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
           <Heading level={2}>Teamleden</Heading>
           {!isArchived && (
             <Link href={`/teams/${team.id}/leden/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-              + Lid toevoegen
+              Lid toevoegen
             </Link>
           )}
         </div>

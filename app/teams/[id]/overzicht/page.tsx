@@ -87,7 +87,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem", alignItems: "start" }}>
         {/* Members section */}
         <section>
-          <Heading level={2} style={{ fontSize: "1.125rem", borderBottom: "2px solid var(--rvo-color-hemelblauw-300)", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
+          <Heading level={2} style={{ borderBottom: "2px solid var(--rvo-color-hemelblauw-300)", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
             Teamleden ({activeMembers.length})
           </Heading>
           {activeMembers.length === 0 ? (
@@ -125,7 +125,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
 
         {/* Positions section */}
         <section>
-          <Heading level={2} style={{ fontSize: "1.125rem", borderBottom: "2px solid var(--rvo-color-hemelblauw-300)", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
+          <Heading level={2} style={{ borderBottom: "2px solid var(--rvo-color-hemelblauw-300)", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
             Posities ({sortedPositions.length})
           </Heading>
           {sortedPositions.length === 0 ? (
@@ -168,7 +168,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
 
       {team.description && (
         <section style={{ marginTop: "2.5rem" }}>
-          <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "0.5rem" }}>Over dit team</Heading>
+          <Heading level={2} style={{ marginBottom: "0.5rem" }}>Over dit team</Heading>
           <Paragraph style={{ color: "var(--rvo-color-grijs-700)" }}>{team.description}</Paragraph>
         </section>
       )}

@@ -152,20 +152,16 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
       )}
 
       {/* Budget summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      <div className="stat-tiles">
         {[
           { label: "Totaal budget", value: totalBudget, color: "var(--rvo-color-hemelblauw-700)" },
           { label: "Vrijgegeven", value: releasedBudget, color: "var(--rvo-color-groen-700)" },
           { label: "Gealloceerd", value: allocatedBudget, color: "var(--rvo-color-oranje-600, #e17000)" },
           { label: "Beschikbaar", value: remaining, color: remaining >= 0 ? "var(--rvo-color-groen-700)" : "var(--rvo-color-rood-600)" },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
-            <div className="rhc-card__content">
-              <div style={{ fontSize: "1.375rem", fontWeight: 700, color }}>
-                <CurrencyDisplay value={value} />
-              </div>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
-            </div>
+          <div key={label} className="stat-tile">
+            <strong className="stat-tile__value" style={{ color }}><CurrencyDisplay value={value} /></strong>
+            <span className="stat-tile__label">{label}</span>
           </div>
         ))}
       </div>
@@ -196,9 +192,9 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
           <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             {!isArchived && (
               <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginBottom: "0.25rem" }}>
-                <Link href={`/financiering/${source.id}/types/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Type toevoegen</Link>
+                <Link href={`/financiering/${source.id}/types/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>Type toevoegen</Link>
                 {source.types.length > 0 && (
-                  <Link href={`/financiering/${source.id}/bedragen/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>+ Bedrag toevoegen</Link>
+                  <Link href={`/financiering/${source.id}/bedragen/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>Bedrag toevoegen</Link>
                 )}
               </div>
             )}

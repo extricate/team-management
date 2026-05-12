@@ -87,7 +87,7 @@ export default async function MedewerkersPage({
         <Heading level={1} style={{ margin: 0 }}>Medewerkers</Heading>
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <Link href="/medewerkers/bulk-import" className="utrecht-button utrecht-button--secondary-action">Bulk importeren</Link>
-          <Link href="/medewerkers/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuwe medewerker</Link>
+          <Link href="/medewerkers/nieuw" className="utrecht-button utrecht-button--primary-action">Nieuwe medewerker</Link>
         </div>
       </div>
 

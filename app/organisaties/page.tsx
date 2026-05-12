@@ -56,7 +56,7 @@ export default async function OrganisatiesPage({
       <Breadcrumbs crumbs={[{ label: "Organisaties" }]} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <Heading level={1} style={{ margin: 0 }}>Organisaties</Heading>
-        <Link href="/organisaties/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuwe organisatie</Link>
+        <Link href="/organisaties/nieuw" className="utrecht-button utrecht-button--primary-action">Nieuwe organisatie</Link>
       </div>
 
       {/* Filters */}

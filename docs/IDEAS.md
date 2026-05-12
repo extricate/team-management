@@ -13,6 +13,8 @@
 
 - Audit log entries currently just store the basic crud operations. Please also store the actual change to the relevant data fields (in plain text). Or figure out a better solution.
 
+- Fix the default organization from user/settings not being applied in the various create new (of model) pages ("-- Kies een organisatie --" remains the default even with a set default; in new financial source, new employee, new team, new order.)
+
 - Add user management interface (creating and enabling management accounts)
 - Add notifications (with access through the navbar) with notifications regarding the conflicts (which are currently in the dashboard).
 - Add sorting (on table headers?) on pages like employees, teams, finance sources, etc.
@@ -38,5 +40,5 @@
 
 ~~- Add ability to set a certain organisation entity as your personal default (to prevent having to click many times)~~
 
-- Declutter navbar
-- Add pre-commit hook that ups the version of the application in package.json. Maybe optionally automatically add a commit message as well, based on the changes inside the commit Maybe add a way to make an LLM/you as Claude Code write the commit message? Figure out a way. Use semantic versioning.
+~~- Declutter navbar~~
+~~- Add pre-commit hook that ups the version of the application in package.json. Maybe optionally automatically add a commit message as well, based on the changes inside the commit Maybe add a way to make an LLM/you as Claude Code write the commit message? Figure out a way. Use semantic versioning.~~

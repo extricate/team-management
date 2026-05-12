@@ -106,7 +106,7 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "2.5rem" }}>
+      <div className="stat-tiles">
         {[
           { label: "Teams",           value: org.teams.length },
           { label: "Medewerkers",     value: org.employees.length },
@@ -115,11 +115,9 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
           { label: "Financieringsbronnen", value: org.financialSources.length },
           { label: "Totaal budget",   value: CurrencyDisplay({value: totalBudget}) },
         ].map(({ label, value }) => (
-          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
-            <div className="rhc-card__content">
-              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--rvo-color-hemelblauw-700)" }}>{value}</div>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
-            </div>
+          <div key={label} className="stat-tile">
+            <strong className="stat-tile__value">{value}</strong>
+            <span className="stat-tile__label">{label}</span>
           </div>
         ))}
       </div>
@@ -130,7 +128,7 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
           <Heading level={2}>Teams</Heading>
           {!isArchived && (
             <Link href="/teams/nieuw" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-              + Nieuw team
+              Nieuw team
             </Link>
           )}
         </div>
@@ -183,7 +181,7 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
           <Heading level={2}>Financieringsbronnen</Heading>
           {!isArchived && (
             <Link href="/financiering/nieuw" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-              + Nieuwe bron
+              Nieuwe bron
             </Link>
           )}
         </div>

@@ -79,7 +79,7 @@ export default async function BestellingenPage({
       <Breadcrumbs crumbs={[{ label: "Bestellingen" }]} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <Heading level={1} style={{ margin: 0 }}>Bestellingen</Heading>
-        <Link href="/bestellingen/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuwe bestelling</Link>
+        <Link href="/bestellingen/nieuw" className="utrecht-button utrecht-button--primary-action">Nieuwe bestelling</Link>
       </div>
 
       <form method="get" action="/bestellingen" style={{ display: "flex", gap: "0.75rem", marginBottom: "1.25rem", flexWrap: "wrap", alignItems: "flex-end" }}>

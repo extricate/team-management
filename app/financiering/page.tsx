@@ -79,7 +79,7 @@ export default async function FinancieringPage({
       <Breadcrumbs crumbs={[{ label: "Financiering" }]} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <Heading level={1} style={{ margin: 0 }}>Financieringsbronnen</Heading>
-        <Link href="/financiering/nieuw" className="utrecht-button utrecht-button--primary-action">+ Nieuwe bron</Link>
+        <Link href="/financiering/nieuw" className="utrecht-button utrecht-button--primary-action">Nieuwe bron</Link>
       </div>
 
       {/* Filters */}

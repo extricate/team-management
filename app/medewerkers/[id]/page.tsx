@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Card, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { employees, comments, auditEvents } from "@/lib/db/schema";
@@ -82,35 +82,29 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
 
       {/* Current status */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2.5rem" }}>
-        <div className="rhc-card rhc-card--default" style={{ width: "100%" }}>
-          <div className="rhc-card__content">
-            <Heading level={2} style={{ fontSize: "0.9375rem", marginBottom: "0.75rem" }}>Actieve teams</Heading>
-            {activeTeams.length === 0
-              ? <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve teamlidmaatschappen</Paragraph>
-              : activeTeams.map(m => (
-                <div key={m.id} style={{ marginBottom: "0.5rem" }}>
-                  <Link href={`/teams/${m.team.id}`} className="utrecht-link">{m.team.name}</Link>
-                  <span style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginLeft: "0.5rem" }}>
-                    vanaf {formatDate(m.startDate)}
-                  </span>
-                </div>
-              ))}
-          </div>
-        </div>
-        <div className="rhc-card rhc-card--default" style={{ width: "100%" }}>
-          <div className="rhc-card__content">
-            <Heading level={2} style={{ fontSize: "0.9375rem", marginBottom: "0.75rem" }}>Huidige positie</Heading>
-            {activePos
-              ? <div>
-                  <strong>{activePos.position.type}</strong>
-                  {activePos.position.positionCode && <span style={{ marginLeft: "0.5rem", color: "var(--rvo-color-grijs-600)" }}>({activePos.position.positionCode})</span>}
-                  <Paragraph style={{ margin: "0.25rem 0 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
-                    Team: {activePos.position.team.name} · Sinds {formatDate(activePos.startDate)}
-                  </Paragraph>
-                </div>
-              : <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve positie</Paragraph>}
-          </div>
-        </div>
+        <Card heading="Actieve teams" headingLevel={3} style={{ maxInlineSize: "none", width: "100%" }}>
+          {activeTeams.length === 0
+            ? <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve teamlidmaatschappen</Paragraph>
+            : activeTeams.map(m => (
+              <div key={m.id} style={{ marginBottom: "0.5rem" }}>
+                <Link href={`/teams/${m.team.id}`} className="utrecht-link">{m.team.name}</Link>
+                <span style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginLeft: "0.5rem" }}>
+                  vanaf {formatDate(m.startDate)}
+                </span>
+              </div>
+            ))}
+        </Card>
+        <Card heading="Huidige positie" headingLevel={3} style={{ maxInlineSize: "none", width: "100%" }}>
+          {activePos
+            ? <div>
+                <strong>{activePos.position.type}</strong>
+                {activePos.position.positionCode && <span style={{ marginLeft: "0.5rem", color: "var(--rvo-color-grijs-600)" }}>({activePos.position.positionCode})</span>}
+                <Paragraph style={{ margin: "0.25rem 0 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
+                  Team: {activePos.position.team.name} · Sinds {formatDate(activePos.startDate)}
+                </Paragraph>
+              </div>
+            : <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve positie</Paragraph>}
+        </Card>
       </div>
 
       {/* Position history */}
@@ -119,7 +113,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
           <Heading level={2}>Positiegeschiedenis</Heading>
           {!isArchived && (
             <Link href={`/medewerkers/${emp.id}/posities/toewijzen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-              + Positie toewijzen
+              Positie toewijzen
             </Link>
           )}
         </div>
@@ -166,7 +160,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
           <Heading level={2}>Teamlidmaatschappen</Heading>
           {!isArchived && (
             <Link href={`/medewerkers/${emp.id}/teams/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-              + Team toevoegen
+              Team toevoegen
             </Link>
           )}
         </div>

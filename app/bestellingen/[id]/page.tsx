@@ -124,19 +124,17 @@ export default async function BestellingDetailPage({ params }: { params: Promise
       {/* Budget summary */}
       <section style={{ marginBottom: "2rem" }}>
         <Heading level={2} style={{ marginBottom: "1rem" }}>Financiering</Heading>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "1.25rem" }}>
+        <div className="stat-tiles" style={{ marginBottom: "1.25rem" }}>
           {[
             { label: "Geraamd", value: allocationSummary.geraamd },
             { label: "Gealloceerd", value: allocationSummary.toegewezen },
             { label: "Beschikbaar", value: allocationSummary.beschikbaar },
           ].map(({ label, value }) => (
-            <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
-              <div className="rhc-card__content">
-                <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>{label}</div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: value < 0 ? "var(--rvo-color-rood)" : undefined }}>
-                  <CurrencyDisplay value={value} />
-                </div>
-              </div>
+            <div key={label} className="stat-tile">
+              <strong className="stat-tile__value" style={{ color: value < 0 ? "var(--rvo-color-rood-600)" : undefined }}>
+                <CurrencyDisplay value={value} />
+              </strong>
+              <span className="stat-tile__label">{label}</span>
             </div>
           ))}
         </div>
