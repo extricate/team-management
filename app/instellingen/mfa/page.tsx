@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
@@ -18,7 +19,10 @@ export default async function MfaPage() {
 
   return (
     <main style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
-      <Heading level={1}>Twee-factor authenticatie</Heading>
+      <Link href="/instellingen" style={{ fontSize: "0.875rem", color: "var(--rvo-color-hemelblauw-700)" }}>
+        ← Terug naar instellingen
+      </Link>
+      <Heading level={1} style={{ marginTop: "1rem" }}>Twee-factor authenticatie</Heading>
 
       {user?.totpEnabled ? (
         <div>
