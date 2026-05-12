@@ -4,15 +4,9 @@
 
 Next.js 16, Drizzle ORM + drizzle-kit, PostgreSQL 16, NextAuth v5, Meilisearch. Dutch government org (~700 employees). UI language is Dutch.
 
+Vitest is using as a testing framework for this application. Vitest is invoced using 'npm run test' in bash. We do not have npx installed locally.
+
 ## Dev environment
-
-Start everything with one command:
-
-```bash
-npm run dev:start
-```
-
-This runs `docker compose up -d --wait db && npm run db:migrate && next dev` in sequence. **Never start the dev server before migrations have run.** If the dev server is running when you run `npm run db:migrate`, the `ALTER TABLE` statements will hang indefinitely waiting for Postgres locks held by the connection pool.
 
 If you need to run migrations mid-session, stop the dev server first (`Ctrl+C`), then:
 
@@ -20,6 +14,14 @@ If you need to run migrations mid-session, stop the dev server first (`Ctrl+C`),
 npm run db:migrate
 npm run dev
 ```
+
+## Writing and generating code
+
+When generating or writing new code, always use the TDD skill located in .claude/skills/tdd.
+
+When debugging issues that require code changes, also write regression tests.
+
+Use modern software engineering testing conventions.
 
 ## Database / Drizzle
 

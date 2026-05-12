@@ -68,7 +68,15 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/inloggen)",
       "Bash(git commit -m ' *)",
       "Bash(node --env-file=.env --env-file=.env.local --input-type=module)",
-      "Bash(pkill -f \"next dev\")"
+      "Bash(pkill -f \"next dev\")",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(PATH=/home/hsfnelissen/.nvm/versions/node/v25.5.0/bin:__TRACKED_VAR__ npx tsc --noEmit)",
+      "Bash(npm install *)",
+      "Bash(node_modules/.bin/playwright install *)",
+      "Bash(PATH=/home/hsfnelissen/.nvm/versions/node/v25.5.0/bin:__TRACKED_VAR__ node_modules/.bin/playwright install chromium)",
+      "Bash(PATH=/home/hsfnelissen/.nvm/versions/node/v25.5.0/bin:__TRACKED_VAR__ node_modules/.bin/playwright test)",
+      "Bash(PATH=/home/hsfnelissen/.nvm/versions/node/v25.5.0/bin:__TRACKED_VAR__ sudo node_modules/.bin/playwright install-deps chromium)",
+      "Bash(PATH=/home/hsfnelissen/.nvm/versions/node/v25.5.0/bin:__TRACKED_VAR__ node_modules/.bin/playwright install-deps chromium)"
     ],
     "additionalDirectories": [
       "/home/hsfnelissen/code/team-management/app/bestellingen/[id]"

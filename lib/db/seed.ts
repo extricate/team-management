@@ -1,6 +1,8 @@
+import { fileURLToPath } from "url";
 import { db } from "./index";
 import { users, bestellingTypes } from "./schema";
 import { eq } from "drizzle-orm";
+import { hashPassword, generatePassword } from "../auth/password";
 
 const DEFAULT_BESTELLING_TYPES = [
   { naam: "Hardware", omschrijving: "Laptops, servers, randapparatuur en overige fysieke ICT-middelen" },
@@ -12,6 +14,35 @@ const DEFAULT_BESTELLING_TYPES = [
   { naam: "Overig", omschrijving: "Bestellingen die niet onder een andere categorie vallen" },
 ];
 
+export async function createAdminUser(
+  email: string,
+  name: string | undefined,
+  generatePw: () => string = () => generatePassword(20),
+): Promise<{ created: true; password: string } | { created: false }> {
+  const existing = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return { created: false };
+  }
+
+  const password = generatePw();
+  const passwordHash = await hashPassword(password);
+
+  await db.insert(users).values({
+    email,
+    name,
+    role: "admin",
+    emailVerified: new Date(),
+    passwordHash,
+  });
+
+  return { created: true, password };
+}
+
 async function seed() {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminName  = process.env.ADMIN_NAME;
@@ -22,49 +53,45 @@ async function seed() {
   }
 
   try {
-    const existingAdmin = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, adminEmail))
-      .limit(1);
+    const result = await createAdminUser(adminEmail, adminName);
 
-    if (existingAdmin.length > 0) {
-      console.log("✓ Default admin user already exists");
+    if (result.created) {
+      console.log("");
+      console.log("┌─────────────────────────────────────────────────┐");
+      console.log("│           Admin account aangemaakt               │");
+      console.log("├─────────────────────────────────────────────────┤");
+      console.log(`│  E-mail  : ${adminEmail.padEnd(37)} │`);
+      console.log(`│  Wachtwoord: ${result.password.padEnd(35)} │`);
+      console.log("│                                                  │");
+      console.log("│  Sla dit wachtwoord op — het wordt niet opnieuw  │");
+      console.log("│  getoond.                                        │");
+      console.log("└─────────────────────────────────────────────────┘");
+      console.log("");
     } else {
-      await db
-        .insert(users)
-        .values({
-          email: adminEmail,
-          name: adminName,
-          role: "admin",
-          emailVerified: new Date(),
-        });
-
-      console.log("✓ Default admin user created successfully");
-      console.log(`  Email: ${adminEmail}`);
-      console.log(`  Name: ${adminName}`);
-      console.log(`  Role: admin`);
+      console.log("✓ Admin user bestaat al, overgeslagen");
     }
 
     const existingTypes = await db.select().from(bestellingTypes).limit(1);
     if (existingTypes.length > 0) {
-      console.log("✓ Bestelling types already seeded");
+      console.log("✓ Bestelling types al aanwezig");
     } else {
       await db.insert(bestellingTypes).values(DEFAULT_BESTELLING_TYPES);
-      console.log(`✓ Bestelling types seeded (${DEFAULT_BESTELLING_TYPES.length})`);
+      console.log(`✓ Bestelling types aangemaakt (${DEFAULT_BESTELLING_TYPES.length})`);
     }
   } catch (error) {
-    console.error("✗ Error seeding:", error);
+    console.error("✗ Fout bij seeden:", error);
     process.exit(1);
   }
 }
 
-seed()
-  .then(() => {
-    console.log("✓ Seed completed");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("✗ Seed failed:", error);
-    process.exit(1);
-  });
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  seed()
+    .then(() => {
+      console.log("✓ Seed voltooid");
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("✗ Seed mislukt:", error);
+      process.exit(1);
+    });
+}

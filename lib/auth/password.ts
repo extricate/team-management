@@ -1,6 +1,17 @@
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
+export const PASSWORD_CHARSET =
+  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+
+export function generatePassword(
+  length: number,
+  generateBytes: (n: number) => Buffer = randomBytes,
+): string {
+  const bytes = generateBytes(length);
+  return Array.from(bytes, (b) => PASSWORD_CHARSET[b % PASSWORD_CHARSET.length]).join("");
+}
+
 const scryptAsync = promisify(scrypt) as (
   password: string | Buffer,
   salt: string | Buffer,
