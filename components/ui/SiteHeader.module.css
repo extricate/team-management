@@ -14,3 +14,11 @@
 .navLink { color: rgba(255, 255, 255, 0.78); text-decoration: none; font-size: 0.875rem; padding: 0.5rem 0.875rem; display: flex; align-items: center; border-bottom: 3px solid transparent; transition: color 0.15s, border-bottom-color 0.15s; white-space: nowrap; }
 .navLink:hover { color: var(--rvo-color-white, #ffffff); border-bottom-color: rgba(255, 255, 255, 0.35); }
 .navLinkActive { color: var(--rvo-color-white, #ffffff) !important; font-weight: 500; border-bottom-color: var(--rvo-color-geel-500, #f9b000) !important; }
+
+/* ── "Meer" secondary nav dropdown ──────────────────────────── */
+.meerWrapper { position: relative; display: flex; align-items: stretch; }
+.meerButton { background: none; border: none; cursor: pointer; gap: 0.3rem; font-family: inherit; }
+.meerDropdown { position: absolute; top: 100%; left: 0; min-width: 172px; background: #ffffff; border: 1px solid var(--rvo-color-grijs-200, #d4d4d4); border-radius: 4px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13); z-index: 100; overflow: hidden; }
+.meerItem { display: block; padding: 0.5rem 1rem; font-size: 0.875rem; color: var(--rvo-color-hemelblauw-700, #154273); text-decoration: none; transition: background 0.1s; }
+.meerItem:hover { background: var(--rvo-color-hemelblauw-50, #eef4fb); }
+.meerItemActive { font-weight: 600; background: var(--rvo-color-hemelblauw-50, #eef4fb); }
