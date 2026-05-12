@@ -32,3 +32,8 @@
 ~~- Add <title></title> for every page where appropriate.~~
 ~~- Make positions transferable to other teams~~
 ~~- add ability to remove funding~~
+
+
+- Add ability to finance from company persex (which is an unlimited financial source, basically used for any positions that cannot be traced back to a specific other financial source). This does need to have a maximum but can be exceeded (give a % indicator >100%).
+
+- Add ability to set a certain organisation entity as your personal default (to prevent having to click many times)

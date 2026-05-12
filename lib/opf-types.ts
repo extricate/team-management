@@ -143,3 +143,11 @@ export const CATEGORY_COLORS: Record<OPFNaturalCategory, { bg: string; text: str
   geen: { bg: "var(--rvo-color-grijs-100, #f0f0f0)", text: "var(--rvo-color-grijs-600)" },
   extern: { bg: "var(--rvo-color-grijs-100, #f0f0f0)", text: "var(--rvo-color-grijs-700)" },
 };
+
+export const CATEGORY_BADGE_COLOR: Record<OPFNaturalCategory, "blue" | "green" | "orange" | "grey"> = {
+  PERSEX: "blue",
+  MATEX: "green",
+  Investeringen: "orange",
+  geen: "grey",
+  extern: "grey",
+};

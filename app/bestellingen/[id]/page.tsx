@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Alert, DataSummary, DataSummaryItem, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { bestellingen, comments, auditEvents } from "@/lib/db/schema";
@@ -11,7 +11,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import { detectBestellingConflicts, calculateBestellingAllocation } from "@/lib/bestellingen";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -103,44 +103,23 @@ export default async function BestellingDetailPage({ params }: { params: Promise
       </div>
 
       {conflicts.length > 0 && (
-        <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {conflicts.map((c, i) => (
-            <div key={i} role="alert" style={{
-              padding: "0.75rem 1rem",
-              marginBottom: "0.5rem",
-              borderLeft: `4px solid ${c.severity === "error" ? "var(--rvo-color-rood)" : "var(--rvo-color-oranje)"}`,
-              background: c.severity === "error" ? "var(--rvo-color-rood-50)" : "var(--rvo-color-oranje-50)",
-              borderRadius: "0 4px 4px 0",
-            }}>
-              <strong>{c.severity === "error" ? "Fout" : "Waarschuwing"}:</strong> {c.message}
-            </div>
+            <Alert key={i} type={c.severity === "error" ? "error" : "warning"}>
+              <Paragraph><strong>{c.severity === "error" ? "Fout" : "Waarschuwing"}:</strong> {c.message}</Paragraph>
+            </Alert>
           ))}
         </div>
       )}
 
       {/* Metadata */}
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem", marginBottom: "2rem", padding: "1.25rem", background: "var(--rvo-color-grijs-100)", borderRadius: "4px" }}>
-        <div>
-          <dt style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>Type</dt>
-          <dd style={{ margin: 0, fontWeight: 600 }}>{row.type.naam}</dd>
-        </div>
-        <div>
-          <dt style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>Organisatie</dt>
-          <dd style={{ margin: 0 }}>{row.organisation.name}</dd>
-        </div>
-        <div>
-          <dt style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>Aanvraagdatum</dt>
-          <dd style={{ margin: 0 }}>{row.aanvraagDatum ? formatDate(row.aanvraagDatum) : "—"}</dd>
-        </div>
-        <div>
-          <dt style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>Geraamd bedrag</dt>
-          <dd style={{ margin: 0 }}>{row.geraamdBedrag ? <CurrencyDisplay value={Number(row.geraamdBedrag)} /> : "—"}</dd>
-        </div>
-        <div>
-          <dt style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>Werkelijk bedrag</dt>
-          <dd style={{ margin: 0 }}>{row.werkelijkBedrag ? <CurrencyDisplay value={Number(row.werkelijkBedrag)} /> : "—"}</dd>
-        </div>
-      </section>
+      <DataSummary appearance="row" style={{ marginBottom: "2rem" }}>
+        <DataSummaryItem itemKey="Type" itemValue={row.type.naam} />
+        <DataSummaryItem itemKey="Organisatie" itemValue={row.organisation.name} />
+        <DataSummaryItem itemKey="Aanvraagdatum" itemValue={row.aanvraagDatum ? formatDate(row.aanvraagDatum) : "—"} />
+        <DataSummaryItem itemKey="Geraamd bedrag" itemValue={row.geraamdBedrag ? formatCurrency(Number(row.geraamdBedrag)) : "—"} />
+        <DataSummaryItem itemKey="Werkelijk bedrag" itemValue={row.werkelijkBedrag ? formatCurrency(Number(row.werkelijkBedrag)) : "—"} />
+      </DataSummary>
 
       {/* Budget summary */}
       <section style={{ marginBottom: "2rem" }}>
@@ -151,10 +130,12 @@ export default async function BestellingDetailPage({ params }: { params: Promise
             { label: "Gealloceerd", value: allocationSummary.toegewezen },
             { label: "Beschikbaar", value: allocationSummary.beschikbaar },
           ].map(({ label, value }) => (
-            <div key={label} style={{ padding: "1rem", background: "var(--rvo-color-grijs-100)", borderRadius: "4px", textAlign: "center" }}>
-              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginBottom: "0.25rem" }}>{label}</div>
-              <div style={{ fontSize: "1.25rem", fontWeight: 700, color: value < 0 ? "var(--rvo-color-rood)" : undefined }}>
-                <CurrencyDisplay value={value} />
+            <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
+              <div className="rhc-card__content">
+                <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>{label}</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: value < 0 ? "var(--rvo-color-rood)" : undefined }}>
+                  <CurrencyDisplay value={value} />
+                </div>
               </div>
             </div>
           ))}

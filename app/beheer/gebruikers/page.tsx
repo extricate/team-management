@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -50,17 +51,7 @@ export default async function GebruikersPage() {
               </td>
               <td style={{ padding: "0.75rem 0.5rem" }}>{u.role}</td>
               <td style={{ padding: "0.75rem 0.5rem" }}>
-                <span style={{
-                  display: "inline-block",
-                  padding: "0.2rem 0.6rem",
-                  borderRadius: "999px",
-                  fontSize: "0.8em",
-                  fontWeight: "600",
-                  background: u.isEnabled ? "var(--rvo-color-groen-200)" : "var(--rvo-color-grijs-200)",
-                  color: u.isEnabled ? "var(--rvo-color-groen-800)" : "var(--rvo-color-grijs-700)",
-                }}>
-                  {u.isEnabled ? "Actief" : "Uitgeschakeld"}
-                </span>
+                <StatusBadge label={u.isEnabled ? "Actief" : "Uitgeschakeld"} color={u.isEnabled ? "green" : "grey"} />
               </td>
               <td style={{ padding: "0.75rem 0.5rem" }}>
                 {u.totpEnabled

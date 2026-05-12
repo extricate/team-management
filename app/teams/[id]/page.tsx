@@ -16,7 +16,7 @@ import { TransferPositionButton } from "@/components/ui/TransferPositionButton";
 import { RemoveFundingButton } from "@/components/ui/RemoveFundingButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableTeamMembersTable } from "@/components/ui/FilterableTeamMembersTable";
-import { getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
+import { getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-types";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -120,9 +120,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
           { label: "Open",            value: openPositions },
           { label: "Gefinancierd",    value: fundedPositions },
         ].map(({ label, value }) => (
-          <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50)", borderRadius: "4px", padding: "1rem", textAlign: "center" }}>
-            <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--rvo-color-hemelblauw-700)" }}>{value}</div>
-            <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
+          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
+            <div className="rhc-card__content">
+              <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--rvo-color-hemelblauw-700)" }}>{value}</div>
+              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
+            </div>
           </div>
         ))}
       </div>
@@ -166,22 +168,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                       {opfDef && (
                         <>
                           <span style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>{opfDef.label}</span>
-                          <span style={{
-                            borderRadius: "20px",
-                            padding: "0.125rem 0.625rem",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            background: CATEGORY_COLORS[opfDef.naturalCategory].bg,
-                            color: CATEGORY_COLORS[opfDef.naturalCategory].text,
-                          }}>
-                            {CATEGORY_LABELS[opfDef.naturalCategory]}
-                          </span>
+                          <StatusBadge label={CATEGORY_LABELS[opfDef.naturalCategory]} color={CATEGORY_BADGE_COLOR[opfDef.naturalCategory]} />
                         </>
                       )}
                       {pos.schaal && (
-                        <span style={{ background: "var(--rvo-color-hemelblauw-100, #d3e4f5)", color: "var(--rvo-color-hemelblauw-800)", borderRadius: "20px", padding: "0.125rem 0.625rem", fontSize: "0.8125rem", fontWeight: 500 }}>
-                          Schaal {pos.schaal}
-                        </span>
+                        <StatusBadge label={`Schaal ${pos.schaal}`} color="blue" />
                       )}
                       <StatusBadge label={pos.status} color={pos.status === "filled" ? "green" : pos.status === "open" ? "orange" : "grey"} />
                     </div>
@@ -198,6 +189,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                           entityName={pos.type}
                           apiPath={`/api/positions/${pos.id}`}
                           warningText="Actieve toewijzingen worden afgesloten."
+                          size="sm"
                         />
                       </div>
                     )}
@@ -239,13 +231,10 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                               {isProrated ? ` in ${relevantYear}` : " p.j."}
                             </span>
                             {coveragePct !== null && (
-                              <span style={{
-                                background: coveragePct >= 100 ? "var(--rvo-color-groen-100)" : coveragePct > 0 ? "var(--rvo-color-geel-100, #fff9e6)" : "var(--rvo-color-grijs-100)",
-                                color: coveragePct >= 100 ? "var(--rvo-color-groen-800)" : coveragePct > 0 ? "var(--rvo-color-oranje-700, #b35900)" : "var(--rvo-color-grijs-700)",
-                                borderRadius: "20px", padding: "0.125rem 0.625rem", fontSize: "0.8125rem", fontWeight: 600,
-                              }}>
-                                {coveragePct}%
-                              </span>
+                              <StatusBadge
+                                label={`${coveragePct}%`}
+                                color={coveragePct >= 100 ? "green" : coveragePct > 0 ? "orange" : "grey"}
+                              />
                             )}
                           </div>
                           {isProrated && (

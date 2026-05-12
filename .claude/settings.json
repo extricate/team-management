@@ -77,7 +77,8 @@
       "Bash(PATH=/home/hsfnelissen/.nvm/versions/node/v25.5.0/bin:__TRACKED_VAR__ node_modules/.bin/playwright test)",
       "Bash(PATH=/home/hsfnelissen/.nvm/versions/node/v25.5.0/bin:__TRACKED_VAR__ sudo node_modules/.bin/playwright install-deps chromium)",
       "Bash(PATH=/home/hsfnelissen/.nvm/versions/node/v25.5.0/bin:__TRACKED_VAR__ node_modules/.bin/playwright install-deps chromium)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(xargs cat)"
     ],
     "additionalDirectories": [
       "/home/hsfnelissen/code/team-management/app/bestellingen/[id]"

@@ -82,30 +82,34 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
 
       {/* Current status */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2.5rem" }}>
-        <div style={{ background: "var(--rvo-color-hemelblauw-50)", padding: "1.25rem", borderRadius: "4px" }}>
-          <Heading level={2} style={{ fontSize: "0.9375rem", marginBottom: "0.75rem" }}>Actieve teams</Heading>
-          {activeTeams.length === 0
-            ? <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve teamlidmaatschappen</Paragraph>
-            : activeTeams.map(m => (
-              <div key={m.id} style={{ marginBottom: "0.5rem" }}>
-                <Link href={`/teams/${m.team.id}`} className="utrecht-link">{m.team.name}</Link>
-                <span style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginLeft: "0.5rem" }}>
-                  vanaf {formatDate(m.startDate)}
-                </span>
-              </div>
-            ))}
+        <div className="rhc-card rhc-card--default" style={{ width: "100%" }}>
+          <div className="rhc-card__content">
+            <Heading level={2} style={{ fontSize: "0.9375rem", marginBottom: "0.75rem" }}>Actieve teams</Heading>
+            {activeTeams.length === 0
+              ? <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve teamlidmaatschappen</Paragraph>
+              : activeTeams.map(m => (
+                <div key={m.id} style={{ marginBottom: "0.5rem" }}>
+                  <Link href={`/teams/${m.team.id}`} className="utrecht-link">{m.team.name}</Link>
+                  <span style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)", marginLeft: "0.5rem" }}>
+                    vanaf {formatDate(m.startDate)}
+                  </span>
+                </div>
+              ))}
+          </div>
         </div>
-        <div style={{ background: "var(--rvo-color-hemelblauw-50)", padding: "1.25rem", borderRadius: "4px" }}>
-          <Heading level={2} style={{ fontSize: "0.9375rem", marginBottom: "0.75rem" }}>Huidige positie</Heading>
-          {activePos
-            ? <div>
-                <strong>{activePos.position.type}</strong>
-                {activePos.position.positionCode && <span style={{ marginLeft: "0.5rem", color: "var(--rvo-color-grijs-600)" }}>({activePos.position.positionCode})</span>}
-                <Paragraph style={{ margin: "0.25rem 0 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
-                  Team: {activePos.position.team.name} · Sinds {formatDate(activePos.startDate)}
-                </Paragraph>
-              </div>
-            : <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve positie</Paragraph>}
+        <div className="rhc-card rhc-card--default" style={{ width: "100%" }}>
+          <div className="rhc-card__content">
+            <Heading level={2} style={{ fontSize: "0.9375rem", marginBottom: "0.75rem" }}>Huidige positie</Heading>
+            {activePos
+              ? <div>
+                  <strong>{activePos.position.type}</strong>
+                  {activePos.position.positionCode && <span style={{ marginLeft: "0.5rem", color: "var(--rvo-color-grijs-600)" }}>({activePos.position.positionCode})</span>}
+                  <Paragraph style={{ margin: "0.25rem 0 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
+                    Team: {activePos.position.team.name} · Sinds {formatDate(activePos.startDate)}
+                  </Paragraph>
+                </div>
+              : <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve positie</Paragraph>}
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Alert, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { financialSources, comments, auditEvents } from "@/lib/db/schema";
@@ -134,20 +134,21 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
 
       {/* Conflict warnings */}
       {conflicts.length > 0 && (
-        <section style={{ marginBottom: "1.5rem" }}>
-          <div style={{ padding: "0.875rem 1rem", borderRadius: "6px", border: `1px solid ${conflicts.some(c => c.severity === "error") ? "var(--rvo-color-rood-300, #f5a3a3)" : "var(--rvo-color-geel-400, #e6a817)"}`, background: conflicts.some(c => c.severity === "error") ? "var(--rvo-color-rood-50, #fff5f5)" : "var(--rvo-color-geel-50, #fffbea)" }}>
-            <strong style={{ display: "block", marginBottom: "0.5rem", color: conflicts.some(c => c.severity === "error") ? "var(--rvo-color-rood-700, #b30000)" : "var(--rvo-color-oranje-800, #7a3b00)" }}>
-              {conflicts.some(c => c.severity === "error") ? "⚠ Financiële conflicten" : "⚠ Financiële waarschuwingen"} ({conflicts.length})
+        <Alert
+          type={conflicts.some(c => c.severity === "error") ? "error" : "warning"}
+          style={{ marginBottom: "1.5rem" }}
+        >
+          <Paragraph>
+            <strong>
+              {conflicts.some(c => c.severity === "error") ? "Financiële conflicten" : "Financiële waarschuwingen"} ({conflicts.length})
             </strong>
-            <ul style={{ margin: 0, paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-              {conflicts.map((c, i) => (
-                <li key={i} style={{ fontSize: "0.875rem", color: c.severity === "error" ? "var(--rvo-color-rood-700, #b30000)" : "var(--rvo-color-oranje-800, #7a3b00)" }}>
-                  {c.message}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+          </Paragraph>
+          <ul style={{ margin: 0, paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+            {conflicts.map((c, i) => (
+              <li key={i}>{c.message}</li>
+            ))}
+          </ul>
+        </Alert>
       )}
 
       {/* Budget summary */}
@@ -158,11 +159,13 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
           { label: "Gealloceerd", value: allocatedBudget, color: "var(--rvo-color-oranje-600, #e17000)" },
           { label: "Beschikbaar", value: remaining, color: remaining >= 0 ? "var(--rvo-color-groen-700)" : "var(--rvo-color-rood-600)" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50, #eef4fb)", borderRadius: "4px", padding: "1rem", textAlign: "center" }}>
-            <div style={{ fontSize: "1.375rem", fontWeight: 700, color }}>
-              <CurrencyDisplay value={value} />
+          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
+            <div className="rhc-card__content">
+              <div style={{ fontSize: "1.375rem", fontWeight: 700, color }}>
+                <CurrencyDisplay value={value} />
+              </div>
+              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
             </div>
-            <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
           </div>
         ))}
       </div>
@@ -207,7 +210,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", background: "var(--rvo-color-hemelblauw-50, #eef4fb)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                       <span style={{ fontWeight: 700 }}>{t.type}</span>
-                      <span style={{ background: "var(--rvo-color-hemelblauw-100)", color: "var(--rvo-color-hemelblauw-800)", borderRadius: "20px", padding: "0.125rem 0.625rem", fontSize: "0.8125rem", fontWeight: 500 }}>{t.year}</span>
+                      <StatusBadge label={String(t.year)} color="blue" />
                       {typeAmounts.length > 0 && (
                         <span style={{ color: "var(--rvo-color-grijs-600)", fontSize: "0.875rem" }}><CurrencyDisplay value={typeTotal} /></span>
                       )}

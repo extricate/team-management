@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Alert, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
@@ -69,19 +69,19 @@ export default async function DashboardPage() {
 
       {/* Stat tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: "1rem", marginBottom: "2.5rem" }}>
-        {statTiles.map(({ label, value, href, color }) => (
-          <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50, #eef4fb)", borderRadius: "4px", padding: "1.25rem", textAlign: "center", border: "1px solid var(--rvo-color-hemelblauw-100, #d3e4f5)" }}>
-            {href ? (
-              <Link href={href} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-                <div style={{ fontSize: "2rem", fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
-                <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)", marginTop: "0.375rem" }}>{label}</div>
-              </Link>
-            ) : (
-              <>
-                <div style={{ fontSize: "2rem", fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
-                <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)", marginTop: "0.375rem" }}>{label}</div>
-              </>
-            )}
+        {statTiles.map(({ label, value, href, color }) => href ? (
+          <Link key={label} href={href} className="rhc-card rhc-card--default" style={{ display: "flex", flexDirection: "column", width: "100%", textAlign: "center", textDecoration: "none" }}>
+            <div className="rhc-card__content">
+              <div className="rhc-card__heading" style={{ fontSize: "2rem", fontWeight: 700, color, lineHeight: 1.1, display: "block" }}>{value}</div>
+              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
+            </div>
+          </Link>
+        ) : (
+          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
+            <div className="rhc-card__content">
+              <div style={{ fontSize: "2rem", fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
+              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
+            </div>
           </div>
         ))}
       </div>
@@ -94,23 +94,27 @@ export default async function DashboardPage() {
           </Heading>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {lateStartConflicts.map(c => (
-              <div key={`late-${c.positionId}`} style={{ padding: "0.75rem 1rem", background: "var(--rvo-color-rood-50, #fdf2f2)", border: "1px solid var(--rvo-color-rood-200, #f5c2c2)", borderRadius: "4px", fontSize: "0.875rem" }}>
-                <strong>Late start:</strong>{" "}
-                <Link href={`/teams/${c.teamId}`} className="utrecht-link">{c.teamName}</Link>
-                {" — "}<em>{c.positionType}</em>
-                {" "}verwacht te starten op{" "}
-                <strong>{c.expectedStart ? formatDate(c.expectedStart) : "?"}</strong>
-                {", maar vereist vóór "}
-                <strong>{c.requiredBefore ? formatDate(c.requiredBefore) : "?"}</strong>.
-              </div>
+              <Alert key={`late-${c.positionId}`} type="error">
+                <Paragraph>
+                  <strong>Late start:</strong>{" "}
+                  <Link href={`/teams/${c.teamId}`} className="utrecht-link">{c.teamName}</Link>
+                  {" — "}<em>{c.positionType}</em>
+                  {" "}verwacht te starten op{" "}
+                  <strong>{c.expectedStart ? formatDate(c.expectedStart) : "?"}</strong>
+                  {", maar vereist vóór "}
+                  <strong>{c.requiredBefore ? formatDate(c.requiredBefore) : "?"}</strong>.
+                </Paragraph>
+              </Alert>
             ))}
             {unfundedConflicts.map(c => (
-              <div key={`unfunded-${c.positionId}`} style={{ padding: "0.75rem 1rem", background: "var(--rvo-color-geel-50, #fffae6)", border: "1px solid var(--rvo-color-geel-200, #ffe680)", borderRadius: "4px", fontSize: "0.875rem" }}>
-                <strong>Niet gefinancierd:</strong>{" "}
-                <Link href={`/teams/${c.teamId}`} className="utrecht-link">{c.teamName}</Link>
-                {" — "}<em>{c.positionType}</em>
-                {" "}({c.expectedStart ? `start ${formatDate(c.expectedStart)}` : "geen startdatum"}) heeft nog geen actieve financiering.
-              </div>
+              <Alert key={`unfunded-${c.positionId}`} type="warning">
+                <Paragraph>
+                  <strong>Niet gefinancierd:</strong>{" "}
+                  <Link href={`/teams/${c.teamId}`} className="utrecht-link">{c.teamName}</Link>
+                  {" — "}<em>{c.positionType}</em>
+                  {" "}({c.expectedStart ? `start ${formatDate(c.expectedStart)}` : "geen startdatum"}) heeft nog geen actieve financiering.
+                </Paragraph>
+              </Alert>
             ))}
           </div>
         </section>
@@ -152,22 +156,24 @@ export default async function DashboardPage() {
         </div>
 
         {/* Financiering overzicht */}
-        <div style={{ background: "var(--rvo-color-hemelblauw-50, #eef4fb)", borderRadius: "4px", padding: "1.25rem", border: "1px solid var(--rvo-color-hemelblauw-100, #d3e4f5)" }}>
-          <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "1rem" }}>Financieringsoverzicht</Heading>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-            {[
-              { label: "Vrijgegeven budget", value: formatCurrency(stats.releasedBudget), color: "var(--rvo-color-groen-700)" },
-              { label: "Concept budget",     value: formatCurrency(stats.conceptBudget),  color: "var(--rvo-color-oranje-600, #e17000)" },
-              { label: "Totaal",             value: formatCurrency(stats.releasedBudget + stats.conceptBudget), color: "var(--rvo-color-hemelblauw-700)" },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <span style={{ fontSize: "0.875rem", color: "var(--rvo-color-grijs-700)" }}>{label}</span>
-                <span style={{ fontWeight: 700, color }}>{value}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: "1rem" }}>
-            <Link href="/financiering" className="utrecht-link" style={{ fontSize: "0.875rem" }}>Naar financieringsoverzicht →</Link>
+        <div className="rhc-card rhc-card--default" style={{ width: "100%" }}>
+          <div className="rhc-card__content">
+            <Heading level={2} style={{ fontSize: "1.125rem", marginBottom: "1rem" }}>Financieringsoverzicht</Heading>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+              {[
+                { label: "Vrijgegeven budget", value: formatCurrency(stats.releasedBudget), color: "var(--rvo-color-groen-700)" },
+                { label: "Concept budget",     value: formatCurrency(stats.conceptBudget),  color: "var(--rvo-color-oranje-600, #e17000)" },
+                { label: "Totaal",             value: formatCurrency(stats.releasedBudget + stats.conceptBudget), color: "var(--rvo-color-hemelblauw-700)" },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span style={{ fontSize: "0.875rem", color: "var(--rvo-color-grijs-700)" }}>{label}</span>
+                  <span style={{ fontWeight: 700, color }}>{value}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: "1rem" }}>
+              <Link href="/financiering" className="utrecht-link" style={{ fontSize: "0.875rem" }}>Naar financieringsoverzicht →</Link>
+            </div>
           </div>
         </div>
       </div>

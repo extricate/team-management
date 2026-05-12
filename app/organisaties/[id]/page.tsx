@@ -115,9 +115,11 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
           { label: "Financieringsbronnen", value: org.financialSources.length },
           { label: "Totaal budget",   value: CurrencyDisplay({value: totalBudget}) },
         ].map(({ label, value }) => (
-          <div key={label} style={{ background: "var(--rvo-color-hemelblauw-50)", borderRadius: "4px", padding: "1rem", textAlign: "center", border: "1px solid var(--rvo-color-hemelblauw-100)" }}>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--rvo-color-hemelblauw-700)" }}>{value}</div>
-            <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)", marginTop: "0.25rem" }}>{label}</div>
+          <div key={label} className="rhc-card rhc-card--default" style={{ width: "100%", textAlign: "center" }}>
+            <div className="rhc-card__content">
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--rvo-color-hemelblauw-700)" }}>{value}</div>
+              <div style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)" }}>{label}</div>
+            </div>
           </div>
         ))}
       </div>

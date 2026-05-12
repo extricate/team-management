@@ -8,9 +8,10 @@ interface Props {
   apiPath: string;
   redirectTo?: string;
   warningText?: string;
+  size?: "sm";
 }
 
-export function ArchiveButton({ entityName, apiPath, redirectTo, warningText }: Props) {
+export function ArchiveButton({ entityName, apiPath, redirectTo, warningText, size }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
@@ -52,7 +53,12 @@ export function ArchiveButton({ entityName, apiPath, redirectTo, warningText }: 
 
   return (
     <>
-      <button type="button" className="utrecht-button utrecht-button--danger" onClick={open}>
+      <button
+        type="button"
+        className="utrecht-button utrecht-button--danger"
+        style={size === "sm" ? { fontSize: "0.8125rem", padding: "0.25rem 0.75rem" } : undefined}
+        onClick={open}
+      >
         Archiveren
       </button>
       <dialog ref={dialogRef} className="confirm-dialog" aria-labelledby={titleId}>

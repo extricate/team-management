@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Alert, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -26,9 +26,9 @@ export default async function MfaPage() {
 
       {user?.totpEnabled ? (
         <div>
-          <div style={{ padding: "1rem", marginBottom: "1.5rem", borderLeft: "4px solid var(--rvo-color-groen-600)", background: "var(--rvo-color-groen-100)" }}>
-            <Paragraph style={{ margin: 0, fontWeight: "600" }}>MFA is ingeschakeld voor uw account.</Paragraph>
-          </div>
+          <Alert type="ok" style={{ marginBottom: "1.5rem" }}>
+            <Paragraph><strong>MFA is ingeschakeld voor uw account.</strong></Paragraph>
+          </Alert>
           <Paragraph>Neem contact op met een beheerder als u MFA wilt uitschakelen of opnieuw wilt instellen.</Paragraph>
         </div>
       ) : (

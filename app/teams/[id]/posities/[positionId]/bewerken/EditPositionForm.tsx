@@ -6,7 +6,9 @@ import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import type { Position } from "@/lib/db/schema";
-import { OPF_TYPES, getOPFType, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/opf-types";
+import { Alert } from "@rijkshuisstijl-community/components-react";
+import { OPF_TYPES, getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-types";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface Props {
   position: Position;
@@ -117,20 +119,12 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
             ))}
           </select>
           {opfDef ? (
-            <div style={{ marginTop: "0.5rem", padding: "0.625rem 0.875rem", background: "var(--rvo-color-hemelblauw-50, #eef4fb)", borderRadius: "4px", fontSize: "0.875rem", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
-              <span style={{
-                flexShrink: 0,
-                borderRadius: "20px",
-                padding: "0.125rem 0.625rem",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                background: CATEGORY_COLORS[opfDef.naturalCategory].bg,
-                color: CATEGORY_COLORS[opfDef.naturalCategory].text,
-              }}>
-                {CATEGORY_LABELS[opfDef.naturalCategory]}
-              </span>
-              <span style={{ color: "var(--rvo-color-grijs-700)" }}>{opfDef.hint}</span>
-            </div>
+            <Alert type="info" style={{ marginTop: "0.5rem" }}>
+              <p style={{ margin: 0, fontSize: "0.875rem", display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                <StatusBadge label={CATEGORY_LABELS[opfDef.naturalCategory]} color={CATEGORY_BADGE_COLOR[opfDef.naturalCategory]} />
+                {opfDef.hint}
+              </p>
+            </Alert>
           ) : (
             <p className="form-hint">Bepaalt het verwachte budgettype (PERSEX, MATEX of Investeringen) voor financieringscontroles.</p>
           )}

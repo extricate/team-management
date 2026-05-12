@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
+import { Alert, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 
 interface SetupState {
   secret: string;
@@ -90,9 +90,9 @@ export function TotpSetupClient() {
         <Paragraph>Voer de 6-cijferige code uit uw authenticator-app in ter bevestiging.</Paragraph>
 
         {error && (
-          <div role="alert" style={{ padding: "0.75rem", marginBottom: "1rem", borderLeft: "4px solid var(--rvo-color-rood-600)", background: "var(--rvo-color-rood-100)" }}>
-            <Paragraph style={{ margin: 0 }}>{error}</Paragraph>
-          </div>
+          <Alert type="error" style={{ marginBottom: "1rem" }}>
+            <Paragraph>{error}</Paragraph>
+          </Alert>
         )}
 
         <div style={{ display: "flex", gap: "1rem", alignItems: "flex-end" }}>
@@ -118,9 +118,9 @@ export function TotpSetupClient() {
   if (step === "done") {
     return (
       <div>
-        <div style={{ padding: "1rem", marginBottom: "1.5rem", borderLeft: "4px solid var(--rvo-color-groen-600)", background: "var(--rvo-color-groen-100)" }}>
-          <Paragraph style={{ margin: 0, fontWeight: "600" }}>MFA is succesvol ingesteld.</Paragraph>
-        </div>
+        <Alert type="ok" style={{ marginBottom: "1.5rem" }}>
+          <Paragraph><strong>MFA is succesvol ingesteld.</strong></Paragraph>
+        </Alert>
 
         <Heading level={2}>Herstelcodes — bewaar deze veilig!</Heading>
         <Paragraph>
