@@ -11,12 +11,14 @@ declare module "next-auth" {
       image?: string | null;
       role: UserRole;
       organisationId: string | null;
+      defaultOrganisationId: string | null;
     };
   }
 
   interface User {
     role: UserRole;
     organisationId?: string | null;
+    defaultOrganisationId?: string | null;
   }
 }
 
@@ -24,5 +26,6 @@ declare module "next-auth/adapters" {
   interface AdapterUser {
     role: UserRole;
     organisationId?: string | null;
+    defaultOrganisationId?: string | null;
   }
 }

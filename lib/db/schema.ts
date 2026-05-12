@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   image: text("image"),
   role: text("role").$type<UserRole>().notNull().default("viewer"),
   organisationId: uuid("organisation_id").references(() => organisations.id),
+  defaultOrganisationId: uuid("default_organisation_id").references(() => organisations.id),
   // Credentials auth
   passwordHash: text("password_hash"),
   isEnabled: boolean("is_enabled").notNull().default(true),

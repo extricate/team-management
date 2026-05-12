@@ -27,7 +27,7 @@ export default async function IndelenPage({
     .where(isNull(organisations.deletedAt))
     .orderBy(asc(organisations.name));
 
-  const selectedOrgId = orgId ?? allOrgs[0]?.id ?? null;
+  const selectedOrgId = orgId ?? session.user.defaultOrganisationId ?? allOrgs[0]?.id ?? null;
 
   if (!selectedOrgId) {
     return (

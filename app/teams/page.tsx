@@ -30,10 +30,13 @@ export default async function TeamsPage({
 
   const allOrgs = await db.select({ id: organisations.id, name: organisations.name }).from(organisations).where(isNull(organisations.deletedAt)).orderBy(asc(organisations.name));
 
+  // When no orgId param is present, fall back to the user's default organisation.
+  const effectiveOrgId = orgId ?? session.user.defaultOrganisationId ?? undefined;
+
   // Build base where condition
   const whereConditions = [isNull(teams.deletedAt)];
   if (q) whereConditions.push(ilike(teams.name, `%${q}%`));
-  if (orgId) whereConditions.push(eq(teams.organisationId, orgId));
+  if (effectiveOrgId) whereConditions.push(eq(teams.organisationId, effectiveOrgId));
 
   const { and } = await import("drizzle-orm");
   const whereClause = and(...whereConditions);
@@ -93,7 +96,7 @@ export default async function TeamsPage({
         </div>
         <div>
           <label htmlFor="orgId" style={{ display: "block", fontSize: "0.8125rem", marginBottom: "0.25rem", color: "var(--rvo-color-grijs-700)" }}>Organisatie</label>
-          <select id="orgId" name="orgId" className="utrecht-select" defaultValue={orgId ?? ""}>
+          <select id="orgId" name="orgId" className="utrecht-select" defaultValue={effectiveOrgId ?? ""}>
             <option value="">Alle organisaties</option>
             {allOrgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>

@@ -220,3 +220,7 @@ export const UpdateUserSchema = z.object({
   isEnabled: z.boolean().optional(),
   password: z.string().min(12, "Wachtwoord moet minimaal 12 tekens bevatten").optional(),
 });
+
+export const UpdateMyPreferencesSchema = z.object({
+  defaultOrganisationId: z.string().uuid().nullable(),
+});

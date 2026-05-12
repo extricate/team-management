@@ -31,8 +31,10 @@ export default async function MedewerkersPage({
 
   const allOrgs = await db.select({ id: organisations.id, name: organisations.name }).from(organisations).where(isNull(organisations.deletedAt)).orderBy(asc(organisations.name));
 
+  const effectiveOrgId = orgId ?? session.user.defaultOrganisationId ?? undefined;
+
   const conditions = [isNull(employees.deletedAt)];
-  if (orgId) conditions.push(eq(employees.organisationId, orgId));
+  if (effectiveOrgId) conditions.push(eq(employees.organisationId, effectiveOrgId));
   if (q) {
     conditions.push(
       or(
@@ -97,7 +99,7 @@ export default async function MedewerkersPage({
         </div>
         <div>
           <label htmlFor="orgId" style={{ display: "block", fontSize: "0.8125rem", marginBottom: "0.25rem", color: "var(--rvo-color-grijs-700)" }}>Organisatie</label>
-          <select id="orgId" name="orgId" className="utrecht-select" defaultValue={orgId ?? ""}>
+          <select id="orgId" name="orgId" className="utrecht-select" defaultValue={effectiveOrgId ?? ""}>
             <option value="">Alle organisaties</option>
             {allOrgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>

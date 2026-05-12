@@ -20,6 +20,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id = user.id;
       session.user.role = user.role ?? "viewer";
       session.user.organisationId = user.organisationId ?? null;
+      session.user.defaultOrganisationId = user.defaultOrganisationId ?? null;
       return session;
     },
   },

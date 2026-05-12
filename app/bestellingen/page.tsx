@@ -31,9 +31,11 @@ export default async function BestellingenPage({
 
   const allOrgs = await db.select({ id: organisations.id, name: organisations.name }).from(organisations).where(isNull(organisations.deletedAt)).orderBy(asc(organisations.name));
 
+  const effectiveOrgId = orgId ?? session.user.defaultOrganisationId ?? undefined;
+
   const conditions = [isNull(bestellingen.deletedAt)];
   if (q) conditions.push(ilike(bestellingen.atbNummer, `%${q}%`));
-  if (orgId) conditions.push(eq(bestellingen.organisationId, orgId));
+  if (effectiveOrgId) conditions.push(eq(bestellingen.organisationId, effectiveOrgId));
   const whereClause = and(...conditions);
 
   const [{ total }] = await db.select({ total: count() }).from(bestellingen).where(whereClause);
@@ -87,7 +89,7 @@ export default async function BestellingenPage({
         </div>
         <div>
           <label htmlFor="orgId" style={{ display: "block", fontSize: "0.8125rem", marginBottom: "0.25rem", color: "var(--rvo-color-grijs-700)" }}>Organisatie</label>
-          <select id="orgId" name="orgId" className="utrecht-select" defaultValue={orgId ?? ""}>
+          <select id="orgId" name="orgId" className="utrecht-select" defaultValue={effectiveOrgId ?? ""}>
             <option value="">Alle organisaties</option>
             {allOrgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
