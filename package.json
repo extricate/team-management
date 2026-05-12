@@ -40,6 +40,8 @@
     "@rijkshuisstijl-community/components-react": "^15.0.2",
     "@rijkshuisstijl-community/design-tokens": "^15.0.0",
     "@rijkshuisstijl-community/font": "^1.1.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20.19.39",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -47,6 +49,7 @@
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.4",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }

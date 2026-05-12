@@ -8,9 +8,9 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Org { id: string; name: string; }
 interface BestellingType { id: string; naam: string; }
-interface Props { orgs: Org[]; types: BestellingType[]; }
+interface Props { orgs: Org[]; types: BestellingType[]; defaultOrganisationId?: string | null; }
 
-export function NieuweBestellingForm({ orgs, types }: Props) {
+export function NieuweBestellingForm({ orgs, types, defaultOrganisationId }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -67,7 +67,7 @@ export function NieuweBestellingForm({ orgs, types }: Props) {
           <label htmlFor="organisationId" className="utrecht-form-label">
             Organisatie <span className="form-required" aria-label="verplicht">*</span>
           </label>
-          <select id="organisationId" name="organisationId" className="utrecht-select" required>
+          <select id="organisationId" name="organisationId" className="utrecht-select" required defaultValue={defaultOrganisationId ?? ""}>
             <option value="">— Kies een organisatie —</option>
             {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>

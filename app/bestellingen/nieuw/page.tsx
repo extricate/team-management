@@ -17,5 +17,5 @@ export default async function NieuweBestellingPage() {
     db.select({ id: bestellingTypes.id, naam: bestellingTypes.naam }).from(bestellingTypes).orderBy(bestellingTypes.naam),
   ]);
 
-  return <NieuweBestellingForm orgs={orgs} types={types} />;
+  return <NieuweBestellingForm orgs={orgs} types={types} defaultOrganisationId={session.user.defaultOrganisationId ?? null} />;
 }

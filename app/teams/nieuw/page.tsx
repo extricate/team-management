@@ -18,5 +18,5 @@ export default async function NieuwTeamPage() {
     .where(isNull(organisations.deletedAt))
     .orderBy(organisations.name);
 
-  return <NieuwTeamForm orgs={orgs} />;
+  return <NieuwTeamForm orgs={orgs} defaultOrganisationId={session.user.defaultOrganisationId ?? null} />;
 }

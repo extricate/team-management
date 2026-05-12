@@ -18,5 +18,5 @@ export default async function NieuweFinancieringPage() {
     .where(isNull(organisations.deletedAt))
     .orderBy(organisations.name);
 
-  return <NieuweFinancieringForm orgs={orgs} />;
+  return <NieuweFinancieringForm orgs={orgs} defaultOrganisationId={session.user.defaultOrganisationId ?? null} />;
 }

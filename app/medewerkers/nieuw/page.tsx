@@ -18,5 +18,5 @@ export default async function NieuweMedewerkerPage() {
     .where(isNull(organisations.deletedAt))
     .orderBy(organisations.name);
 
-  return <NieuweMedewerkerForm orgs={orgs} />;
+  return <NieuweMedewerkerForm orgs={orgs} defaultOrganisationId={session.user.defaultOrganisationId ?? null} />;
 }
