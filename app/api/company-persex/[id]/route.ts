@@ -16,8 +16,9 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
   const parsed = CompanyPersexBudgetUpdateSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
 
+  const { amount, ...rest } = parsed.data;
   const [after] = await db.update(companyPersexBudgets)
-    .set({ ...parsed.data, updatedAt: new Date() })
+    .set({ ...rest, ...(amount != null ? { amount: String(amount) } : {}), updatedAt: new Date() })
     .where(eq(companyPersexBudgets.id, id))
     .returning();
 

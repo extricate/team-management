@@ -21,7 +21,7 @@ export default async function BedrijfspersexPage() {
     with: {
       allocations: {
         where: eq(fundingAllocations.status, "active"),
-        with: { position: { with: { team: true } }, team: true },
+        with: { position: { with: { teamCouplings: { with: { team: true } } } }, team: true },
       },
     },
     orderBy: (b, { asc }) => [asc(b.year)],
@@ -112,7 +112,7 @@ export default async function BedrijfspersexPage() {
                       <td className="utrecht-table__cell">{b.year}</td>
                       <td className="utrecht-table__cell">
                         {al.position
-                          ? <><strong>{al.position.type}</strong> · {al.position.team.name}</>
+                          ? <><strong>{al.position.type}</strong>{al.position.teamCouplings[0]?.team ? ` · ${al.position.teamCouplings[0].team.name}` : ""}</>
                           : al.team
                           ? al.team.name
                           : "—"}

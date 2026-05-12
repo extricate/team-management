@@ -38,7 +38,7 @@ export default async function BestellingDetailPage({ params }: { params: Promise
         orderBy: (al, { desc }) => [desc(al.createdAt)],
       },
       positions: {
-        with: { team: true, assignments: { with: { employee: true } } },
+        with: { teamCouplings: { with: { team: true } }, assignments: { with: { employee: true } } },
       },
     },
   });
@@ -86,7 +86,7 @@ export default async function BestellingDetailPage({ params }: { params: Promise
     <div>
       <Breadcrumbs crumbs={[{ label: "Bestellingen", href: "/bestellingen" }, { label: row.atbNummer }]} />
 
-      {isArchived && <ArchivedBanner entityName="bestelling" />}
+      {isArchived && <ArchivedBanner deletedAt={row.deletedAt!} entityLabel={row.atbNummer} />}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
         <div>
@@ -97,7 +97,7 @@ export default async function BestellingDetailPage({ params }: { params: Promise
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <Link href={`/bestellingen/${id}/financieren`} className="utrecht-button utrecht-button--secondary-action">Financieren</Link>
             <Link href={`/bestellingen/${id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
-            <ArchiveButton entityType="bestellingen" entityId={id} redirectTo="/bestellingen" />
+            <ArchiveButton entityName={row.atbNummer} apiPath={`/api/bestellingen/${id}`} redirectTo="/bestellingen" />
           </div>
         )}
       </div>
@@ -198,9 +198,11 @@ export default async function BestellingDetailPage({ params }: { params: Promise
                 return (
                   <tr key={pos.id} className="utrecht-table__row">
                     <td className="utrecht-table__cell">
-                      <Link href={`/teams/${pos.team.id}`} className="utrecht-link">{pos.type}</Link>
+                      {pos.teamCouplings[0]?.team
+                        ? <Link href={`/teams/${pos.teamCouplings[0].team.id}`} className="utrecht-link">{pos.type}</Link>
+                        : pos.type}
                     </td>
-                    <td className="utrecht-table__cell">{pos.team.name}</td>
+                    <td className="utrecht-table__cell">{pos.teamCouplings[0]?.team?.name ?? "—"}</td>
                     <td className="utrecht-table__cell"><code>{pos.opfType ?? "—"}</code></td>
                     <td className="utrecht-table__cell">
                       {activeAssignment

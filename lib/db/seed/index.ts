@@ -10,7 +10,7 @@ import { faker } from "@faker-js/faker/locale/nl";
 import { db } from "../index";
 import {
   organisations, teams, employees, positions,
-  teamMemberships, positionAssignments,
+  teamMemberships, positionAssignments, teamPositionCouplings,
   financialSources, financialTypes, financialSourceAmounts, fundingAllocations,
   auditEvents, comments,
 } from "../schema";
@@ -255,6 +255,7 @@ async function resetAll() {
   await db.delete(financialTypes);
   await db.delete(financialSources);
   await db.delete(positionAssignments);
+  await db.delete(teamPositionCouplings);
   await db.delete(positions);
   await db.delete(teamMemberships);
   await db.delete(comments);
@@ -316,20 +317,20 @@ async function seedEmployees(orgsWithTeams: { org: Organisation; employeeCount: 
 
 // ── Positions ─────────────────────────────────────────────────────────────────
 
-async function seedPositions(orgsWithTeams: { teams: Team[] }[]) {
+async function seedPositions(orgsWithTeams: { org: Organisation; teams: Team[] }[]) {
   type PositionWithTeam = { pos: typeof positions.$inferSelect; teamId: string };
   const result: PositionWithTeam[] = [];
 
-  const statusWeights = ["filled", "filled", "filled", "open", "open", "planned", "closed"] as const;
+  const statusWeights = ["gevuld", "gevuld", "gevuld", "open", "open", "gepland", "gesloten"] as const;
 
-  for (const { teams: orgTeams } of orgsWithTeams) {
+  for (const { org, teams: orgTeams } of orgsWithTeams) {
     for (const team of orgTeams) {
       const defs = faker.helpers.shuffle([...POSITION_DEFS]).slice(0, 3);
 
       const rows = defs.map((def, i) => {
         const opfDef = OPF_TYPES.find(t => t.key === def.opfKey);
         return {
-          teamId:        team.id,
+          organisationId: org.id,
           type:          opfDef?.label ?? def.opfKey,
           opfType:       def.opfKey,
           positionCode:  `${team.id.slice(0, 6).toUpperCase()}-${def.opfKey}-${i + 1}`,
@@ -341,6 +342,16 @@ async function seedPositions(orgsWithTeams: { teams: Team[] }[]) {
       });
 
       const created = await db.insert(positions).values(rows).returning();
+
+      // Create active team couplings for each position
+      await db.insert(teamPositionCouplings).values(
+        created.map(pos => ({
+          teamId: team.id,
+          positionId: pos.id,
+          startDate: pos.expectedStart ?? new Date("2024-01-01"),
+        })),
+      );
+
       result.push(...created.map(pos => ({ pos, teamId: team.id })));
     }
   }
@@ -402,7 +413,7 @@ async function seedPositionAssignments(
   allPositions:   { pos: typeof positions.$inferSelect; teamId: string }[],
   allMemberships: { teamId: string; empId: string }[],
 ) {
-  const filledPositions = allPositions.filter(p => p.pos.status === "filled");
+  const filledPositions = allPositions.filter(p => p.pos.status === "gevuld");
 
   for (const { pos, teamId } of filledPositions) {
     const eligibleEmpIds = allMemberships

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { organisations, teams, employees, positions } from "@/lib/db/schema";
+import { organisations, teams, employees, positions, teamPositionCouplings } from "@/lib/db/schema";
 import { isNull, eq, asc, and, inArray, ne } from "drizzle-orm";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { DragDropPositionBuilder } from "@/components/ui/DragDropPositionBuilder";
@@ -47,13 +47,11 @@ export default async function BezettingPage({
   const teamIds = orgTeams.map(t => t.id);
 
   const [orgPositions, orgEmployees] = await Promise.all([
-    teamIds.length > 0
-      ? db
-          .select()
-          .from(positions)
-          .where(and(inArray(positions.teamId, teamIds), isNull(positions.deletedAt), ne(positions.status, "closed")))
-          .orderBy(asc(positions.type))
-      : Promise.resolve([]),
+    db.query.positions.findMany({
+      where: and(eq(positions.organisationId, selectedOrgId), isNull(positions.deletedAt), ne(positions.status, "gesloten")),
+      with: { teamCouplings: { where: isNull(teamPositionCouplings.endDate) } },
+      orderBy: (p, { asc: _asc }) => [_asc(p.type)],
+    }),
     db.query.employees.findMany({
       where: (e, { and: a }) => a(eq(e.organisationId, selectedOrgId), isNull(e.deletedAt)),
       with: {
@@ -83,7 +81,7 @@ export default async function BezettingPage({
     return {
       id: pos.id,
       type: pos.type,
-      teamId: pos.teamId,
+      teamId: pos.teamCouplings[0]?.teamId ?? "",
       status: pos.status,
       activeAssignmentId: assignment?.id ?? null,
       activeEmployeeId: assignment?.employeeId ?? null,

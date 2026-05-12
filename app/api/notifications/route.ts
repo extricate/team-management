@@ -9,7 +9,7 @@ export const GET = withErrorHandling(async () => {
 
   const allPositions = await db.query.positions.findMany({
     where: isNull(positions.deletedAt),
-    with: { team: true, fundingAllocations: true },
+    with: { teamCouplings: { with: { team: true } }, fundingAllocations: true },
   });
 
   const conflicts = detectPositionConflicts(allPositions);

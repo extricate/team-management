@@ -8,6 +8,7 @@ import styles from "./SiteHeader.module.css";
 const primaryLinks = [
   { href: "/dashboard",    label: "Dashboard" },
   { href: "/teams",        label: "Teams" },
+  { href: "/posities",     label: "Posities" },
   { href: "/medewerkers",  label: "Medewerkers" },
   { href: "/financiering", label: "Financiering" },
   { href: "/bestellingen", label: "Bestellingen" },

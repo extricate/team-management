@@ -9,7 +9,7 @@ export const GET = withErrorHandling(async () => {
   const rows = await db.query.fundingAllocations.findMany({
     with: {
       financialSourceAmount: { with: { financialSource: true, type: true } },
-      position: { with: { team: true } },
+      position: { with: { teamCouplings: { with: { team: true } } } },
       team: true,
       createdByUser: true,
     },

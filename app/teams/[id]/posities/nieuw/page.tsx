@@ -19,5 +19,5 @@ export default async function NieuwePositiePage({ params }: { params: Promise<{ 
   });
   if (!team) notFound();
 
-  return <NewPositionForm teamId={team.id} teamName={team.name} />;
+  return <NewPositionForm teamId={team.id} organisationId={team.organisationId} teamName={team.name} />;
 }

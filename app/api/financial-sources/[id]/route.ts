@@ -16,9 +16,9 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
       types: true,
       amounts: {
         with: {
-          financialType: true,
+          type: true,
           allocations: {
-            with: { position: { with: { team: true } }, team: true, createdByUser: true },
+            with: { position: { with: { teamCouplings: { with: { team: true } } } }, team: true, createdByUser: true },
           },
         },
       },

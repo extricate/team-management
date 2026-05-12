@@ -30,7 +30,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
     with: {
       organisation: true,
       memberships: { with: { team: true, createdByUser: true }, orderBy: (m, { desc }) => [desc(m.startDate)] },
-      positionAssignments: { with: { position: { with: { team: true } }, createdByUser: true }, orderBy: (pa, { desc }) => [desc(pa.startDate)] },
+      positionAssignments: { with: { position: { with: { teamCouplings: { with: { team: true } } } }, createdByUser: true }, orderBy: (pa, { desc }) => [desc(pa.startDate)] },
     },
   });
 
@@ -101,7 +101,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
                 <strong>{activePos.position.type}</strong>
                 {activePos.position.positionCode && <span style={{ marginLeft: "0.5rem", color: "var(--rvo-color-grijs-600)" }}>({activePos.position.positionCode})</span>}
                 <Paragraph style={{ margin: "0.25rem 0 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
-                  Team: {activePos.position.team.name} · Sinds {formatDate(activePos.startDate)}
+                  Team: {activePos.position.teamCouplings[0]?.team?.name ?? "—"} · Sinds {formatDate(activePos.startDate)}
                 </Paragraph>
               </div>
             : <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>Geen actieve positie</Paragraph>}
@@ -140,7 +140,11 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
             {emp.positionAssignments.map((pa) => (
               <tr key={pa.id} className="utrecht-table__row">
                 <td className="utrecht-table__cell"><strong>{pa.position.type}</strong></td>
-                <td className="utrecht-table__cell"><Link href={`/teams/${pa.position.team.id}`} className="utrecht-link">{pa.position.team.name}</Link></td>
+                <td className="utrecht-table__cell">
+                  {pa.position.teamCouplings[0]?.team
+                    ? <Link href={`/teams/${pa.position.teamCouplings[0].team.id}`} className="utrecht-link">{pa.position.teamCouplings[0].team.name}</Link>
+                    : "—"}
+                </td>
                 <td className="utrecht-table__cell"><StatusBadge label={pa.status} color={pa.status === "active" ? "green" : "grey"} /></td>
                 <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(pa.startDate)}</td>
                 <td className="utrecht-table__cell" style={{ whiteSpace: "nowrap" }}>{formatDate(pa.endDate)}</td>

@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { organisations, teams, employees, financialSources, positions, comments, auditEvents } from "@/lib/db/schema";
+import { organisations, teams, employees, financialSources, positions, comments, auditEvents, teamPositionCouplings } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
@@ -31,7 +31,7 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
       teams: {
         where: isNull(teams.deletedAt),
         with: {
-          positions: { where: isNull(positions.deletedAt) },
+          positionCouplings: { where: isNull(teamPositionCouplings.endDate), with: { position: { columns: { status: true, deletedAt: true } } } },
           memberships: true,
         },
         orderBy: (t, { asc }) => [asc(t.name)],
@@ -65,9 +65,10 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
     limit: 50,
   });
 
-  const totalPositions  = org.teams.flatMap(t => t.positions).length;
-  const filledPositions = org.teams.flatMap(t => t.positions).filter(p => p.status === "filled").length;
-  const openPositions   = org.teams.flatMap(t => t.positions).filter(p => p.status === "open").length;
+  const allActivePositions = org.teams.flatMap(t => t.positionCouplings).filter(c => c.position && !c.position.deletedAt).map(c => c.position!);
+  const totalPositions  = allActivePositions.length;
+  const filledPositions = allActivePositions.filter(p => p.status === "gevuld").length;
+  const openPositions   = allActivePositions.filter(p => p.status === "open").length;
   const totalBudget     = org.financialSources.flatMap(fs => fs.amounts).reduce((s, a) => s + Number(a.amount), 0);
 
   return (
@@ -151,8 +152,9 @@ export default async function OrganisatieDetailPage({ params }: { params: Promis
             )}
             {org.teams.map((team) => {
               const activeMembers   = team.memberships.filter(m => m.status === "active" && !m.endDate).length;
-              const filled = team.positions.filter(p => p.status === "filled").length;
-              const total  = team.positions.length;
+              const activePositions = team.positionCouplings.filter(c => c.position && !c.position.deletedAt);
+              const filled = activePositions.filter(c => c.position?.status === "gevuld").length;
+              const total  = activePositions.length;
               return (
                 <tr key={team.id} className="utrecht-table__row">
                   <td className="utrecht-table__cell">

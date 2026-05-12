@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { employees, teams, organisations, financialSources, positions } from "../db/schema";
+import { employees, teams, organisations, financialSources, positions, teamPositionCouplings } from "../db/schema";
 import { isNull } from "drizzle-orm";
 import { getClient, INDEXES, ensureIndexes } from "./client";
 
@@ -98,22 +98,28 @@ export async function reindex() {
   // ── Positions ─────────────────────────────────────────────────────────────────
   const allPositions = await db.query.positions.findMany({
     where: isNull(positions.deletedAt),
-    with: { team: { with: { organisation: true } } },
+    with: {
+      organisation: true,
+      teamCouplings: { where: isNull(teamPositionCouplings.endDate), with: { team: true } },
+    },
   });
   console.log(`[reindex] ${allPositions.length} posities`);
   if (allPositions.length > 0) {
     const t = await c.index(INDEXES.positions).addDocuments(
-      allPositions.map(row => ({
-        id: row.id,
-        type: row.type,
-        positionCode: row.positionCode ?? null,
-        schaal: row.schaal ?? null,
-        status: row.status,
-        teamName: row.team.name,
-        teamId: row.teamId,
-        organisationName: row.team.organisation.name,
-        url: `/teams/${row.teamId}`,
-      })),
+      allPositions.map(row => {
+        const activeTeam = row.teamCouplings[0]?.team ?? null;
+        return {
+          id: row.id,
+          type: row.type,
+          positionCode: row.positionCode ?? null,
+          schaal: row.schaal ?? null,
+          status: row.status,
+          teamName: activeTeam?.name ?? null,
+          teamId: activeTeam?.id ?? null,
+          organisationName: row.organisation.name,
+          url: activeTeam ? `/teams/${activeTeam.id}` : `/posities/${row.id}`,
+        };
+      }),
       { primaryKey: "id" }
     );
     tasks.push(t.taskUid);

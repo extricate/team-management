@@ -12,9 +12,10 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
   const row = await db.query.positions.findFirst({
     where: eq(positions.id, id),
     with: {
-      team: { with: { organisation: true } },
+      organisation: true,
       assignments: { with: { employee: true, createdByUser: true } },
       fundingAllocations: { with: { financialSourceAmount: { with: { financialSource: true, type: true } } } },
+      teamCouplings: { with: { team: true } },
     },
   });
   if (!row || row.deletedAt) return notFound();

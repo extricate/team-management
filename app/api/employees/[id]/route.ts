@@ -14,7 +14,7 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
     with: {
       organisation: true,
       memberships: { with: { team: true, createdByUser: true } },
-      positionAssignments: { with: { position: { with: { team: true } }, createdByUser: true } },
+      positionAssignments: { with: { position: { with: { teamCouplings: { with: { team: true } } } }, createdByUser: true } },
     },
   });
   if (!row || row.deletedAt) return notFound();

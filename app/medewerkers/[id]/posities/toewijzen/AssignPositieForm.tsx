@@ -10,7 +10,7 @@ interface Position {
   id: string;
   type: string;
   positionCode: string | null;
-  team: { id: string; name: string };
+  teamCouplings: { team: { id: string; name: string } }[];
 }
 
 interface Props {
@@ -92,7 +92,7 @@ export function AssignPositieForm({ employeeId, employeeName, positions }: Props
               <option value="">— Kies een positie —</option>
               {positions.map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.type}{p.positionCode ? ` (${p.positionCode})` : ""} — {p.team.name}
+                  {p.type}{p.positionCode ? ` (${p.positionCode})` : ""}{p.teamCouplings[0]?.team ? ` — ${p.teamCouplings[0].team.name}` : ""}
                 </option>
               ))}
             </select>

@@ -64,31 +64,45 @@ export const EmployeeUpdateSchema = z.object({
 });
 
 // ── Position ───────────────────────────────────────────────────────────────────
+export const POSITION_STATUSES = ["gepland", "gewenst", "toegezegd", "open", "gevuld", "gesloten"] as const;
+
 export const PositionSchema = z.object({
-  teamId: uuidField,
+  organisationId: uuidField,
+  bestellingId: z.string().uuid().optional().nullable(),
   type: z.string().min(1),
   opfType: z.string().optional().nullable(),
   positionCode: z.string().optional(),
   schaal: z.string().optional(),
   annualCost: z.number().positive().optional(),
-  status: z.enum(["planned", "open", "filled", "closed"]).default("planned"),
+  status: z.enum(POSITION_STATUSES).default("gepland"),
   expectedStart: optionalDatetime,
   expectedEnd: optionalDatetime,
   requiredBefore: optionalDatetime,
 });
 
 export const PositionUpdateSchema = z.object({
-  teamId: optionalUuid,
   bestellingId: z.string().uuid().optional().nullable(),
   type: z.string().min(1).optional(),
   opfType: z.string().optional().nullable(),
   positionCode: z.string().optional().nullable(),
   schaal: z.string().optional().nullable(),
   annualCost: z.number().positive().optional().nullable(),
-  status: z.enum(["planned", "open", "filled", "closed"]).optional(),
+  status: z.enum(POSITION_STATUSES).optional(),
   expectedStart: nullableDatetime,
   expectedEnd: nullableDatetime,
   requiredBefore: nullableDatetime,
+});
+
+// ── TeamPositionCoupling ───────────────────────────────────────────────────────
+export const TeamPositionCouplingSchema = z.object({
+  teamId: uuidField,
+  positionId: uuidField,
+  startDate: z.string().datetime(),
+  endDate: optionalDatetime,
+});
+
+export const TeamPositionCouplingUpdateSchema = z.object({
+  endDate: nullableDatetime,
 });
 
 // ── TeamMembership ─────────────────────────────────────────────────────────────

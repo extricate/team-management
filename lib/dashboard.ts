@@ -24,9 +24,9 @@ export interface UpcomingEvent {
 
 type PositionWithTeamAndAllocations = Pick<
   Position,
-  "id" | "type" | "teamId" | "status" | "expectedStart" | "expectedEnd" | "requiredBefore"
+  "id" | "type" | "status" | "expectedStart" | "expectedEnd" | "requiredBefore"
 > & {
-  team: { name: string };
+  teamCouplings: Array<{ teamId: string; team: { name: string } }>;
   fundingAllocations: Array<{ status: string }>;
 };
 
@@ -42,7 +42,7 @@ type AssignmentWithPositionAndEmployee = Pick<
   PositionAssignment,
   "id" | "status" | "endDate"
 > & {
-  position: { type: string; team: { name: string } };
+  position: { type: string; teamCouplings: Array<{ team: { name: string } }> };
   employee: { firstName: string; prefixName?: string | null; lastName: string };
 };
 
@@ -52,7 +52,10 @@ export function detectPositionConflicts(
   const conflicts: PositionConflict[] = [];
 
   for (const pos of positions) {
-    if (pos.status === "closed") continue;
+    if (pos.status === "gesloten") continue;
+
+    const activeTeamId = pos.teamCouplings[0]?.teamId ?? "";
+    const activeTeamName = pos.teamCouplings[0]?.team?.name ?? "Onbekend team";
 
     // Late start: expectedStart is after requiredBefore
     if (pos.requiredBefore && pos.expectedStart && pos.expectedStart > pos.requiredBefore) {
@@ -60,23 +63,23 @@ export function detectPositionConflicts(
         type: "late_start",
         positionId: pos.id,
         positionType: pos.type,
-        teamId: pos.teamId,
-        teamName: pos.team.name,
+        teamId: activeTeamId,
+        teamName: activeTeamName,
         requiredBefore: pos.requiredBefore,
         expectedStart: pos.expectedStart,
       });
     }
 
-    // Unfunded: planned/open with no active funding allocation
-    if (pos.status === "planned" || pos.status === "open") {
+    // Unfunded: gepland/open with no active funding allocation
+    if (pos.status === "gepland" || pos.status === "open") {
       const hasFunding = pos.fundingAllocations.some((fa) => fa.status === "active");
       if (!hasFunding) {
         conflicts.push({
           type: "unfunded",
           positionId: pos.id,
           positionType: pos.type,
-          teamId: pos.teamId,
-          teamName: pos.team.name,
+          teamId: activeTeamId,
+          teamName: activeTeamName,
           requiredBefore: pos.requiredBefore ?? null,
           expectedStart: pos.expectedStart ?? null,
         });
@@ -115,13 +118,14 @@ export function collectUpcomingEvents(
   }
 
   for (const pos of positions) {
-    if (pos.status === "closed") continue;
+    if (pos.status === "gesloten") continue;
+    const teamName = pos.teamCouplings[0]?.team?.name;
     if (inRange(pos.expectedStart)) {
       events.push({
         kind: "position_start",
-        label: `Positie "${pos.type}" (${pos.team.name}) start`,
+        label: teamName ? `Positie "${pos.type}" (${teamName}) start` : `Positie "${pos.type}" start`,
         entityId: pos.id,
-        teamName: pos.team.name,
+        teamName,
         date: pos.expectedStart!,
         daysUntil: daysUntil(pos.expectedStart!),
       });
@@ -129,9 +133,9 @@ export function collectUpcomingEvents(
     if (inRange(pos.expectedEnd)) {
       events.push({
         kind: "position_end",
-        label: `Positie "${pos.type}" (${pos.team.name}) eindigt`,
+        label: teamName ? `Positie "${pos.type}" (${teamName}) eindigt` : `Positie "${pos.type}" eindigt`,
         entityId: pos.id,
-        teamName: pos.team.name,
+        teamName,
         date: pos.expectedEnd!,
         daysUntil: daysUntil(pos.expectedEnd!),
       });
@@ -160,7 +164,7 @@ export function collectUpcomingEvents(
         kind: "assignment_end",
         label: `Toewijzing ${fullName(a.employee)} aan "${a.position.type}" eindigt`,
         entityId: a.id,
-        teamName: a.position.team.name,
+        teamName: a.position.teamCouplings[0]?.team?.name,
         employeeName: fullName(a.employee),
         date: a.endDate!,
         daysUntil: daysUntil(a.endDate!),

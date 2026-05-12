@@ -27,7 +27,7 @@ export const POST = withErrorHandling(async (req: Request) => {
   });
   if (existing) return badRequest(`Er bestaat al een bedrijfspersex-budget voor ${parsed.data.year}.`);
 
-  const [row] = await db.insert(companyPersexBudgets).values(parsed.data).returning();
+  const [row] = await db.insert(companyPersexBudgets).values({ ...parsed.data, amount: String(parsed.data.amount) }).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "companyPersexBudget", entityId: row.id, action: "create", after: row });
   return created(row);
 });

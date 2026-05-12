@@ -7,7 +7,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Pagination } from "@/components/ui/Pagination";
 import { SortHeader } from "@/components/ui/SortHeader";
 import { db } from "@/lib/db";
-import { teams, organisations } from "@/lib/db/schema";
+import { teams, organisations, teamPositionCouplings } from "@/lib/db/schema";
 import { isNull, count, ilike, eq, asc, desc } from "drizzle-orm";
 
 export const metadata: Metadata = { title: "Teams – Teambeheer" };
@@ -53,7 +53,7 @@ export default async function TeamsPage({
 
   const pageTeams = await db.query.teams.findMany({
     where: whereClause,
-    with: { organisation: true, positions: true, memberships: true },
+    with: { organisation: true, positionCouplings: { where: isNull(teamPositionCouplings.endDate), with: { position: { columns: { status: true, deletedAt: true } } } }, memberships: true },
     orderBy: orderByClause,
     limit: PAGE_SIZE,
     offset,
@@ -138,8 +138,9 @@ export default async function TeamsPage({
           )}
           {pageTeams.map((team) => {
             const activeMembers   = team.memberships.filter(m => m.status === "active" && !m.endDate).length;
-            const totalPositions  = team.positions.filter(p => !p.deletedAt).length;
-            const filledPositions = team.positions.filter(p => p.status === "filled" && !p.deletedAt).length;
+            const activePositions  = team.positionCouplings.filter(c => c.position && !c.position.deletedAt);
+            const totalPositions  = activePositions.length;
+            const filledPositions = activePositions.filter(c => c.position?.status === "gevuld").length;
 
             return (
               <tr key={team.id} className="utrecht-table__row">

@@ -20,7 +20,7 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
         },
       },
       positions: {
-        with: { team: true, assignments: { with: { employee: true } } },
+        with: { teamCouplings: { with: { team: true } }, assignments: { with: { employee: true } } },
       },
     },
   });

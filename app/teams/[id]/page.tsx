@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { teams, comments, auditEvents, positions, financialSourceAmounts, companyPersexBudgets } from "@/lib/db/schema";
+import { teams, comments, auditEvents, positions, teamPositionCouplings, financialSourceAmounts, companyPersexBudgets } from "@/lib/db/schema";
 import { eq, isNull, desc, and, inArray } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
@@ -33,16 +33,20 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
     where: eq(teams.id, id),
     with: {
       organisation: true,
-      positions: {
-        where: isNull(positions.deletedAt),
+      positionCouplings: {
+        where: isNull(teamPositionCouplings.endDate),
         with: {
-          assignments: { with: { employee: true } },
-          bestelling: true,
-          // Load allocations without nested source amount to avoid alias collision
-          // (teams_positions_fundingAllocations_financialSourceAmount_financialSource/Type
-          // both truncate to the same 63-char PostgreSQL identifier)
-          fundingAllocations: {
-            orderBy: (fa, { desc }) => [desc(fa.createdAt)],
+          position: {
+            with: {
+              assignments: { with: { employee: true } },
+              bestelling: true,
+              // Load allocations without nested source amount to avoid alias collision
+              // (teams_positionCouplings_position_fundingAllocations_financialSourceAmount_financialSource/Type
+              // both truncate to the same 63-char PostgreSQL identifier)
+              fundingAllocations: {
+                orderBy: (fa, { desc }) => [desc(fa.createdAt)],
+              },
+            },
           },
         },
       },
@@ -54,9 +58,16 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
 
   const isArchived = !!team.deletedAt;
 
+  // Flatten active (non-deleted) coupled positions for stats and rendering
+  const teamPositions = team.positionCouplings
+    .map(c => ({ coupling: c, position: c.position }))
+    .filter((cp): cp is typeof cp & { position: NonNullable<typeof cp.position> } =>
+      !!cp.position && !cp.position.deletedAt,
+    );
+
   // Load source amounts separately to avoid the deep-join alias collision
   const allAmountIds = Array.from(new Set(
-    team.positions.flatMap(p => p.fundingAllocations.map(fa => fa.financialSourceAmountId)).filter(Boolean) as string[],
+    teamPositions.flatMap(({ position: p }) => p.fundingAllocations.map(fa => fa.financialSourceAmountId)).filter(Boolean) as string[],
   ));
   const sourceAmounts = allAmountIds.length > 0
     ? await db.query.financialSourceAmounts.findMany({
@@ -68,7 +79,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
 
   // Load company persex budgets referenced by allocations
   const allPersexIds = Array.from(new Set(
-    team.positions.flatMap(p => p.fundingAllocations.map(fa => fa.companyPersexBudgetId)).filter(Boolean) as string[],
+    teamPositions.flatMap(({ position: p }) => p.fundingAllocations.map(fa => fa.companyPersexBudgetId)).filter(Boolean) as string[],
   ));
   const persexBudgets = allPersexIds.length > 0
     ? await db.select().from(companyPersexBudgets).where(inArray(companyPersexBudgets.id, allPersexIds))
@@ -89,10 +100,10 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
   });
 
   const activeMembers    = team.memberships.filter(m => m.status === "active" && !m.endDate);
-  const totalPositions   = team.positions.length;
-  const filledPositions  = team.positions.filter(p => p.status === "filled").length;
-  const openPositions    = team.positions.filter(p => p.status === "open").length;
-  const fundedPositions  = team.positions.filter(p => p.fundingAllocations.some(fa => fa.status === "active")).length;
+  const totalPositions   = teamPositions.length;
+  const filledPositions  = teamPositions.filter(({ position: p }) => p.status === "gevuld").length;
+  const openPositions    = teamPositions.filter(({ position: p }) => p.status === "open").length;
+  const fundedPositions  = teamPositions.filter(({ position: p }) => p.fundingAllocations.some(fa => fa.status === "active")).length;
 
   return (
     <div>
@@ -146,11 +157,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
             </Link>
           )}
         </div>
-        {team.positions.length === 0 ? (
-          <Paragraph style={{ color: "var(--rvo-color-grijs-600)" }}>Geen posities gevonden.</Paragraph>
+        {teamPositions.length === 0 ? (
+          <Paragraph style={{ color: "var(--rvo-color-grijs-600)" }}>Geen posities gekoppeld aan dit team.</Paragraph>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {team.positions.map((pos) => {
+            {teamPositions.map(({ coupling, position: pos }) => {
               const activeAssignment = pos.assignments.find(a => a.status === "active");
               const activeAllocations = pos.fundingAllocations.filter(fa => fa.status === "active");
               const annualCost = Number(pos.annualCost ?? 0);
@@ -181,7 +192,16 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                       {pos.schaal && (
                         <StatusBadge label={`Schaal ${pos.schaal}`} color="blue" />
                       )}
-                      <StatusBadge label={pos.status} color={pos.status === "filled" ? "green" : pos.status === "open" ? "orange" : "grey"} />
+                      <StatusBadge
+                        label={pos.status}
+                        color={
+                          pos.status === "gevuld" ? "green"
+                          : pos.status === "open" ? "orange"
+                          : pos.status === "toegezegd" ? "blue"
+                          : pos.status === "gesloten" ? "grey"
+                          : "grey"
+                        }
+                      />
                     </div>
                     {!isArchived && (
                       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -191,7 +211,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                         <Link href={`/teams/${team.id}/posities/${pos.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
                           Bewerken
                         </Link>
-                        <TransferPositionButton positionId={pos.id} positionName={pos.type} currentTeamId={team.id} />
+                        <TransferPositionButton positionId={pos.id} positionName={pos.type} currentTeamId={team.id} activeCouplingId={coupling.id} />
                         <ArchiveButton
                           entityName={pos.type}
                           apiPath={`/api/positions/${pos.id}`}

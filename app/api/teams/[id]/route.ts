@@ -13,7 +13,7 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
     where: eq(teams.id, id),
     with: {
       organisation: true,
-      positions: true,
+      positionCouplings: { with: { position: true } },
       memberships: { with: { employee: true } },
       fundingAllocations: { with: { financialSourceAmount: { with: { financialSource: true } } } },
     },

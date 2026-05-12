@@ -3,27 +3,27 @@ import { detectPositionConflicts, collectUpcomingEvents } from '@/lib/dashboard'
 import type { PositionStatus } from '@/lib/db/schema'
 
 const TEAM = { name: 'Alpha Team' }
+const TEAM_COUPLINGS = [{ teamId: 'team-1', team: TEAM }]
 
 function makePosition(overrides: Partial<{
   id: string
   type: string
-  teamId: string
   status: PositionStatus
   expectedStart: Date | null
   expectedEnd: Date | null
   requiredBefore: Date | null
   fundingAllocations: Array<{ status: string }>
+  teamCouplings: Array<{ teamId: string; team: { name: string } }>
 }> = {}) {
   return {
     id: overrides.id ?? 'pos-1',
     type: overrides.type ?? 'Product Owner',
-    teamId: overrides.teamId ?? 'team-1',
-    status: overrides.status ?? 'planned',
+    status: overrides.status ?? 'gepland',
     expectedStart: overrides.expectedStart ?? null,
     expectedEnd: overrides.expectedEnd ?? null,
     requiredBefore: overrides.requiredBefore ?? null,
     fundingAllocations: overrides.fundingAllocations ?? [],
-    team: TEAM,
+    teamCouplings: overrides.teamCouplings ?? TEAM_COUPLINGS,
   }
 }
 
@@ -36,7 +36,7 @@ describe('detectPositionConflicts', () => {
 
   it('flags a late-start conflict when expectedStart > requiredBefore', () => {
     const pos = makePosition({
-      status: 'planned',
+      status: 'gepland',
       requiredBefore: new Date('2025-06-01'),
       expectedStart: new Date('2025-09-01'),
     })
@@ -47,7 +47,7 @@ describe('detectPositionConflicts', () => {
 
   it('does NOT flag late-start when expectedStart <= requiredBefore', () => {
     const pos = makePosition({
-      status: 'planned',
+      status: 'gepland',
       requiredBefore: new Date('2025-09-01'),
       expectedStart: new Date('2025-06-01'),
     })
@@ -68,7 +68,7 @@ describe('detectPositionConflicts', () => {
 
   it('flags unfunded for planned position with no active allocations', () => {
     const pos = makePosition({
-      status: 'planned',
+      status: 'gepland',
       fundingAllocations: [],
     })
     const conflicts = detectPositionConflicts([pos])
@@ -95,7 +95,7 @@ describe('detectPositionConflicts', () => {
 
   it('does NOT flag unfunded for filled positions', () => {
     const pos = makePosition({
-      status: 'filled',
+      status: 'gevuld',
       fundingAllocations: [],
     })
     expect(detectPositionConflicts([pos])).toHaveLength(0)
@@ -103,7 +103,7 @@ describe('detectPositionConflicts', () => {
 
   it('skips closed positions entirely', () => {
     const pos = makePosition({
-      status: 'closed',
+      status: 'gesloten',
       requiredBefore: new Date('2025-01-01'),
       expectedStart: new Date('2025-12-01'),
       fundingAllocations: [],
@@ -114,7 +114,7 @@ describe('detectPositionConflicts', () => {
   it('returns the correct teamName and positionType in the conflict', () => {
     const pos = makePosition({
       type: 'Scrum Master',
-      status: 'planned',
+      status: 'gepland',
       requiredBefore: new Date('2025-06-01'),
       expectedStart: new Date('2025-09-01'),
     })
@@ -140,7 +140,7 @@ describe('collectUpcomingEvents', () => {
 
   it('includes position starting within the window', () => {
     const pos = makePosition({
-      status: 'planned',
+      status: 'gepland',
       expectedStart: daysFromNow(30),
       fundingAllocations: [{ status: 'active' }],
     })
@@ -150,7 +150,7 @@ describe('collectUpcomingEvents', () => {
 
   it('includes position ending within the window', () => {
     const pos = makePosition({
-      status: 'filled',
+      status: 'gevuld',
       expectedEnd: daysFromNow(60),
       fundingAllocations: [{ status: 'active' }],
     })
@@ -160,7 +160,7 @@ describe('collectUpcomingEvents', () => {
 
   it('excludes events outside the window', () => {
     const pos = makePosition({
-      status: 'planned',
+      status: 'gepland',
       expectedStart: daysFromNow(120),
     })
     expect(collectUpcomingEvents([pos], [], [], now, 0, 90)).toHaveLength(0)
@@ -190,15 +190,15 @@ describe('collectUpcomingEvents', () => {
   })
 
   it('sorts events chronologically', () => {
-    const pos1 = makePosition({ id: 'p1', status: 'planned', expectedStart: daysFromNow(60), fundingAllocations: [{ status: 'active' }] })
-    const pos2 = makePosition({ id: 'p2', status: 'planned', expectedStart: daysFromNow(10), fundingAllocations: [{ status: 'active' }] })
+    const pos1 = makePosition({ id: 'p1', status: 'gepland', expectedStart: daysFromNow(60), fundingAllocations: [{ status: 'active' }] })
+    const pos2 = makePosition({ id: 'p2', status: 'gepland', expectedStart: daysFromNow(10), fundingAllocations: [{ status: 'active' }] })
     const events = collectUpcomingEvents([pos1, pos2], [], [], now, 0, 90)
     expect(events[0].daysUntil).toBeLessThan(events[1].daysUntil)
   })
 
   it('calculates daysUntil correctly', () => {
     const pos = makePosition({
-      status: 'planned',
+      status: 'gepland',
       expectedStart: daysFromNow(7),
       fundingAllocations: [{ status: 'active' }],
     })
@@ -208,7 +208,7 @@ describe('collectUpcomingEvents', () => {
 
   it('excludes closed positions', () => {
     const pos = makePosition({
-      status: 'closed',
+      status: 'gesloten',
       expectedStart: daysFromNow(5),
     })
     expect(collectUpcomingEvents([pos], [], [], now, 0, 90)).toHaveLength(0)

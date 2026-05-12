@@ -21,7 +21,7 @@ export default async function EditPositiePage({ params }: { params: Promise<{ id
 
   const assignment = await db.query.positionAssignments.findFirst({
     where: eq(positionAssignments.id, assignmentId),
-    with: { position: { with: { team: true } } },
+    with: { position: { with: { teamCouplings: { with: { team: true } } } } },
   });
   if (!assignment || assignment.employeeId !== id) notFound();
 
@@ -30,7 +30,7 @@ export default async function EditPositiePage({ params }: { params: Promise<{ id
       assignment={assignment}
       employeeId={emp.id}
       employeeName={formatFullName(emp)}
-      positionLabel={`${assignment.position.type}${assignment.position.positionCode ? ` (${assignment.position.positionCode})` : ""} — ${assignment.position.team.name}`}
+      positionLabel={`${assignment.position.type}${assignment.position.positionCode ? ` (${assignment.position.positionCode})` : ""}${assignment.position.teamCouplings[0]?.team ? ` — ${assignment.position.teamCouplings[0].team.name}` : ""}`}
     />
   );
 }

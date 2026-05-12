@@ -10,7 +10,11 @@ export const GET = withErrorHandling(async () => {
   await requireAuth();
   const rows = await db.query.positions.findMany({
     where: isNull(positions.deletedAt),
-    with: { team: { with: { organisation: true } }, assignments: { with: { employee: true } } },
+    with: {
+      organisation: true,
+      assignments: { with: { employee: true } },
+      teamCouplings: { with: { team: true } },
+    },
   });
   return ok(rows);
 });

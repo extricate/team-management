@@ -4,7 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { teams, positions } from "@/lib/db/schema";
+import { teams, teamPositionCouplings } from "@/lib/db/schema";
 import { eq, isNull } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatFullName, formatDate } from "@/lib/utils";
@@ -24,10 +24,10 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
     where: eq(teams.id, id),
     with: {
       organisation: true,
-      positions: {
-        where: isNull(positions.deletedAt),
+      positionCouplings: {
+        where: isNull(teamPositionCouplings.endDate),
         with: {
-          assignments: { with: { employee: true } },
+          position: { with: { assignments: { with: { employee: true } } } },
         },
       },
       memberships: { with: { employee: true } },
@@ -44,7 +44,10 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
       return nameA.localeCompare(nameB, "nl");
     });
 
-  const sortedPositions = [...team.positions].sort((a, b) => a.type.localeCompare(b.type, "nl"));
+  const sortedPositions = team.positionCouplings
+    .filter(c => c.position && !c.position.deletedAt)
+    .map(c => c.position!)
+    .sort((a, b) => a.type.localeCompare(b.type, "nl"));
 
   const today = formatDate(new Date());
 
@@ -103,7 +106,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
               </thead>
               <tbody>
                 {activeMembers.map((m) => {
-                  const pos = team.positions.find(p =>
+                  const pos = sortedPositions.find(p =>
                     p.assignments.some(a => a.employeeId === m.employeeId && a.status === "active"),
                   );
                   return (
@@ -154,7 +157,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
                       <td style={{ padding: "0.5rem" }}>
                         <StatusBadge
                           label={pos.status}
-                          color={pos.status === "filled" ? "green" : pos.status === "open" ? "orange" : "grey"}
+                          color={pos.status === "gevuld" ? "green" : pos.status === "open" ? "orange" : pos.status === "toegezegd" ? "blue" : "grey"}
                         />
                       </td>
                     </tr>

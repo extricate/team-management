@@ -4,7 +4,7 @@ import { redirect, notFound } from "next/navigation";
 export const metadata: Metadata = { title: "Positie financieren – Teambeheer" };
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { teams, positions, financialSourceAmounts, financialSources, fundingAllocations, companyPersexBudgets } from "@/lib/db/schema";
+import { teams, positions, financialSourceAmounts, financialSources, fundingAllocations, companyPersexBudgets, teamPositionCouplings } from "@/lib/db/schema";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { AllocatePositionForm } from "./AllocatePositionForm";
 import { getOPFType } from "@/lib/opf-types";
@@ -32,7 +32,12 @@ export default async function FinancierPositiePage({ params }: { params: Promise
       },
     },
   });
-  if (!position || position.teamId !== id) notFound();
+  if (!position) notFound();
+
+  const coupling = await db.query.teamPositionCouplings.findFirst({
+    where: and(eq(teamPositionCouplings.positionId, positionId), eq(teamPositionCouplings.teamId, id), isNull(teamPositionCouplings.endDate)),
+  });
+  if (!coupling) notFound();
 
   const opfDef = getOPFType(position.opfType);
 

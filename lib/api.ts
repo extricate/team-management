@@ -25,6 +25,9 @@ export function forbidden(message = "Forbidden"): Response {
 export function badRequest(message: string): Response {
   return err(message, 400);
 }
+export function conflict(message: string): Response {
+  return err(message, 409);
+}
 export function serverError(message = "Internal server error"): Response {
   return err(message, 500);
 }

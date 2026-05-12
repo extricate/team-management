@@ -39,8 +39,6 @@ import { auth } from '@/lib/auth'
 
 // ── Fixture helpers ────────────────────────────────────────────────────────────
 
-const TEAM = { name: 'Alpha Team' }
-
 function makePosition(overrides: {
   id?: string
   type?: string
@@ -50,16 +48,16 @@ function makePosition(overrides: {
   requiredBefore?: Date | null
   fundingAllocations?: Array<{ status: string }>
 } = {}) {
+  const teamId = overrides.teamId ?? 'team-1'
   return {
     id: overrides.id ?? 'pos-1',
     type: overrides.type ?? 'Product Owner',
-    teamId: overrides.teamId ?? 'team-1',
-    status: overrides.status ?? 'planned',
+    status: overrides.status ?? 'gepland',
     expectedStart: overrides.expectedStart ?? null,
     expectedEnd: null,
     requiredBefore: overrides.requiredBefore ?? null,
     fundingAllocations: overrides.fundingAllocations ?? [],
-    team: TEAM,
+    teamCouplings: [{ teamId, team: { name: 'Alpha Team' } }],
     deletedAt: null,
   }
 }
@@ -85,7 +83,7 @@ describe('GET /api/notifications', () => {
   it('returns a late_start conflict when expectedStart is after requiredBefore', async () => {
     dbMock.set([
       makePosition({
-        status: 'planned',
+        status: 'gepland',
         expectedStart: new Date('2025-09-01'),
         requiredBefore: new Date('2025-06-01'),
         fundingAllocations: [{ status: 'active' }],
@@ -96,7 +94,7 @@ describe('GET /api/notifications', () => {
   })
 
   it('returns an unfunded conflict for a planned position with no active allocations', async () => {
-    dbMock.set([makePosition({ status: 'planned', fundingAllocations: [] })])
+    dbMock.set([makePosition({ status: 'gepland', fundingAllocations: [] })])
     const { conflicts } = (await (await GET()).json()).data
     expect(conflicts.some((c: { type: string }) => c.type === 'unfunded')).toBe(true)
   })
@@ -108,7 +106,7 @@ describe('GET /api/notifications', () => {
   })
 
   it('returns no conflicts for a funded position with no date issues', async () => {
-    dbMock.set([makePosition({ status: 'planned', fundingAllocations: [{ status: 'active' }] })])
+    dbMock.set([makePosition({ status: 'gepland', fundingAllocations: [{ status: 'active' }] })])
     const { conflicts } = (await (await GET()).json()).data
     expect(conflicts).toHaveLength(0)
   })
@@ -116,7 +114,7 @@ describe('GET /api/notifications', () => {
   it('ignores closed positions even when they have no funding or date conflicts', async () => {
     dbMock.set([
       makePosition({
-        status: 'closed',
+        status: 'gesloten',
         fundingAllocations: [],
         requiredBefore: new Date('2025-01-01'),
         expectedStart: new Date('2025-12-01'),
@@ -132,7 +130,7 @@ describe('GET /api/notifications', () => {
         id: 'pos-abc',
         type: 'Scrum Master',
         teamId: 'team-xyz',
-        status: 'planned',
+        status: 'gepland',
         fundingAllocations: [],
       }),
     ])
@@ -146,7 +144,7 @@ describe('GET /api/notifications', () => {
 
   it('returns one conflict per problematic position', async () => {
     dbMock.set([
-      makePosition({ id: 'p1', status: 'planned', fundingAllocations: [] }),
+      makePosition({ id: 'p1', status: 'gepland', fundingAllocations: [] }),
       makePosition({ id: 'p2', status: 'open',   fundingAllocations: [] }),
     ])
     const { conflicts } = (await (await GET()).json()).data

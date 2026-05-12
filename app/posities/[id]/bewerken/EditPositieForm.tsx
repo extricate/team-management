@@ -4,16 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
+import { Alert } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import type { Position } from "@/lib/db/schema";
-import { Alert } from "@rijkshuisstijl-community/components-react";
 import { OPF_TYPES, getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-types";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface Props {
   position: Position;
-  teamId: string;
-  teamName: string;
 }
 
 function toDateInput(val: Date | string | null | undefined): string {
@@ -22,7 +20,7 @@ function toDateInput(val: Date | string | null | undefined): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function EditPositionForm({ position, teamId, teamName }: Props) {
+export function EditPositieForm({ position }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -61,7 +59,7 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
         setError(body.error ?? "Er is een fout opgetreden.");
         return;
       }
-      router.push(`/teams/${teamId}`);
+      router.push(`/posities/${position.id}`);
       router.refresh();
     } catch {
       setError("Er is een verbindingsfout opgetreden.");
@@ -73,9 +71,9 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
   return (
     <div className="form-page">
       <Breadcrumbs crumbs={[
-        { label: "Teams", href: "/teams" },
-        { label: teamName, href: `/teams/${teamId}` },
-        { label: "Positie bewerken" },
+        { label: "Posities", href: "/posities" },
+        { label: position.type, href: `/posities/${position.id}` },
+        { label: "Bewerken" },
       ]} />
       <Heading level={1} style={{ marginBottom: "1.5rem" }}>Positie bewerken</Heading>
 
@@ -101,7 +99,6 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
             defaultValue={position.type}
             placeholder="bijv. Product Owner, Scrum Master, Teamleider"
           />
-          <p className="form-hint">De identificerende naam van de functie binnen het team.</p>
         </div>
 
         <div className="form-field">
@@ -126,7 +123,7 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
               </p>
             </Alert>
           ) : (
-            <p className="form-hint">Bepaalt het verwachte budgettype (PERSEX, MATEX of Investeringen) voor financieringscontroles.</p>
+            <p className="form-hint">Bepaalt het verwachte budgettype voor financieringscontroles.</p>
           )}
         </div>
 
@@ -154,7 +151,6 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
               defaultValue={position.schaal ?? ""}
               placeholder="bijv. 8, 10, 12"
             />
-            <p className="form-hint">Salarisschaal voor deze positie.</p>
           </div>
         </div>
 
@@ -170,7 +166,6 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
             defaultValue={position.annualCost ?? ""}
             placeholder="0.00"
           />
-          <p className="form-hint">Totale jaarlijkse kosten incl. werkgeverslasten{opfDef?.isExternal ? " (extern tarief)" : ""}.</p>
         </div>
 
         <div className="form-field">
@@ -199,7 +194,7 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
           <div className="form-field">
             <label htmlFor="requiredBefore" className="utrecht-form-label">Vereist vóór</label>
             <input id="requiredBefore" name="requiredBefore" type="date" className="utrecht-textbox" defaultValue={toDateInput(position.requiredBefore)} style={{ maxWidth: "100%" }} />
-            <p className="form-hint">Uiterste datum voor invulling van de positie.</p>
+            <p className="form-hint">Uiterste datum voor invulling.</p>
           </div>
         </div>
 
@@ -207,7 +202,7 @@ export function EditPositionForm({ position, teamId, teamName }: Props) {
           <button type="submit" className="utrecht-button utrecht-button--primary-action" disabled={saving}>
             {saving ? "Opslaan..." : "Wijzigingen opslaan"}
           </button>
-          <Link href={`/teams/${teamId}`} className="utrecht-button utrecht-button--secondary-action">
+          <Link href={`/posities/${position.id}`} className="utrecht-button utrecht-button--secondary-action">
             Annuleren
           </Link>
         </div>

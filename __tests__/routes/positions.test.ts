@@ -35,17 +35,16 @@ import { GET, POST } from '@/app/api/positions/route'
 import { GET as GetById, PATCH, DELETE } from '@/app/api/positions/[id]/route'
 import { auth } from '@/lib/auth'
 
-const TEAM_ID = 'b1b2c3d4-0000-0000-0000-000000000001'
-const TARGET_TEAM_ID = 'b1b2c3d4-0000-0000-0000-000000000002'
+const ORG_ID = 'a1b2c3d4-0000-0000-0000-000000000001'
 const POSITION = {
   id: 'pos-1',
-  teamId: TEAM_ID,
+  organisationId: ORG_ID,
   type: 'Product Owner',
   opfType: null,
   positionCode: 'P001',
   schaal: null,
   annualCost: null,
-  status: 'planned',
+  status: 'gepland',
   expectedStart: null,
   expectedEnd: null,
   requiredBefore: null,
@@ -57,7 +56,6 @@ const POSITION = {
 beforeEach(() => dbMock.reset())
 
 // --- GET /api/positions ---
-// Uses db.query.positions.findMany() → array
 
 describe('GET /api/positions', () => {
   it('returns 200 with positions list', async () => {
@@ -82,7 +80,7 @@ describe('POST /api/positions', () => {
     dbMock.set([POSITION])
     const req = makeRequest('/api/positions', {
       method: 'POST',
-      body: { teamId: TEAM_ID, type: 'Product Owner', status: 'planned' },
+      body: { organisationId: ORG_ID, type: 'Product Owner', status: 'gepland' },
     })
     const res = await POST(req)
     expect(res.status).toBe(201)
@@ -93,7 +91,7 @@ describe('POST /api/positions', () => {
     dbMock.set([{ ...POSITION, opfType: 'OPF1' }])
     const req = makeRequest('/api/positions', {
       method: 'POST',
-      body: { teamId: TEAM_ID, type: 'Product Owner', status: 'planned', opfType: 'OPF1' },
+      body: { organisationId: ORG_ID, type: 'Product Owner', status: 'gepland', opfType: 'OPF1' },
     })
     const res = await POST(req)
     expect(res.status).toBe(201)
@@ -104,12 +102,12 @@ describe('POST /api/positions', () => {
     dbMock.set([POSITION])
     const req = makeRequest('/api/positions', {
       method: 'POST',
-      body: { teamId: TEAM_ID, type: 'Scrum Master', status: 'open' },
+      body: { organisationId: ORG_ID, type: 'Scrum Master', status: 'open' },
     })
     expect((await POST(req)).status).toBe(201)
   })
 
-  it('returns 400 when teamId is missing', async () => {
+  it('returns 400 when organisationId is missing', async () => {
     const req = makeRequest('/api/positions', {
       method: 'POST',
       body: { type: 'Product Owner' },
@@ -120,9 +118,31 @@ describe('POST /api/positions', () => {
   it('returns 400 for an invalid status value', async () => {
     const req = makeRequest('/api/positions', {
       method: 'POST',
-      body: { teamId: TEAM_ID, type: 'Product Owner', status: 'invalid_status' },
+      body: { organisationId: ORG_ID, type: 'Product Owner', status: 'invalid_status' },
     })
     expect((await POST(req)).status).toBe(400)
+  })
+
+  it('accepts all valid Dutch status values', async () => {
+    const statuses = ['gepland', 'gewenst', 'toegezegd', 'open', 'gevuld', 'gesloten'] as const
+    for (const status of statuses) {
+      dbMock.set([{ ...POSITION, status }])
+      const req = makeRequest('/api/positions', {
+        method: 'POST',
+        body: { organisationId: ORG_ID, type: 'Scrum Master', status },
+      })
+      expect((await POST(req)).status).toBe(201)
+    }
+  })
+
+  it('rejects old English status values', async () => {
+    for (const status of ['planned', 'filled', 'closed']) {
+      const req = makeRequest('/api/positions', {
+        method: 'POST',
+        body: { organisationId: ORG_ID, type: 'Scrum Master', status },
+      })
+      expect((await POST(req)).status).toBe(400)
+    }
   })
 
   it('accepts optional start and end dates', async () => {
@@ -130,7 +150,7 @@ describe('POST /api/positions', () => {
     const req = makeRequest('/api/positions', {
       method: 'POST',
       body: {
-        teamId: TEAM_ID,
+        organisationId: ORG_ID,
         type: 'Scrum Master',
         status: 'open',
         expectedStart: '2025-01-01T00:00:00.000Z',
@@ -146,9 +166,9 @@ describe('POST /api/positions', () => {
     const req = makeRequest('/api/positions', {
       method: 'POST',
       body: {
-        teamId: TEAM_ID,
+        organisationId: ORG_ID,
         type: 'Product Owner',
-        status: 'planned',
+        status: 'gepland',
         requiredBefore: '2025-03-01T00:00:00.000Z',
       },
     })
@@ -162,7 +182,7 @@ describe('POST /api/positions', () => {
     dbMock.set([POSITION])
     const req = makeRequest('/api/positions', {
       method: 'POST',
-      body: { teamId: TEAM_ID, type: 'Tester', status: 'planned' },
+      body: { organisationId: ORG_ID, type: 'Tester', status: 'gepland' },
     })
     const res = await POST(req)
     expect(res.status).toBe(201)
@@ -171,7 +191,6 @@ describe('POST /api/positions', () => {
 })
 
 // --- GET /api/positions/[id] ---
-// Uses db.query.positions.findFirst() → single object
 
 describe('GET /api/positions/[id]', () => {
   it('returns 200 with position details', async () => {
@@ -193,16 +212,15 @@ describe('GET /api/positions/[id]', () => {
 })
 
 // --- PATCH /api/positions/[id] ---
-// Route: select (before) → update.returning (after)
 
 describe('PATCH /api/positions/[id]', () => {
   it('updates position status and returns 200', async () => {
-    const updated = { ...POSITION, status: 'filled' }
+    const updated = { ...POSITION, status: 'gevuld' }
     dbMock.set([POSITION], [updated])
-    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { status: 'filled' } })
+    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { status: 'gevuld' } })
     const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
     expect(res.status).toBe(200)
-    expect((await res.json()).data.status).toBe('filled')
+    expect((await res.json()).data.status).toBe('gevuld')
   })
 
   it('sets opfType and returns it in the response', async () => {
@@ -259,24 +277,16 @@ describe('PATCH /api/positions/[id]', () => {
     expect((await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })).status).toBe(400)
   })
 
-  it('transfers position to another team and returns 200 with updated teamId', async () => {
-    const transferred = { ...POSITION, teamId: TARGET_TEAM_ID }
-    dbMock.set([POSITION], [transferred])
-    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { teamId: TARGET_TEAM_ID } })
-    const res = await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })
-    expect(res.status).toBe(200)
-    expect((await res.json()).data.teamId).toBe(TARGET_TEAM_ID)
-  })
-
-  it('returns 400 when teamId is not a valid UUID', async () => {
+  it('returns 400 for old English status values', async () => {
     dbMock.set([POSITION])
-    const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { teamId: 'not-a-uuid' } })
-    expect((await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })).status).toBe(400)
+    for (const status of ['planned', 'filled', 'closed']) {
+      const req = makeRequest('/api/positions/pos-1', { method: 'PATCH', body: { status } })
+      expect((await PATCH(req, { params: Promise.resolve({ id: 'pos-1' }) })).status).toBe(400)
+    }
   })
 })
 
 // --- DELETE /api/positions/[id] ---
-// Route: select (before) → update (no returning)
 
 describe('DELETE /api/positions/[id]', () => {
   it('soft-deletes the position and returns 200', async () => {

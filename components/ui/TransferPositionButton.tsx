@@ -9,9 +9,10 @@ interface Props {
   positionId: string;
   positionName: string;
   currentTeamId: string;
+  activeCouplingId: string;
 }
 
-export function TransferPositionButton({ positionId, positionName, currentTeamId }: Props) {
+export function TransferPositionButton({ positionId, positionName, currentTeamId, activeCouplingId }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -46,17 +47,32 @@ export function TransferPositionButton({ positionId, positionName, currentTeamId
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/positions/${positionId}`, {
+      // End the current coupling
+      const endRes = await fetch(`/api/team-position-couplings/${activeCouplingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId: selectedTeamId }),
+        body: JSON.stringify({ endDate: new Date().toISOString() }),
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(body.message ?? body.error ?? "Er is iets misgegaan. Probeer het opnieuw.");
+      if (!endRes.ok) {
+        const body = await endRes.json().catch(() => ({}));
+        setError(body.error ?? "Koppeling beëindigen mislukt.");
         setLoading(false);
         return;
       }
+
+      // Create new coupling to target team
+      const newRes = await fetch("/api/team-position-couplings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId: selectedTeamId, positionId, startDate: new Date().toISOString() }),
+      });
+      if (!newRes.ok) {
+        const body = await newRes.json().catch(() => ({}));
+        setError(body.error ?? "Nieuwe koppeling aanmaken mislukt.");
+        setLoading(false);
+        return;
+      }
+
       dialogRef.current?.close();
       router.push(`/teams/${selectedTeamId}`);
     } catch {

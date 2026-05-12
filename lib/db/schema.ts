@@ -16,7 +16,7 @@ import type { AdapterAccountType } from "next-auth/adapters";
 // Defined before the tables so $type<> narrowing below can reference them.
 export type UserRole = "admin" | "manager" | "viewer";
 export type OrganisationType = "OS1" | "OS2";
-export type PositionStatus = "planned" | "open" | "filled" | "closed";
+export type PositionStatus = "gepland" | "gewenst" | "toegezegd" | "open" | "gevuld" | "gesloten";
 export type MembershipStatus = "active" | "ended";
 export type AllocationStatus = "active" | "reallocated" | "expired";
 export type AmountStatus = "concept" | "released";
@@ -158,18 +158,30 @@ export const bestellingen = pgTable("bestellingen", {
 // ── Positions ──────────────────────────────────────────────────────────────────
 export const positions = pgTable("positions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  teamId: uuid("team_id").notNull().references(() => teams.id),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   bestellingId: uuid("bestelling_id").references(() => bestellingen.id),
   type: text("type").notNull(), // identifying name, e.g. "Product Owner", "Scrum Master"
   opfType: text("opf_type"), // OPF classification key, e.g. "OPF1", "OPF9-inhuur"
   positionCode: text("position_code"),
   schaal: text("schaal"),
   annualCost: numeric("annual_cost", { precision: 15, scale: 2 }),
-  status: text("status").$type<PositionStatus>().notNull().default("planned"),
+  status: text("status").$type<PositionStatus>().notNull().default("gepland"),
   expectedStart: timestamp("expected_start", { mode: "date" }),
   expectedEnd: timestamp("expected_end", { mode: "date" }),
   requiredBefore: timestamp("required_before", { mode: "date" }),
   deletedAt: timestamp("deleted_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+// ── Team ↔ Position couplings (temporal, 1:1 per position) ────────────────────
+export const teamPositionCouplings = pgTable("team_position_couplings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  teamId: uuid("team_id").notNull().references(() => teams.id),
+  positionId: uuid("position_id").notNull().references(() => positions.id),
+  startDate: timestamp("start_date", { mode: "date" }).notNull(),
+  endDate: timestamp("end_date", { mode: "date" }), // null = currently active
+  createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
@@ -296,11 +308,12 @@ export const organisationsRelations = relations(organisations, ({ many }) => ({
   financialSources: many(financialSources),
   users: many(users),
   bestellingen: many(bestellingen),
+  positions: many(positions),
 }));
 
 export const teamsRelations = relations(teams, ({ one, many }) => ({
   organisation: one(organisations, { fields: [teams.organisationId], references: [organisations.id] }),
-  positions: many(positions),
+  positionCouplings: many(teamPositionCouplings),
   memberships: many(teamMemberships),
   fundingAllocations: many(fundingAllocations),
 }));
@@ -312,10 +325,17 @@ export const employeesRelations = relations(employees, ({ one, many }) => ({
 }));
 
 export const positionsRelations = relations(positions, ({ one, many }) => ({
-  team: one(teams, { fields: [positions.teamId], references: [teams.id] }),
+  organisation: one(organisations, { fields: [positions.organisationId], references: [organisations.id] }),
   bestelling: one(bestellingen, { fields: [positions.bestellingId], references: [bestellingen.id] }),
   assignments: many(positionAssignments),
   fundingAllocations: many(fundingAllocations),
+  teamCouplings: many(teamPositionCouplings),
+}));
+
+export const teamPositionCouplingsRelations = relations(teamPositionCouplings, ({ one }) => ({
+  team: one(teams, { fields: [teamPositionCouplings.teamId], references: [teams.id] }),
+  position: one(positions, { fields: [teamPositionCouplings.positionId], references: [positions.id] }),
+  createdByUser: one(users, { fields: [teamPositionCouplings.createdBy], references: [users.id] }),
 }));
 
 export const teamMembershipsRelations = relations(teamMemberships, ({ one }) => ({
@@ -401,6 +421,8 @@ export type NewEmployee = typeof employees.$inferInsert;
 export type Position = typeof positions.$inferSelect;
 export type NewPosition = typeof positions.$inferInsert;
 export type TeamMembership = typeof teamMemberships.$inferSelect;
+export type TeamPositionCoupling = typeof teamPositionCouplings.$inferSelect;
+export type NewTeamPositionCoupling = typeof teamPositionCouplings.$inferInsert;
 export type PositionAssignment = typeof positionAssignments.$inferSelect;
 export type CompanyPersexBudget = typeof companyPersexBudgets.$inferSelect;
 export type NewCompanyPersexBudget = typeof companyPersexBudgets.$inferInsert;

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { employees, teams, organisations, financialSources, positions } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { employees, teams, organisations, financialSources, positions, teamPositionCouplings } from "@/lib/db/schema";
+import { eq, isNull } from "drizzle-orm";
 import { getClient, INDEXES, ensureIndexes } from "./client";
 
 function buildFullName(firstName: string, prefixName: string | null, lastName: string): string {
@@ -87,12 +87,16 @@ export async function syncFinancialSource(id: string): Promise<void> {
 export async function syncPosition(id: string): Promise<void> {
   const row = await db.query.positions.findFirst({
     where: eq(positions.id, id),
-    with: { team: { with: { organisation: true } } },
+    with: {
+      organisation: true,
+      teamCouplings: { where: isNull(teamPositionCouplings.endDate), with: { team: true } },
+    },
   });
   if (!row || row.deletedAt) {
     await removeFromIndex(INDEXES.positions, id);
     return;
   }
+  const activeTeam = row.teamCouplings[0]?.team ?? null;
   await ensureIndexes();
   await getClient().index(INDEXES.positions).addDocuments([{
     id: row.id,
@@ -100,10 +104,10 @@ export async function syncPosition(id: string): Promise<void> {
     positionCode: row.positionCode ?? null,
     schaal: row.schaal ?? null,
     status: row.status,
-    teamName: row.team.name,
-    teamId: row.teamId,
-    organisationName: row.team.organisation.name,
-    url: `/teams/${row.teamId}`,
+    teamName: activeTeam?.name ?? null,
+    teamId: activeTeam?.id ?? null,
+    organisationName: row.organisation.name,
+    url: activeTeam ? `/teams/${activeTeam.id}` : `/posities/${row.id}`,
   }], { primaryKey: "id" });
 }
 

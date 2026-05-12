@@ -13,7 +13,7 @@ export const GET = withErrorHandling(async () => {
     with: {
       organisation: true,
       types: true,
-      amounts: { with: { financialType: true, allocations: true } },
+      amounts: { with: { type: true, allocations: true } },
     },
   });
   return ok(rows);

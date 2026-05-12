@@ -11,10 +11,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface Props {
   teamId: string;
+  organisationId: string;
   teamName: string;
 }
 
-export function NewPositionForm({ teamId, teamName }: Props) {
+export function NewPositionForm({ teamId, organisationId, teamName }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -34,11 +35,11 @@ export function NewPositionForm({ teamId, teamName }: Props) {
     const costStr = (fd.get("annualCost") as string).replace(",", ".");
 
     try {
-      const res = await fetch("/api/positions", {
+      const posRes = await fetch("/api/positions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          teamId,
+          organisationId,
           type: fd.get("type"),
           opfType: (fd.get("opfType") as string) || null,
           positionCode: (fd.get("positionCode") as string) || undefined,
@@ -50,9 +51,25 @@ export function NewPositionForm({ teamId, teamName }: Props) {
           requiredBefore: requiredBeforeStr ? new Date(requiredBeforeStr).toISOString() : undefined,
         }),
       });
-      if (!res.ok) {
-        const body = await res.json();
+      if (!posRes.ok) {
+        const body = await posRes.json();
         setError(body.error ?? "Er is een fout opgetreden.");
+        return;
+      }
+      const { data: newPosition } = await posRes.json();
+
+      const couplingRes = await fetch("/api/team-position-couplings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          teamId,
+          positionId: newPosition.id,
+          startDate: new Date().toISOString(),
+        }),
+      });
+      if (!couplingRes.ok) {
+        const body = await couplingRes.json();
+        setError(body.error ?? "Positie aangemaakt maar koppeling met team mislukt.");
         return;
       }
       router.push(`/teams/${teamId}`);
@@ -167,11 +184,13 @@ export function NewPositionForm({ teamId, teamName }: Props) {
           <label htmlFor="status" className="utrecht-form-label">
             Status <span className="form-required" aria-label="verplicht">*</span>
           </label>
-          <select id="status" name="status" className="utrecht-select" required defaultValue="planned">
-            <option value="planned">Gepland</option>
+          <select id="status" name="status" className="utrecht-select" required defaultValue="gepland">
+            <option value="gepland">Gepland</option>
+            <option value="gewenst">Gewenst</option>
+            <option value="toegezegd">Toegezegd</option>
             <option value="open">Open (vacature)</option>
-            <option value="filled">Bezet</option>
-            <option value="closed">Gesloten</option>
+            <option value="gevuld">Bezet</option>
+            <option value="gesloten">Gesloten</option>
           </select>
         </div>
 
