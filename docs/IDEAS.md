@@ -39,3 +39,4 @@
 ~~- Add ability to set a certain organisation entity as your personal default (to prevent having to click many times)~~
 
 - Declutter navbar
+- Add pre-commit hook that ups the version of the application in package.json. Maybe optionally automatically add a commit message as well, based on the changes inside the commit Maybe add a way to make an LLM/you as Claude Code write the commit message? Figure out a way. Use semantic versioning.

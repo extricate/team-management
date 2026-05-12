@@ -1,8 +1,9 @@
 {
   "name": "team-management",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
+    "prepare": "husky",
     "dev": "next dev",
     "dev:start": "docker compose up -d --wait db && npm run db:migrate && next dev",
     "build": "next build",
@@ -45,6 +46,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.4",
+    "husky": "^9.1.7",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Load nvm so node and claude are available in non-interactive shell contexts
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+# shellcheck source=/dev/null
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+node "$REPO_ROOT/scripts/commit-helper.mjs" "$@"
