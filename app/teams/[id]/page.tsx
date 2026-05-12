@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { teams, comments, auditEvents, positions, financialSourceAmounts } from "@/lib/db/schema";
+import { teams, comments, auditEvents, positions, financialSourceAmounts, companyPersexBudgets } from "@/lib/db/schema";
 import { eq, isNull, desc, and, inArray } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
@@ -56,7 +56,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
 
   // Load source amounts separately to avoid the deep-join alias collision
   const allAmountIds = Array.from(new Set(
-    team.positions.flatMap(p => p.fundingAllocations.map(fa => fa.financialSourceAmountId)),
+    team.positions.flatMap(p => p.fundingAllocations.map(fa => fa.financialSourceAmountId)).filter(Boolean) as string[],
   ));
   const sourceAmounts = allAmountIds.length > 0
     ? await db.query.financialSourceAmounts.findMany({
@@ -65,6 +65,15 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
       })
     : [];
   const sourceAmountMap = new Map(sourceAmounts.map(a => [a.id, a]));
+
+  // Load company persex budgets referenced by allocations
+  const allPersexIds = Array.from(new Set(
+    team.positions.flatMap(p => p.fundingAllocations.map(fa => fa.companyPersexBudgetId)).filter(Boolean) as string[],
+  ));
+  const persexBudgets = allPersexIds.length > 0
+    ? await db.select().from(companyPersexBudgets).where(inArray(companyPersexBudgets.id, allPersexIds))
+    : [];
+  const persexBudgetMap = new Map(persexBudgets.map(b => [b.id, b]));
 
   const teamComments = await db.query.comments.findMany({
     where: and(eq(comments.commentableType, "team"), eq(comments.commentableId, id)),
@@ -254,16 +263,23 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                       {activeAllocations.length > 0 && (
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                           {activeAllocations.map(fa => {
-                            const sa = sourceAmountMap.get(fa.financialSourceAmountId);
-                            const typeSuffix = sa?.type
-                              ? ` · ${sa.type.type} ${sa.type.year}`
-                              : "";
+                            const pb = fa.companyPersexBudgetId ? persexBudgetMap.get(fa.companyPersexBudgetId) : undefined;
+                            const sa = fa.financialSourceAmountId ? sourceAmountMap.get(fa.financialSourceAmountId) : undefined;
+                            const label = pb
+                              ? `Bedrijfspersex ${pb.year}`
+                              : (sa?.financialSource.name ?? "—");
+                            const typeSuffix = sa?.type ? ` · ${sa.type.type} ${sa.type.year}` : "";
                             return (
                               <div key={fa.id} style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-700)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
                                 <span style={{ color: "var(--rvo-color-groen-700)" }}>✓</span>
-                                {sa?.financialSource.name ?? "—"}{typeSuffix}
+                                {pb && (
+                                  <span style={{ borderRadius: "10px", padding: "0.0625rem 0.4rem", fontSize: "0.7rem", fontWeight: 700, background: "var(--rvo-color-lila-100, #ede8f7)", color: "var(--rvo-color-lila-700, #4b2c8a)" }}>
+                                    BP
+                                  </span>
+                                )}
+                                {label}{typeSuffix}
                                 {fa.amount && <span style={{ color: "var(--rvo-color-grijs-600)" }}>(<CurrencyDisplay value={fa.amount} />)</span>}
-                                {!isArchived && <RemoveFundingButton allocationId={fa.id} sourceName={sa?.financialSource.name ?? "—"} />}
+                                {!isArchived && <RemoveFundingButton allocationId={fa.id} sourceName={label} />}
                               </div>
                             );
                           })}

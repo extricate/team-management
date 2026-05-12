@@ -36,7 +36,7 @@ export default async function BedrijfspersexPage() {
         <Heading level={1} style={{ margin: "0 0 0.375rem 0" }}>Bedrijfspersex</Heading>
         <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
           Afdelingsbrede personeelspot — voor posities die niet aan een specifieke financieringsbron gekoppeld kunnen worden.
-          Het maximum is een zacht plafond; overschrijding is toegestaan.
+          Het maximum is een zacht plafond; overschrijding is enkel toegestaan i.o.m. controller & directie.
         </Paragraph>
       </div>
 

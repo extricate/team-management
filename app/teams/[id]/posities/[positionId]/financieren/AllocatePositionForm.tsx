@@ -339,7 +339,7 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
                     <strong>{persexPct}%</strong> benut ({formatCurrency(selectedPersex.allocated)} van {formatCurrency(Number(selectedPersex.amount))})
                   </span>
                   {" · "}
-                  <span style={{ color: "var(--rvo-color-grijs-600)" }}>Overschrijding is toegestaan.</span>
+                  <span style={{ color: "var(--rvo-color-grijs-600)" }}>Overschrijding is toegestaan i.o.m controller & directie</span>
                 </div>
               )}
             </div>
