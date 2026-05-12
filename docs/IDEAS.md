@@ -8,19 +8,19 @@
 - Positiestatus: gewenst/toegezegd/gepland/etc.?
 - Posities (arbeidsplaatsen) loskoppelen van teams (je financieert een positie en koppelt die aan een team)
 - Add unique arbeidsplaatsnummers to positions
-- Add unique personnel ID to employees
+~~- Add unique personnel ID to employees~~
 - When funding a position for the first time, store the intial funding source seperately from any future funding sources (to refer to later).
 
 ~~- Audit log entries currently just store the basic crud operations. Please also store the actual change to the relevant data fields (in plain text). Or figure out a better solution.~~
 
 ~~- Fix the default organization from user/settings not being applied in the various create new (of model) pages ("-- Kies een organisatie --" remains the default even with a set default; in new financial source, new employee, new team, new order.)~~
 
-- Add user management interface (creating and enabling management accounts)
-- Add notifications (with access through the navbar) with notifications regarding the conflicts (which are currently in the dashboard).
+~~- Add user management interface (creating and enabling management accounts)~~
+~~- Add notifications (with access through the navbar) with notifications regarding the conflicts (which are currently in the dashboard).~~
 - Add sorting (on table headers?) on pages like employees, teams, finance sources, etc.
 ~~- Add notifications (with access through the navbar) with notifications regarding the conflicts (which are currently in the dashboard).~~
 ~~- Add sorting (on table headers?) on pages like employees, teams, finance sources, etc.~~
-- Add financial requests other than personnel (which does deduct from financial sources, i.e. investeringen or matex): ATBs, etc.
+~~- Add financial requests other than personnel (which does deduct from financial sources, i.e. investeringen or matex): ATBs, etc.~~
 - Export function for the entire database to an excel document
 - Import function for the entire database from an excel document
 - Easy backup functionality
