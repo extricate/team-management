@@ -58,15 +58,27 @@ CREATE TABLE "comments" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "company_persex_budgets" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"year" integer NOT NULL,
+	"amount" numeric(15, 2) NOT NULL,
+	"status" text DEFAULT 'concept' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "company_persex_budgets_year_unique" UNIQUE("year")
+);
+--> statement-breakpoint
 CREATE TABLE "employees" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organisation_id" uuid NOT NULL,
+	"personeelsnummer" text,
 	"first_name" text NOT NULL,
 	"last_name" text NOT NULL,
 	"prefix_name" text,
 	"deleted_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "employees_personeelsnummer_unique" UNIQUE("personeelsnummer")
 );
 --> statement-breakpoint
 CREATE TABLE "financial_source_amounts" (
@@ -102,7 +114,8 @@ CREATE TABLE "financial_types" (
 --> statement-breakpoint
 CREATE TABLE "funding_allocations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"financial_source_amount_id" uuid NOT NULL,
+	"financial_source_amount_id" uuid,
+	"company_persex_budget_id" uuid,
 	"position_id" uuid,
 	"team_id" uuid,
 	"bestelling_id" uuid,
@@ -141,14 +154,14 @@ CREATE TABLE "position_assignments" (
 --> statement-breakpoint
 CREATE TABLE "positions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"team_id" uuid NOT NULL,
+	"organisation_id" uuid NOT NULL,
 	"bestelling_id" uuid,
 	"type" text NOT NULL,
 	"opf_type" text,
 	"position_code" text,
 	"schaal" text,
 	"annual_cost" numeric(15, 2),
-	"status" text DEFAULT 'planned' NOT NULL,
+	"status" text DEFAULT 'gepland' NOT NULL,
 	"expected_start" timestamp,
 	"expected_end" timestamp,
 	"required_before" timestamp,
@@ -171,6 +184,17 @@ CREATE TABLE "team_memberships" (
 	"end_date" timestamp,
 	"status" text DEFAULT 'active' NOT NULL,
 	"reason" text,
+	"created_by" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "team_position_couplings" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"team_id" uuid NOT NULL,
+	"position_id" uuid NOT NULL,
+	"start_date" timestamp NOT NULL,
+	"end_date" timestamp,
 	"created_by" uuid,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
@@ -202,6 +226,7 @@ CREATE TABLE "users" (
 	"image" text,
 	"role" text DEFAULT 'viewer' NOT NULL,
 	"organisation_id" uuid,
+	"default_organisation_id" uuid,
 	"password_hash" text,
 	"is_enabled" boolean DEFAULT true NOT NULL,
 	"failed_login_attempts" integer DEFAULT 0 NOT NULL,
@@ -232,6 +257,7 @@ ALTER TABLE "financial_source_amounts" ADD CONSTRAINT "financial_source_amounts_
 ALTER TABLE "financial_sources" ADD CONSTRAINT "financial_sources_organisation_id_organisations_id_fk" FOREIGN KEY ("organisation_id") REFERENCES "public"."organisations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "financial_types" ADD CONSTRAINT "financial_types_financial_source_id_financial_sources_id_fk" FOREIGN KEY ("financial_source_id") REFERENCES "public"."financial_sources"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "funding_allocations" ADD CONSTRAINT "funding_allocations_financial_source_amount_id_financial_source_amounts_id_fk" FOREIGN KEY ("financial_source_amount_id") REFERENCES "public"."financial_source_amounts"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "funding_allocations" ADD CONSTRAINT "funding_allocations_company_persex_budget_id_company_persex_budgets_id_fk" FOREIGN KEY ("company_persex_budget_id") REFERENCES "public"."company_persex_budgets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "funding_allocations" ADD CONSTRAINT "funding_allocations_position_id_positions_id_fk" FOREIGN KEY ("position_id") REFERENCES "public"."positions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "funding_allocations" ADD CONSTRAINT "funding_allocations_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "funding_allocations" ADD CONSTRAINT "funding_allocations_bestelling_id_bestellingen_id_fk" FOREIGN KEY ("bestelling_id") REFERENCES "public"."bestellingen"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -239,12 +265,16 @@ ALTER TABLE "funding_allocations" ADD CONSTRAINT "funding_allocations_created_by
 ALTER TABLE "position_assignments" ADD CONSTRAINT "position_assignments_position_id_positions_id_fk" FOREIGN KEY ("position_id") REFERENCES "public"."positions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "position_assignments" ADD CONSTRAINT "position_assignments_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "position_assignments" ADD CONSTRAINT "position_assignments_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "positions" ADD CONSTRAINT "positions_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "positions" ADD CONSTRAINT "positions_organisation_id_organisations_id_fk" FOREIGN KEY ("organisation_id") REFERENCES "public"."organisations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "positions" ADD CONSTRAINT "positions_bestelling_id_bestellingen_id_fk" FOREIGN KEY ("bestelling_id") REFERENCES "public"."bestellingen"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "team_memberships" ADD CONSTRAINT "team_memberships_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "team_memberships" ADD CONSTRAINT "team_memberships_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "team_memberships" ADD CONSTRAINT "team_memberships_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_position_couplings" ADD CONSTRAINT "team_position_couplings_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_position_couplings" ADD CONSTRAINT "team_position_couplings_position_id_positions_id_fk" FOREIGN KEY ("position_id") REFERENCES "public"."positions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_position_couplings" ADD CONSTRAINT "team_position_couplings_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "teams" ADD CONSTRAINT "teams_organisation_id_organisations_id_fk" FOREIGN KEY ("organisation_id") REFERENCES "public"."organisations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "totp_recovery_codes" ADD CONSTRAINT "totp_recovery_codes_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_organisation_id_organisations_id_fk" FOREIGN KEY ("organisation_id") REFERENCES "public"."organisations"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "users" ADD CONSTRAINT "users_organisation_id_organisations_id_fk" FOREIGN KEY ("organisation_id") REFERENCES "public"."organisations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_default_organisation_id_organisations_id_fk" FOREIGN KEY ("default_organisation_id") REFERENCES "public"."organisations"("id") ON DELETE no action ON UPDATE no action;

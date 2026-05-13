@@ -13,6 +13,7 @@ import { formatDate, formatCurrency, prorateCost } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { TransferPositionButton } from "@/components/ui/TransferPositionButton";
+import { DecouplePositionButton } from "@/components/ui/DecouplePositionButton";
 import { RemoveFundingButton } from "@/components/ui/RemoveFundingButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableTeamMembersTable } from "@/components/ui/FilterableTeamMembersTable";
@@ -152,9 +153,14 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <Heading level={2}>Posities</Heading>
           {!isArchived && (
-            <Link href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
-              Positie toevoegen
-            </Link>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <Link href={`/teams/${team.id}/posities/koppelen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+                Bestaande koppelen
+              </Link>
+              <Link href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--primary-action" style={{ fontSize: "0.875rem" }}>
+                + Nieuwe positie
+              </Link>
+            </div>
           )}
         </div>
         {teamPositions.length === 0 ? (
@@ -212,6 +218,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                           Bewerken
                         </Link>
                         <TransferPositionButton positionId={pos.id} positionName={pos.type} currentTeamId={team.id} activeCouplingId={coupling.id} />
+                        <DecouplePositionButton couplingId={coupling.id} positionName={pos.type} size="sm" />
                         <ArchiveButton
                           entityName={pos.type}
                           apiPath={`/api/positions/${pos.id}`}

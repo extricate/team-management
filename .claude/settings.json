@@ -81,7 +81,8 @@
       "Bash(xargs cat)",
       "Bash(./node_modules/.bin/tsc --noEmit)",
       "Bash(mkdir -p /home/hsfnelissen/code/team-management/app/api/company-persex/\\\\[id\\\\])",
-      "WebSearch"
+      "WebSearch",
+      "Bash(node --env-file=/home/hsfnelissen/code/team-management/.env.local --env-file=/home/hsfnelissen/code/team-management/.env --input-type=module)"
     ],
     "additionalDirectories": [
       "/home/hsfnelissen/code/team-management/app/bestellingen/[id]",

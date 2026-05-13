@@ -1,1 +1,0 @@
-ALTER TABLE "financial_sources" ADD COLUMN "is_company_persex" boolean DEFAULT false NOT NULL;
