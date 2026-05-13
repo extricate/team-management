@@ -246,7 +246,8 @@ describe('POST /api/funding-allocations with bestellingId', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     }
-    dbMock.set([ALLOC])
+    const sourceAmount = { id: FSA_ID, amount: '500000', status: 'released', releaseDate: null, type: null, allocations: [] }
+    dbMock.set(sourceAmount, [ALLOC])
     const req = makeRequest('/api/funding-allocations', {
       method: 'POST',
       body: { financialSourceAmountId: FSA_ID, bestellingId: BESTELLING_ID, amount: '15000' },

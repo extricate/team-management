@@ -5,22 +5,9 @@ export const uuidField = z.string().uuid();
 export const optionalUuid = z.string().uuid().optional();
 export const name200 = z.string().min(1).max(200);
 export const optionalName200 = z.string().min(1).max(200).optional();
-export const optionalDatetime = z.string().datetime().optional();
-export const nullableDatetime = z.string().datetime().optional().nullable();
-
-// ── Date parsing helpers ───────────────────────────────────────────────────────
-// Converts an optional ISO string to Date (undefined if absent).
-export function parseDate(val: string | undefined): Date | undefined {
-  return val ? new Date(val) : undefined;
-}
-
-// Converts an optional-or-null ISO string: null → null, undefined → undefined, string → Date.
-// Used in PATCH handlers where null means "clear the field" and undefined means "leave it".
-export function parseNullableDate(val: string | null | undefined): Date | null | undefined {
-  if (val === null) return null;
-  if (val === undefined) return undefined;
-  return new Date(val);
-}
+export const requiredDatetime = z.string().datetime().transform(val => new Date(val));
+export const optionalDatetime = z.string().datetime().optional().transform(val => val ? new Date(val) : undefined);
+export const nullableDatetime = z.string().datetime().optional().nullable().transform(val => val === null ? null : val ? new Date(val) : undefined);
 
 // ── Organisation ───────────────────────────────────────────────────────────────
 export const OrganisationSchema = z.object({
@@ -73,7 +60,7 @@ export const PositionSchema = z.object({
   opfType: z.string().optional().nullable(),
   positionCode: z.string().optional(),
   schaal: z.string().optional(),
-  annualCost: z.number().positive().optional(),
+  annualCost: z.number().positive().optional().transform(val => val != null ? String(val) : undefined),
   status: z.enum(POSITION_STATUSES).default("gepland"),
   expectedStart: optionalDatetime,
   expectedEnd: optionalDatetime,
@@ -86,7 +73,7 @@ export const PositionUpdateSchema = z.object({
   opfType: z.string().optional().nullable(),
   positionCode: z.string().optional().nullable(),
   schaal: z.string().optional().nullable(),
-  annualCost: z.number().positive().optional().nullable(),
+  annualCost: z.number().positive().optional().nullable().transform(val => val == null ? val : String(val)),
   status: z.enum(POSITION_STATUSES).optional(),
   expectedStart: nullableDatetime,
   expectedEnd: nullableDatetime,
@@ -97,7 +84,7 @@ export const PositionUpdateSchema = z.object({
 export const TeamPositionCouplingSchema = z.object({
   teamId: uuidField,
   positionId: uuidField,
-  startDate: z.string().datetime(),
+  startDate: requiredDatetime,
   endDate: optionalDatetime,
 });
 
@@ -109,7 +96,7 @@ export const TeamPositionCouplingUpdateSchema = z.object({
 export const TeamMembershipSchema = z.object({
   teamId: uuidField,
   employeeId: uuidField,
-  startDate: z.string().datetime(),
+  startDate: requiredDatetime,
   endDate: optionalDatetime,
   reason: z.string().optional(),
 });
@@ -125,7 +112,7 @@ export const TeamMembershipUpdateSchema = z.object({
 export const PositionAssignmentSchema = z.object({
   positionId: uuidField,
   employeeId: uuidField,
-  startDate: z.string().datetime(),
+  startDate: requiredDatetime,
   endDate: optionalDatetime,
   reason: z.string().optional(),
 });

@@ -1,8 +1,7 @@
 import { db } from "@/lib/db";
-import { fundingAllocations } from "@/lib/db/schema";
 import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
-import { logAudit } from "@/lib/audit";
-import { FundingAllocationSchema, parseDate } from "@/lib/schemas";
+import { FundingAllocationSchema } from "@/lib/schemas";
+import { createFundingAllocation } from "@/lib/services/funding-allocations";
 
 export const GET = withErrorHandling(async () => {
   await requireAuth();
@@ -22,14 +21,6 @@ export const POST = withErrorHandling(async (req: Request) => {
   const body = await req.json();
   const parsed = FundingAllocationSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const [row] = await db.insert(fundingAllocations).values({
-    ...parsed.data,
-    startDate: parseDate(parsed.data.startDate),
-    endDate: parseDate(parsed.data.endDate),
-    createdBy: session.user?.id,
-  }).returning();
-
-  await logAudit({ actorUserId: session.user?.id, entityType: "fundingAllocation", entityId: row.id, action: "assign", after: row, reason: parsed.data.reason });
-  return created(row);
+  const { row, warnings } = await createFundingAllocation(parsed.data, session.user?.id);
+  return created(warnings.length > 0 ? { ...row, warnings } : row);
 });

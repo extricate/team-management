@@ -1,9 +1,8 @@
 import { db } from "@/lib/db";
 import { positions } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
-import { logAudit } from "@/lib/audit";
-import { dispatchSync } from "@/lib/search/sync";
-import { PositionUpdateSchema, parseNullableDate } from "@/lib/schemas";
+import { PositionUpdateSchema } from "@/lib/schemas";
+import { updatePosition, archivePosition } from "@/lib/services/positions";
 import { eq } from "drizzle-orm";
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
@@ -25,35 +24,15 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
 export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
   const session = await requireAuth();
   const { id } = await ctx.params;
-  const [before] = await db.select().from(positions).where(eq(positions.id, id));
-  if (!before || before.deletedAt) return notFound();
-
   const body = await req.json();
   const parsed = PositionUpdateSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const data = {
-    ...parsed.data,
-    annualCost: parsed.data.annualCost != null ? String(parsed.data.annualCost) : parsed.data.annualCost === null ? null : undefined,
-    expectedStart: parseNullableDate(parsed.data.expectedStart),
-    expectedEnd: parseNullableDate(parsed.data.expectedEnd),
-    requiredBefore: parseNullableDate(parsed.data.requiredBefore),
-    updatedAt: new Date(),
-  };
-  const [after] = await db.update(positions).set(data).where(eq(positions.id, id)).returning();
-  await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: id, action: "update", before, after });
-  dispatchSync("position", id);
-  return ok(after);
+  return ok(await updatePosition(id, parsed.data, session.user?.id));
 });
 
 export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   const session = await requireAuth();
   const { id } = await ctx.params;
-  const [before] = await db.select().from(positions).where(eq(positions.id, id));
-  if (!before || before.deletedAt) return notFound();
-
-  await db.update(positions).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(positions.id, id));
-  await logAudit({ actorUserId: session.user?.id, entityType: "position", entityId: id, action: "archive", before });
-  dispatchSync("position", id);
+  await archivePosition(id, session.user?.id);
   return ok({ message: "Gearchiveerd" });
 });

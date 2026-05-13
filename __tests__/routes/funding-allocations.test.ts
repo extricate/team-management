@@ -55,6 +55,16 @@ const ALLOCATION = {
   updatedAt: new Date(),
 }
 
+// Source amount with ample budget — used in POST tests that should succeed
+const SOURCE_AMOUNT = {
+  id: FSA_ID,
+  amount: '500000',
+  status: 'released',
+  releaseDate: null,
+  type: { type: 'PERSEX', year: 2025 },
+  allocations: [],
+}
+
 beforeEach(() => dbMock.reset())
 
 // --- GET /api/funding-allocations ---
@@ -76,11 +86,12 @@ describe('GET /api/funding-allocations', () => {
 })
 
 // --- POST /api/funding-allocations ---
-// Key domain rule: positionId OR teamId must be provided (not both required, but at least one)
+// POST now queries the source amount first (for conflict detection), then inserts.
+// dbMock must be set with: sourceAmount, [allocation]
 
 describe('POST /api/funding-allocations', () => {
   it('creates allocation linked to a position and returns 201', async () => {
-    dbMock.set([ALLOCATION])
+    dbMock.set(SOURCE_AMOUNT, [ALLOCATION])
     const req = makeRequest('/api/funding-allocations', {
       method: 'POST',
       body: {
@@ -96,7 +107,7 @@ describe('POST /api/funding-allocations', () => {
 
   it('creates allocation linked to a team and returns 201', async () => {
     const teamAlloc = { ...ALLOCATION, positionId: null, teamId: TEAM_ID }
-    dbMock.set([teamAlloc])
+    dbMock.set(SOURCE_AMOUNT, [teamAlloc])
     const req = makeRequest('/api/funding-allocations', {
       method: 'POST',
       body: {
@@ -110,7 +121,7 @@ describe('POST /api/funding-allocations', () => {
   })
 
   it('returns 400 when neither positionId nor teamId is provided', async () => {
-    // Core domain constraint: funding must be traceable to a position or team
+    // Schema validation fails before any DB query — no mock data needed
     const req = makeRequest('/api/funding-allocations', {
       method: 'POST',
       body: {
@@ -122,7 +133,7 @@ describe('POST /api/funding-allocations', () => {
   })
 
   it('accepts a percentage instead of a fixed amount', async () => {
-    dbMock.set([{ ...ALLOCATION, amount: null, percentage: '25' }])
+    dbMock.set(SOURCE_AMOUNT, [{ ...ALLOCATION, amount: null, percentage: '25' }])
     const req = makeRequest('/api/funding-allocations', {
       method: 'POST',
       body: {
@@ -135,7 +146,7 @@ describe('POST /api/funding-allocations', () => {
   })
 
   it('accepts optional start and end dates', async () => {
-    dbMock.set([ALLOCATION])
+    dbMock.set(SOURCE_AMOUNT, [ALLOCATION])
     const req = makeRequest('/api/funding-allocations', {
       method: 'POST',
       body: {
@@ -155,6 +166,23 @@ describe('POST /api/funding-allocations', () => {
       body: { positionId: POSITION_ID, amount: '50000' },
     })
     expect((await POST(req)).status).toBe(400)
+  })
+
+  it('returns 409 when new allocation would over-allocate the source amount', async () => {
+    dbMock.set({
+      ...SOURCE_AMOUNT,
+      amount: '10000',
+      allocations: [{ status: 'active', amount: '9000', startDate: null, position: null }],
+    })
+    const req = makeRequest('/api/funding-allocations', {
+      method: 'POST',
+      body: {
+        financialSourceAmountId: FSA_ID,
+        positionId: POSITION_ID,
+        amount: '5000',
+      },
+    })
+    expect((await POST(req)).status).toBe(409)
   })
 
   it('returns 401 when not authenticated', async () => {

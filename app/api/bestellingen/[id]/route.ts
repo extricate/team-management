@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { bestellingen } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { BestellingUpdateSchema, parseNullableDate } from "@/lib/schemas";
+import { BestellingUpdateSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
 
 export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
@@ -42,7 +42,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
     ...parsed.data,
     geraamdBedrag: parsed.data.geraamdBedrag != null ? String(parsed.data.geraamdBedrag) : parsed.data.geraamdBedrag === null ? null : undefined,
     werkelijkBedrag: parsed.data.werkelijkBedrag != null ? String(parsed.data.werkelijkBedrag) : parsed.data.werkelijkBedrag === null ? null : undefined,
-    aanvraagDatum: parseNullableDate(parsed.data.aanvraagDatum),
+    aanvraagDatum: parsed.data.aanvraagDatum,
     updatedAt: new Date(),
   };
 

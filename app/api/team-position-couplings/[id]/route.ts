@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { teamPositionCouplings } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { TeamPositionCouplingUpdateSchema, parseNullableDate } from "@/lib/schemas";
+import { TeamPositionCouplingUpdateSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
 
 export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
@@ -19,7 +19,7 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
   const [after] = await db
     .update(teamPositionCouplings)
     .set({
-      endDate: parseNullableDate(parsed.data.endDate),
+      endDate: parsed.data.endDate,
       updatedAt: new Date(),
     })
     .where(eq(teamPositionCouplings.id, id))

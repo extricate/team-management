@@ -78,6 +78,9 @@ export function withErrorHandling<TArgs extends unknown[]>(
     } catch (error) {
       if (error instanceof AuthError) return unauthorized(error.message);
       if (error instanceof ForbiddenError) return forbidden(error.message);
+      if (error instanceof Error && "status" in error && typeof (error as { status: unknown }).status === "number") {
+        return err(error.message, (error as { status: number }).status);
+      }
       console.error("[API error]", error);
       return serverError();
     }

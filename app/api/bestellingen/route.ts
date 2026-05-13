@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { bestellingen } from "@/lib/db/schema";
 import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { BestellingSchema, parseDate } from "@/lib/schemas";
+import { BestellingSchema } from "@/lib/schemas";
 import { isNull } from "drizzle-orm";
 
 export const GET = withErrorHandling(async () => {
@@ -31,7 +31,7 @@ export const POST = withErrorHandling(async (req: Request) => {
     ...parsed.data,
     geraamdBedrag: parsed.data.geraamdBedrag != null ? String(parsed.data.geraamdBedrag) : undefined,
     werkelijkBedrag: parsed.data.werkelijkBedrag != null ? String(parsed.data.werkelijkBedrag) : undefined,
-    aanvraagDatum: parseDate(parsed.data.aanvraagDatum),
+    aanvraagDatum: parsed.data.aanvraagDatum,
   };
 
   const [row] = await db.insert(bestellingen).values(data).returning();

@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { teamPositionCouplings } from "@/lib/db/schema";
 import { created, badRequest, conflict, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { TeamPositionCouplingSchema, parseDate } from "@/lib/schemas";
+import { TeamPositionCouplingSchema } from "@/lib/schemas";
 import { and, eq, isNull } from "drizzle-orm";
 
 export const POST = withErrorHandling(async (req: Request) => {
@@ -22,10 +22,7 @@ export const POST = withErrorHandling(async (req: Request) => {
   const [row] = await db
     .insert(teamPositionCouplings)
     .values({
-      teamId: parsed.data.teamId,
-      positionId: parsed.data.positionId,
-      startDate: parseDate(parsed.data.startDate)!,
-      endDate: parseDate(parsed.data.endDate),
+      ...parsed.data,
       createdBy: session.user?.id,
     })
     .returning();

@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { financialSourceAmounts, financialSources } from "@/lib/db/schema";
 import { ok, created, badRequest, notFound, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { FinancialSourceAmountSchema, parseDate } from "@/lib/schemas";
+import { FinancialSourceAmountSchema } from "@/lib/schemas";
 import { eq, isNull } from "drizzle-orm";
 
 export const POST = withErrorHandling(async (req: Request) => {
@@ -22,8 +22,8 @@ export const POST = withErrorHandling(async (req: Request) => {
     financialTypeId: parsed.data.financialTypeId,
     amount: String(parsed.data.amount),
     status: parsed.data.status,
-    effectiveDate: parseDate(parsed.data.effectiveDate),
-    releaseDate: parseDate(parsed.data.releaseDate),
+    effectiveDate: parsed.data.effectiveDate,
+    releaseDate: parsed.data.releaseDate,
   }).returning();
 
   await logAudit({

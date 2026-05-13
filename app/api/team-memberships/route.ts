@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { teamMemberships } from "@/lib/db/schema";
 import { created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { TeamMembershipSchema, parseDate } from "@/lib/schemas";
+import { TeamMembershipSchema } from "@/lib/schemas";
 
 export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
@@ -12,8 +12,6 @@ export const POST = withErrorHandling(async (req: Request) => {
 
   const [row] = await db.insert(teamMemberships).values({
     ...parsed.data,
-    startDate: new Date(parsed.data.startDate),
-    endDate: parseDate(parsed.data.endDate),
     createdBy: session.user?.id,
   }).returning();
 

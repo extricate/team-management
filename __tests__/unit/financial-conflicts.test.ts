@@ -130,7 +130,7 @@ describe('detectFinancialConflicts', () => {
 
   it('collects conflicts from multiple amounts independently', () => {
     const over = makeAmount({ amount: 1_000, allocations: [activeAlloc(2_000)] })
-    const concept = makeAmount({ status: 'concept', financialType: { type: 'MATEX', year: 2025 }, allocations: [activeAlloc(500)] })
+    const concept = makeAmount({ status: 'concept', type: { type: 'MATEX', year: 2025 }, allocations: [activeAlloc(500)] })
     const result = detectFinancialConflicts([over, concept])
     expect(result).toHaveLength(2)
   })

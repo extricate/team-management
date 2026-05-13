@@ -1,9 +1,8 @@
 import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
 import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
-import { logAudit } from "@/lib/audit";
-import { dispatchSync } from "@/lib/search/sync";
 import { TeamSchema } from "@/lib/schemas";
+import { createTeam } from "@/lib/services/teams";
 import { isNull } from "drizzle-orm";
 
 export const GET = withErrorHandling(async () => {
@@ -20,9 +19,5 @@ export const POST = withErrorHandling(async (req: Request) => {
   const body = await req.json();
   const parsed = TeamSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const [row] = await db.insert(teams).values(parsed.data).returning();
-  await logAudit({ actorUserId: session.user?.id, entityType: "team", entityId: row.id, action: "create", after: row });
-  dispatchSync("team", row.id);
-  return created(row);
+  return created(await createTeam(parsed.data, session.user?.id));
 });

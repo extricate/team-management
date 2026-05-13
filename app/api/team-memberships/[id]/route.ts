@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { teamMemberships } from "@/lib/db/schema";
 import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { TeamMembershipUpdateSchema, parseDate, parseNullableDate } from "@/lib/schemas";
+import { TeamMembershipUpdateSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
 
 export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
@@ -17,8 +17,6 @@ export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) =
 
   const data = {
     ...parsed.data,
-    startDate: parseDate(parsed.data.startDate),
-    endDate: parseNullableDate(parsed.data.endDate),
     updatedAt: new Date(),
   };
   const [after] = await db.update(teamMemberships).set(data).where(eq(teamMemberships.id, id)).returning();
