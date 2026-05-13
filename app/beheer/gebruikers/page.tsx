@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -24,43 +25,44 @@ export default async function GebruikersPage() {
   }).from(users).orderBy(users.createdAt);
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
-        <Heading level={1}>Gebruikersbeheer</Heading>
+    <div>
+      <Breadcrumbs crumbs={[
+        { label: "Instellingen", href: "/instellingen" },
+        { label: "Gebruikersbeheer" },
+      ]} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+        <Heading level={1} style={{ margin: 0 }}>Gebruikersbeheer</Heading>
         <Link href="/beheer/gebruikers/nieuw" className="utrecht-button utrecht-button--primary-action">
           Nieuw account
         </Link>
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid var(--rvo-color-grijs-300)" }}>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Naam / E-mail</th>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Rol</th>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>Status</th>
-            <th style={{ textAlign: "left", padding: "0.5rem" }}>MFA</th>
-            <th style={{ padding: "0.5rem" }} />
+      <table className="utrecht-table">
+        <thead className="utrecht-table__header">
+          <tr className="utrecht-table__row">
+            <th className="utrecht-table__header-cell">Naam / E-mail</th>
+            <th className="utrecht-table__header-cell">Rol</th>
+            <th className="utrecht-table__header-cell">Status</th>
+            <th className="utrecht-table__header-cell">MFA</th>
+            <th className="utrecht-table__header-cell" />
           </tr>
         </thead>
-        <tbody>
+        <tbody className="utrecht-table__body">
           {allUsers.map((u) => (
-            <tr key={u.id} style={{ borderBottom: "1px solid var(--rvo-color-grijs-200)" }}>
-              <td style={{ padding: "0.75rem 0.5rem" }}>
-                <div style={{ fontWeight: "600" }}>{u.name ?? "—"}</div>
-                <div style={{ fontSize: "0.85em", color: "var(--rvo-color-grijs-600)" }}>{u.email}</div>
+            <tr key={u.id} className="utrecht-table__row">
+              <td className="utrecht-table__cell">
+                <div style={{ fontWeight: 600 }}>{u.name ?? "—"}</div>
+                <div style={{ fontSize: "0.85em", color: "var(--rvo-color-grijs-600, #5a5a5a)" }}>{u.email}</div>
               </td>
-              <td style={{ padding: "0.75rem 0.5rem" }}>{u.role}</td>
-              <td style={{ padding: "0.75rem 0.5rem" }}>
+              <td className="utrecht-table__cell">{u.role}</td>
+              <td className="utrecht-table__cell">
                 <StatusBadge label={u.isEnabled ? "Actief" : "Uitgeschakeld"} color={u.isEnabled ? "green" : "grey"} />
               </td>
-              <td style={{ padding: "0.75rem 0.5rem" }}>
-                {u.totpEnabled
-                  ? <span style={{ color: "var(--rvo-color-groen-700)", fontWeight: "600" }}>✓ Ingeschakeld</span>
-                  : <span style={{ color: "var(--rvo-color-grijs-600)" }}>Niet ingesteld</span>
-                }
+              <td className="utrecht-table__cell">
+                <StatusBadge label={u.totpEnabled ? "Ingeschakeld" : "Niet ingesteld"} color={u.totpEnabled ? "green" : "grey"} />
               </td>
-              <td style={{ padding: "0.75rem 0.5rem", textAlign: "right" }}>
-                <Link href={`/beheer/gebruikers/${u.id}`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.85em" }}>
+              <td className="utrecht-table__cell" style={{ textAlign: "right" }}>
+                <Link href={`/beheer/gebruikers/${u.id}`} className="utrecht-link">
                   Bewerken
                 </Link>
               </td>
@@ -72,6 +74,6 @@ export default async function GebruikersPage() {
       {allUsers.length === 0 && (
         <Paragraph>Geen gebruikers gevonden.</Paragraph>
       )}
-    </main>
+    </div>
   );
 }

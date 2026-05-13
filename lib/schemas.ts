@@ -204,6 +204,23 @@ export const FundingAllocationUpdateSchema = z.object({
   reason: z.string().optional().nullable(),
 });
 
+// ── Salarisschaal ──────────────────────────────────────────────────────────────
+export const SalarisschaalSchema = z.object({
+  schaalCode: z.string().min(1).max(20),
+  year: z.number().int().min(2000).max(2100),
+  primaryCost: z.number().nonnegative().transform(val => String(val)),
+  secondaryEffects: z.number().nonnegative().default(0).transform(val => String(val)),
+  tertiaryEffects: z.number().nonnegative().default(0).transform(val => String(val)),
+});
+
+export const SalarisschaalUpdateSchema = z.object({
+  schaalCode: z.string().min(1).max(20).optional(),
+  year: z.number().int().min(2000).max(2100).optional(),
+  primaryCost: z.number().nonnegative().optional().transform(val => val != null ? String(val) : undefined),
+  secondaryEffects: z.number().nonnegative().optional().transform(val => val != null ? String(val) : undefined),
+  tertiaryEffects: z.number().nonnegative().optional().transform(val => val != null ? String(val) : undefined),
+});
+
 // ── Comment ────────────────────────────────────────────────────────────────────
 export const CommentSchema = z.object({
   body: z.string().min(1),

@@ -1,8 +1,18 @@
 import { fileURLToPath } from "url";
 import { db } from "./index";
-import { users, bestellingTypes } from "./schema";
+import { users, bestellingTypes, salarisschalen } from "./schema";
 import { eq } from "drizzle-orm";
 import { hashPassword, generatePassword } from "../auth/password";
+
+const DEFAULT_SALARISSCHALEN = [
+  { schaalCode: "7",  year: 2026, primaryCost: "73405.00",  secondaryEffects: "6966.00",  tertiaryEffects: "29782.00" },
+  { schaalCode: "8",  year: 2026, primaryCost: "79985.00",  secondaryEffects: "7591.00",  tertiaryEffects: "31443.00" },
+  { schaalCode: "9",  year: 2026, primaryCost: "90736.00",  secondaryEffects: "8611.00",  tertiaryEffects: "34157.00" },
+  { schaalCode: "10", year: 2026, primaryCost: "96704.00",  secondaryEffects: "9177.00",  tertiaryEffects: "35663.00" },
+  { schaalCode: "11", year: 2026, primaryCost: "113397.00", secondaryEffects: "10761.00", tertiaryEffects: "39877.00" },
+  { schaalCode: "12", year: 2026, primaryCost: "126925.00", secondaryEffects: "12045.00", tertiaryEffects: "43292.00" },
+  { schaalCode: "13", year: 2026, primaryCost: "142251.00", secondaryEffects: "5875.00",  tertiaryEffects: "37013.00" },
+];
 
 const DEFAULT_BESTELLING_TYPES = [
   { naam: "Hardware", omschrijving: "Laptops, servers, randapparatuur en overige fysieke ICT-middelen" },
@@ -77,6 +87,14 @@ async function seed() {
     } else {
       await db.insert(bestellingTypes).values(DEFAULT_BESTELLING_TYPES);
       console.log(`✓ Bestelling types aangemaakt (${DEFAULT_BESTELLING_TYPES.length})`);
+    }
+
+    const existingSchalen = await db.select().from(salarisschalen).limit(1);
+    if (existingSchalen.length > 0) {
+      console.log("✓ Salarisschalen al aanwezig");
+    } else {
+      await db.insert(salarisschalen).values(DEFAULT_SALARISSCHALEN);
+      console.log(`✓ Salarisschalen aangemaakt (${DEFAULT_SALARISSCHALEN.length})`);
     }
   } catch (error) {
     console.error("✗ Fout bij seeden:", error);

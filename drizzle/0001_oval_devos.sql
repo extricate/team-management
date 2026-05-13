@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "salarisschalen_schaal_year_idx" ON "salarisschalen" USING btree ("schaal_code","year");

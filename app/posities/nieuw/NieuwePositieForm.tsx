@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Heading } from "@rijkshuisstijl-community/components-react";
-import { Alert } from "@rijkshuisstijl-community/components-react";
+import { Heading, Alert } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { OPF_TYPES, getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-types";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { formatCurrency } from "@/lib/utils";
 
 interface Organisation {
   id: string;
@@ -19,13 +19,47 @@ interface Props {
   defaultOrganisationId?: string;
 }
 
+interface SchaalInfo {
+  primaryCost: number;
+  secondaryEffects: number;
+  tertiaryEffects: number;
+  totalCost: number;
+  isExact: boolean;
+  foundYear: number;
+}
+
 export function NieuwePositieForm({ organisations, defaultOrganisationId }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [selectedOpfType, setSelectedOpfType] = useState<string>("");
+  const [schaalCode, setSchaalCode] = useState<string>("");
+  const [expectedStartStr, setExpectedStartStr] = useState<string>("");
+  const [annualCost, setAnnualCost] = useState<string>("");
+  const [schaalInfo, setSchaalInfo] = useState<SchaalInfo | null>(null);
+  const [schaalInfoLoading, setSchaalInfoLoading] = useState(false);
 
   const opfDef = getOPFType(selectedOpfType);
+
+  async function lookupSchaalCost(code: string, dateStr: string) {
+    if (!code.trim()) { setSchaalInfo(null); return; }
+    const year = dateStr ? new Date(dateStr).getFullYear() : new Date().getFullYear();
+    setSchaalInfoLoading(true);
+    try {
+      const res = await fetch(`/api/salarisschalen/lookup?schaal=${encodeURIComponent(code.trim())}&year=${year}`);
+      if (res.ok) {
+        const body = await res.json();
+        setSchaalInfo(body.data);
+        setAnnualCost(String(body.data.totalCost));
+      } else {
+        setSchaalInfo(null);
+      }
+    } catch {
+      setSchaalInfo(null);
+    } finally {
+      setSchaalInfoLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,7 +67,7 @@ export function NieuwePositieForm({ organisations, defaultOrganisationId }: Prop
     const startStr = fd.get("expectedStart") as string;
     const endStr = fd.get("expectedEnd") as string;
     const requiredBeforeStr = fd.get("requiredBefore") as string;
-    const costStr = (fd.get("annualCost") as string).replace(",", ".");
+    const costStr = annualCost.replace(",", ".");
 
     setSaving(true);
     setError(null);
@@ -47,7 +81,7 @@ export function NieuwePositieForm({ organisations, defaultOrganisationId }: Prop
           type: fd.get("type"),
           opfType: (fd.get("opfType") as string) || null,
           positionCode: (fd.get("positionCode") as string) || undefined,
-          schaal: (fd.get("schaal") as string) || undefined,
+          schaal: schaalCode || undefined,
           annualCost: costStr ? parseFloat(costStr) : undefined,
           status: fd.get("status"),
           expectedStart: startStr ? new Date(startStr).toISOString() : undefined,
@@ -155,13 +189,54 @@ export function NieuwePositieForm({ organisations, defaultOrganisationId }: Prop
           </div>
           <div className="form-field">
             <label htmlFor="schaal" className="utrecht-form-label">Schaal</label>
-            <input id="schaal" name="schaal" type="text" className="utrecht-textbox" maxLength={10} placeholder="bijv. 8, 10, 12" />
+            <input
+              id="schaal"
+              name="schaal"
+              type="text"
+              className="utrecht-textbox"
+              maxLength={20}
+              value={schaalCode}
+              onChange={e => setSchaalCode(e.target.value)}
+              onBlur={() => lookupSchaalCost(schaalCode, expectedStartStr)}
+              placeholder="bijv. 10, 12, KOL, LTKOL"
+            />
+            <p className="form-hint">
+              {schaalInfoLoading ? "Kosten ophalen…" : "Standaardkosten worden automatisch opgehaald."}
+            </p>
           </div>
         </div>
 
         <div className="form-field">
           <label htmlFor="annualCost" className="utrecht-form-label">Jaarlijkse kosten (€)</label>
-          <input id="annualCost" name="annualCost" type="number" step="0.01" min="0" className="utrecht-textbox" placeholder="0.00" />
+          <input
+            id="annualCost"
+            name="annualCost"
+            type="number"
+            step="0.01"
+            min="0"
+            className="utrecht-textbox"
+            value={annualCost}
+            onChange={e => setAnnualCost(e.target.value)}
+            placeholder="0.00"
+          />
+          {schaalInfo && (
+            <Alert type="info" style={{ marginTop: "0.5rem" }}>
+              <div style={{ fontSize: "0.875rem" }}>
+                {!schaalInfo.isExact && (
+                  <p style={{ marginBottom: "0.5rem", color: "var(--rvo-color-oranje-700)" }}>
+                    Geen exacte match voor het startjaar — kosten gebaseerd op {schaalInfo.foundYear}.
+                  </p>
+                )}
+                <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.2rem 1rem" }}>
+                  <span>Primaire kosten:</span><span>{formatCurrency(schaalInfo.primaryCost)}</span>
+                  <span>2e-orde-effecten:</span><span>{formatCurrency(schaalInfo.secondaryEffects)}</span>
+                  <span>3e-orde-effecten:</span><span>{formatCurrency(schaalInfo.tertiaryEffects)}</span>
+                  <strong>Totaal:</strong><strong>{formatCurrency(schaalInfo.totalCost)}</strong>
+                </div>
+              </div>
+            </Alert>
+          )}
+          <p className="form-hint">Totale jaarlijkse kosten. Kan handmatig worden overschreven.</p>
         </div>
 
         <div className="form-field">
@@ -181,7 +256,18 @@ export function NieuwePositieForm({ organisations, defaultOrganisationId }: Prop
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
           <div className="form-field">
             <label htmlFor="expectedStart" className="utrecht-form-label">Verwachte startdatum</label>
-            <input id="expectedStart" name="expectedStart" type="date" className="utrecht-textbox" style={{ maxWidth: "100%" }} />
+            <input
+              id="expectedStart"
+              name="expectedStart"
+              type="date"
+              className="utrecht-textbox"
+              value={expectedStartStr}
+              onChange={e => {
+                setExpectedStartStr(e.target.value);
+                if (schaalCode) lookupSchaalCost(schaalCode, e.target.value);
+              }}
+              style={{ maxWidth: "100%" }}
+            />
           </div>
           <div className="form-field">
             <label htmlFor="expectedEnd" className="utrecht-form-label">Verwachte einddatum</label>

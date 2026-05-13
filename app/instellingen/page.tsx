@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
-import { Heading, LinkListCard, LinkList, LinkListLink } from "@rijkshuisstijl-community/components-react";
+import { Heading, Paragraph, Card, LinkListCard, LinkList, LinkListLink } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { organisations } from "@/lib/db/schema";
 import { isNull, asc } from "drizzle-orm";
 import { DefaultOrgSelector } from "./DefaultOrgSelector";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export const metadata = { title: "Instellingen – Teambeheer" };
 
@@ -21,21 +22,21 @@ export default async function SettingsPage() {
     .orderBy(asc(organisations.name));
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
+    <div>
+      <Breadcrumbs crumbs={[{ label: "Instellingen" }]} />
       <Heading level={1}>Instellingen</Heading>
 
-      <div style={{ marginTop: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         {allOrgs.length > 0 && (
-          <div style={{ border: "1px solid var(--rvo-color-grijs-200)", borderRadius: "4px", padding: "1.5rem" }}>
-            <Heading level={2} style={{ margin: "0 0 1rem" }}>Standaard organisatie</Heading>
-            <p style={{ margin: "0 0 1rem", fontSize: "0.875rem", color: "var(--rvo-color-grijs-700)" }}>
+          <Card heading="Standaard organisatie" headingLevel={2} style={{ maxInlineSize: "none", width: "100%" }}>
+            <Paragraph>
               Kies een organisatie die automatisch wordt geselecteerd wanneer u een pagina opent.
-            </p>
+            </Paragraph>
             <DefaultOrgSelector
               organisations={allOrgs}
               currentDefaultId={session.user.defaultOrganisationId}
             />
-          </div>
+          </Card>
         )}
 
         <LinkListCard headingLevel={2} heading="Beveiliging">
@@ -48,10 +49,11 @@ export default async function SettingsPage() {
           <LinkListCard headingLevel={2} heading="Beheer">
             <LinkList>
               <LinkListLink href="/beheer/gebruikers">Gebruikersbeheer</LinkListLink>
+              <LinkListLink href="/beheer/salarisschalen">Salarisschalen</LinkListLink>
             </LinkList>
           </LinkListCard>
         )}
       </div>
-    </main>
+    </div>
   );
 }

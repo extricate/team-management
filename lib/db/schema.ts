@@ -8,6 +8,7 @@ import {
   primaryKey,
   numeric,
   jsonb,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import type { AdapterAccountType } from "next-auth/adapters";
@@ -213,6 +214,18 @@ export const positionAssignments = pgTable("position_assignments", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
+
+// ── Salarisschalen (default costs per grade per year) ─────────────────────────
+export const salarisschalen = pgTable("salarisschalen", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schaalCode: text("schaal_code").notNull(),
+  year: integer("year").notNull(),
+  primaryCost: numeric("primary_cost", { precision: 15, scale: 2 }).notNull(),
+  secondaryEffects: numeric("secondary_effects", { precision: 15, scale: 2 }).notNull().default("0"),
+  tertiaryEffects: numeric("tertiary_effects", { precision: 15, scale: 2 }).notNull().default("0"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+}, (t) => [uniqueIndex("salarisschalen_schaal_year_idx").on(t.schaalCode, t.year)]);
 
 // ── Company Persex (singleton government-wide personnel budget) ───────────────
 export const companyPersexBudgets = pgTable("company_persex_budgets", {
@@ -437,3 +450,6 @@ export type TotpRecoveryCode = typeof totpRecoveryCodes.$inferSelect;
 
 // FinancialTypeEnum kept as alias for the renamed FinancialTypeCategory (backwards compat)
 export type FinancialTypeEnum = FinancialTypeCategory;
+
+export type Salarisschaal = typeof salarisschalen.$inferSelect;
+export type NewSalarisschaal = typeof salarisschalen.$inferInsert;

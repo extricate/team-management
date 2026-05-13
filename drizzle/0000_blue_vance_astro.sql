@@ -170,6 +170,17 @@ CREATE TABLE "positions" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "salarisschalen" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"schaal_code" text NOT NULL,
+	"year" integer NOT NULL,
+	"primary_cost" numeric(15, 2) NOT NULL,
+	"secondary_effects" numeric(15, 2) DEFAULT '0' NOT NULL,
+	"tertiary_effects" numeric(15, 2) DEFAULT '0' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "sessions" (
 	"session_token" text PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
