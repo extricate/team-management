@@ -33,6 +33,11 @@ export const TeamUpdateSchema = z.object({
   organisationId: optionalUuid,
 });
 
+export const BulkTeamSchema = z.object({
+  organisationId: uuidField,
+  names: z.array(name200).min(1).max(100),
+});
+
 // ── Employee ───────────────────────────────────────────────────────────────────
 export const EmployeeSchema = z.object({
   organisationId: uuidField,
