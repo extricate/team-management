@@ -55,8 +55,7 @@ export function ArchiveButton({ entityName, apiPath, redirectTo, warningText, si
     <>
       <button
         type="button"
-        className="utrecht-button utrecht-button--danger"
-        style={size === "sm" ? { fontSize: "0.8125rem", padding: "0.25rem 0.75rem" } : undefined}
+        className={`utrecht-button utrecht-button--danger${size === "sm" ? " utrecht-button--sm" : ""}`}
         onClick={open}
       >
         Archiveren

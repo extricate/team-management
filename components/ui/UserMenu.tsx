@@ -12,7 +12,6 @@ interface UserMenuProps {
 }
 
 const userNavLinks = [
-  { href: "/beheer/gebruikers", label: "Gebruikers" },
   { href: "/instellingen", label: "Instellingen" },
 ]
 

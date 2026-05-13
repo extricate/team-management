@@ -171,7 +171,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <div>
             <Heading level={2} style={{ margin: 0 }}>Budgetplanning</Heading>
-            <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
+            <p className="field-label" style={{ marginTop: "0.25rem" }}>
               Bedragen in euro's per jaar · PERSEX = personele kosten, MATEX = materiële kosten
             </p>
           </div>
@@ -186,7 +186,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
       {/* Detailed amounts per type (for auditing / advanced view) */}
       {source.types.length > 0 && (
         <details style={{ marginBottom: "2.5rem" }}>
-          <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "1rem", padding: "0.5rem 0", color: "var(--rvo-color-hemelblauw-700)", userSelect: "none" }}>
+          <summary className="utrecht-link" style={{ cursor: "pointer", fontWeight: 600, padding: "0.5rem 0", userSelect: "none" }}>
             Gedetailleerd overzicht per type & bedrag
           </summary>
           <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>

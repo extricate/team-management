@@ -54,8 +54,7 @@ export function DecouplePositionButton({ couplingId, positionName, size }: Props
     <>
       <button
         type="button"
-        className="utrecht-button utrecht-button--secondary-action"
-        style={size === "sm" ? { fontSize: "0.8125rem", padding: "0.25rem 0.75rem" } : undefined}
+        className={`utrecht-button utrecht-button--secondary-action${size === "sm" ? " utrecht-button--sm" : ""}`}
         onClick={open}
       >
         Ontkoppelen

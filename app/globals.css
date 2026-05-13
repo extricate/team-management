@@ -120,6 +120,12 @@ main {
   text-decoration: none;
 }
 
+/* Compact variant for dense contexts (e.g. position card action rows) */
+.utrecht-button--sm {
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.75rem;
+}
+
 /* ── Table ────────────────────────────────────────────────────── */
 
 .utrecht-table {
@@ -227,6 +233,91 @@ main {
   gap: 1rem;
   justify-content: flex-end;
   flex-wrap: wrap;
+}
+
+/* ── Position actions kebab menu ─────────────────────────────── */
+
+.actions-menu__trigger {
+  background: none;
+  border: 1px solid var(--rvo-color-grijs-300, #cccccc);
+  border-radius: var(--rhc-border-radius-md, 5px);
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rvo-color-grijs-600, #5a5a5a);
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.actions-menu__trigger:hover {
+  background: var(--rvo-color-grijs-100, #f1f1f1);
+  border-color: var(--rvo-color-grijs-500, #767676);
+  color: var(--rvo-color-hemelblauw-700, #154273);
+}
+
+.actions-menu__trigger:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.actions-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
+  background: var(--rvo-color-white, #ffffff);
+  border: 1px solid var(--rhc-card-border-color, #c8c8c8);
+  border-radius: var(--rhc-border-radius-md, 5px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 160px;
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.actions-menu__item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-family: "Fira Sans", Arial, sans-serif;
+  color: var(--rvo-color-hemelblauw-700, #154273);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.actions-menu__item:hover {
+  background: var(--rvo-color-hemelblauw-50, #eef4fb);
+  color: var(--rvo-color-hemelblauw-900, #001f4d);
+  text-decoration: none;
+}
+
+.actions-menu__item:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: -2px;
+}
+
+.actions-menu__item--danger {
+  color: var(--rvo-color-rood-600, #c0392b);
+}
+
+.actions-menu__item--danger:hover {
+  background: var(--rvo-color-rood-50, #fdecea);
+  color: var(--rvo-color-rood-800, #7d1a0f);
+}
+
+.actions-menu__divider {
+  height: 1px;
+  background: var(--rvo-color-grijs-100, #f1f1f1);
+  margin: 0.25rem 0;
 }
 
 /* ── Loading placeholder ──────────────────────────────────────── */

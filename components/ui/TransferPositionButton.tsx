@@ -83,7 +83,7 @@ export function TransferPositionButton({ positionId, positionName, currentTeamId
 
   return (
     <>
-      <button type="button" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }} onClick={open}>
+      <button type="button" className="utrecht-button utrecht-button--secondary-action utrecht-button--sm" onClick={open}>
         Overdragen
       </button>
       <dialog ref={dialogRef} className="confirm-dialog" aria-labelledby={titleId}>

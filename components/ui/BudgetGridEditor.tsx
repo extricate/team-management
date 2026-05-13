@@ -178,55 +178,29 @@ export function BudgetGridEditor({ sourceId, initialEntries, initialYears }: Pro
     }
   };
 
-  const thStyle: React.CSSProperties = {
-    textAlign: "center",
-    padding: "0.5rem 0.75rem",
-    background: "var(--rvo-color-hemelblauw-100, #d3e4f5)",
-    fontWeight: 600,
-    fontSize: "0.875rem",
-    borderBottom: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)",
-    whiteSpace: "nowrap",
-  };
-
-  const tdStyle: React.CSSProperties = {
-    padding: "0.25rem 0.5rem",
-    borderBottom: "1px solid var(--rvo-color-hemelblauw-100, #d3e4f5)",
-    borderRight: "1px solid var(--rvo-color-hemelblauw-100, #d3e4f5)",
-    verticalAlign: "middle",
-  };
-
-  const totalTdStyle: React.CSSProperties = {
-    padding: "0.5rem 0.75rem",
-    textAlign: "right",
-    fontWeight: 700,
-    fontSize: "0.875rem",
-    color: "var(--rvo-color-hemelblauw-800)",
-    borderLeft: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)",
-  };
-
   return (
     <div>
       {error && (
-        <div role="alert" style={{ marginBottom: "1rem", padding: "0.75rem 1rem", background: "var(--rvo-color-rood-50, #fff0f0)", border: "1px solid var(--rvo-color-rood-300, #f5a3a3)", borderRadius: "4px", color: "var(--rvo-color-rood-700, #b30000)", fontSize: "0.875rem" }}>
+        <div role="alert" className="form-alert">
           {error}
         </div>
       )}
       {savedMsg && (
-        <div style={{ marginBottom: "1rem", padding: "0.75rem 1rem", background: "var(--rvo-color-groen-50, #f0faf0)", border: "1px solid var(--rvo-color-groen-300, #74c476)", borderRadius: "4px", color: "var(--rvo-color-groen-800, #006400)", fontSize: "0.875rem" }}>
-          ✓ {savedMsg}
+        <div className="form-alert form-alert--success">
+          {savedMsg}
         </div>
       )}
 
       <div style={{ overflowX: "auto", marginBottom: "0.75rem" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.875rem" }}>
-          <thead>
-            <tr>
-              <th style={{ ...thStyle, textAlign: "left", width: "130px" }}>Categorie</th>
+        <table className="utrecht-table" style={{ width: "auto", fontSize: "0.875rem" }}>
+          <thead className="utrecht-table__header">
+            <tr className="utrecht-table__row">
+              <th className="utrecht-table__header-cell" style={{ textAlign: "left", width: "160px" }}>Categorie</th>
               {years.map((year) => {
                 const isEmpty = CATEGORIES.every((cat) => parseAmount(getCell(cat, year).amount) === 0);
                 return (
-                  <th key={year} style={{ ...thStyle, minWidth: "150px", position: "relative" }}>
-                    <span style={{ color: year === currentYear ? "var(--rvo-color-hemelblauw-700)" : undefined }}>
+                  <th key={year} className="utrecht-table__header-cell" style={{ width: "200px", textAlign: "center", position: "relative" }}>
+                    <span style={{ color: year === currentYear ? "var(--rvo-color-hemelblauw-700, #1a5276)" : undefined }}>
                       {year}
                     </span>
                     {isEmpty && years.length > 1 && (
@@ -234,7 +208,7 @@ export function BudgetGridEditor({ sourceId, initialEntries, initialYears }: Pro
                         type="button"
                         onClick={() => removeYear(year)}
                         title="Leeg jaar verwijderen"
-                        style={{ position: "absolute", top: "2px", right: "4px", background: "none", border: "none", cursor: "pointer", color: "var(--rvo-color-grijs-500)", fontSize: "0.75rem", lineHeight: 1, padding: "2px" }}
+                        style={{ position: "absolute", top: "2px", right: "4px", background: "none", border: "none", cursor: "pointer", color: "var(--rvo-color-grijs-500, #767676)", fontSize: "0.75rem", lineHeight: 1, padding: "2px" }}
                       >
                         ×
                       </button>
@@ -242,26 +216,25 @@ export function BudgetGridEditor({ sourceId, initialEntries, initialYears }: Pro
                   </th>
                 );
               })}
-              <th style={{ ...thStyle, textAlign: "right", borderLeft: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)", width: "120px" }}>
+              <th className="utrecht-table__header-cell" style={{ textAlign: "right", borderLeft: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)", width: "120px" }}>
                 15-jr totaal
               </th>
             </tr>
           </thead>
-          <tbody>
-            {CATEGORIES.map((cat, idx) => {
-              const rowBg = idx % 2 === 0 ? "#fff" : "var(--rvo-color-grijs-50, #f8f8f8)";
+          <tbody className="utrecht-table__body">
+            {CATEGORIES.map((cat) => {
               const rTotal = rowTotal(cat);
               return (
-                <tr key={cat} style={{ background: rowBg }}>
-                  <td style={{ ...tdStyle, fontWeight: 600, paddingLeft: "0.75rem", borderLeft: "1px solid var(--rvo-color-hemelblauw-100, #d3e4f5)" }}>
+                <tr key={cat} className="utrecht-table__row">
+                  <td className="utrecht-table__cell" style={{ fontWeight: 600 }}>
                     <div>{CATEGORY_LABELS[cat]}</div>
-                    <div style={{ fontWeight: 400, fontSize: "0.75rem", color: "var(--rvo-color-grijs-600)" }}>{CATEGORY_HINTS[cat]}</div>
+                    <div className="field-label">{CATEGORY_HINTS[cat]}</div>
                   </td>
                   {years.map((year) => {
                     const cell = getCell(cat, year);
                     const isReleased = cell.status === "released";
                     return (
-                      <td key={year} style={{ ...tdStyle, background: isReleased ? "var(--rvo-color-groen-50, #f0faf0)" : rowBg }}>
+                      <td key={year} className="utrecht-table__cell" style={{ background: isReleased ? "var(--rvo-color-groen-50, #f0faf0)" : undefined }}>
                         <input
                           type="number"
                           step="1000"
@@ -270,16 +243,8 @@ export function BudgetGridEditor({ sourceId, initialEntries, initialYears }: Pro
                           onChange={(e) => updateCell(cat, year, { amount: e.target.value })}
                           placeholder="0"
                           aria-label={`${cat} ${year} bedrag`}
-                          style={{
-                            width: "100%",
-                            border: "1px solid var(--rvo-color-grijs-300)",
-                            borderRadius: "3px",
-                            padding: "0.375rem 0.5rem",
-                            fontSize: "0.875rem",
-                            textAlign: "right",
-                            background: "transparent",
-                            outline: "none",
-                          }}
+                          className="utrecht-textbox"
+                          style={{ width: "100%", textAlign: "right" }}
                         />
                         <div style={{ marginTop: "0.25rem", textAlign: "right" }}>
                           <button
@@ -293,7 +258,7 @@ export function BudgetGridEditor({ sourceId, initialEntries, initialYears }: Pro
                               border: "none",
                               cursor: "pointer",
                               background: isReleased ? "var(--rvo-color-groen-600, #2ca02c)" : "var(--rvo-color-grijs-300, #cccccc)",
-                              color: isReleased ? "#fff" : "var(--rvo-color-grijs-700)",
+                              color: isReleased ? "#fff" : "var(--rvo-color-grijs-700, #4a4a4a)",
                               fontWeight: 500,
                               transition: "background 0.15s",
                             }}
@@ -304,27 +269,27 @@ export function BudgetGridEditor({ sourceId, initialEntries, initialYears }: Pro
                       </td>
                     );
                   })}
-                  <td style={{ ...tdStyle, ...totalTdStyle }}>
-                    {rTotal > 0 ? formatGridCurrency(rTotal) : <span style={{ color: "var(--rvo-color-grijs-400)" }}>—</span>}
+                  <td className="utrecht-table__cell" style={{ textAlign: "right", fontWeight: 700, color: "var(--rvo-color-hemelblauw-800, #0a2342)", borderLeft: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)" }}>
+                    {rTotal > 0 ? formatGridCurrency(rTotal) : <span style={{ color: "var(--rvo-color-grijs-400, #aaaaaa)" }}>—</span>}
                   </td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
-            <tr style={{ background: "var(--rvo-color-hemelblauw-50, #eef4fb)" }}>
-              <td style={{ ...tdStyle, fontWeight: 700, paddingLeft: "0.75rem", borderTop: "2px solid var(--rvo-color-hemelblauw-300)", borderLeft: "1px solid var(--rvo-color-hemelblauw-100)" }}>
+            <tr className="utrecht-table__row" style={{ background: "var(--rvo-color-hemelblauw-50, #eef4fb)" }}>
+              <td className="utrecht-table__cell" style={{ fontWeight: 700, borderTop: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)" }}>
                 Totaal per jaar
               </td>
               {years.map((year) => {
                 const yt = yearTotal(year);
                 return (
-                  <td key={year} style={{ ...tdStyle, textAlign: "right", fontWeight: 700, borderTop: "2px solid var(--rvo-color-hemelblauw-300)" }}>
-                    {yt > 0 ? formatGridCurrency(yt) : <span style={{ color: "var(--rvo-color-grijs-400)" }}>—</span>}
+                  <td key={year} className="utrecht-table__cell" style={{ textAlign: "right", fontWeight: 700, borderTop: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)" }}>
+                    {yt > 0 ? formatGridCurrency(yt) : <span style={{ color: "var(--rvo-color-grijs-400, #aaaaaa)" }}>—</span>}
                   </td>
                 );
               })}
-              <td style={{ ...tdStyle, ...totalTdStyle, borderTop: "2px solid var(--rvo-color-hemelblauw-300)" }}>
+              <td className="utrecht-table__cell" style={{ textAlign: "right", fontWeight: 700, color: "var(--rvo-color-hemelblauw-800, #0a2342)", borderLeft: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)", borderTop: "2px solid var(--rvo-color-hemelblauw-300, #6baed6)" }}>
                 {grandTotal > 0 ? formatGridCurrency(grandTotal) : "—"}
               </td>
             </tr>
@@ -341,9 +306,9 @@ export function BudgetGridEditor({ sourceId, initialEntries, initialYears }: Pro
             className="utrecht-button utrecht-button--secondary-action"
             style={{ fontSize: "0.8125rem" }}
           >
-            + Jaar toevoegen
+            Jaar toevoegen
           </button>
-          <span style={{ fontSize: "0.75rem", color: "var(--rvo-color-grijs-500)" }}>
+          <span className="field-label">
             Velden van €0 worden overgeslagen. Status per cel toggelbaar.
           </span>
         </div>

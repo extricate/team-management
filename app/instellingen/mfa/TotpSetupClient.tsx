@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Alert, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 
@@ -75,14 +76,14 @@ export function TotpSetupClient() {
         />
 
         <details style={{ margin: "0 0 1.5rem" }}>
-          <summary style={{ cursor: "pointer", fontSize: "0.875rem", color: "var(--rvo-color-hemelblauw-700)" }}>
+          <summary className="utrecht-link" style={{ cursor: "pointer" }}>
             QR-code werkt niet? Voer handmatig in
           </summary>
-          <div style={{ marginTop: "0.75rem", padding: "1rem", background: "var(--rvo-color-grijs-100)", borderRadius: "4px" }}>
+          <div style={{ marginTop: "0.75rem", padding: "1rem", background: "var(--rvo-color-grijs-100, #f5f5f5)", borderRadius: "4px" }}>
             <code style={{ wordBreak: "break-all", fontSize: "1.1em", letterSpacing: "0.1em" }}>{setupData.secret}</code>
-            <Paragraph style={{ marginTop: "0.5rem", fontSize: "0.85em", color: "var(--rvo-color-grijs-600)", margin: "0.5rem 0 0" }}>
+            <p className="field-label" style={{ marginTop: "0.5rem" }}>
               Algoritme: SHA1 | Cijfers: 6 | Periode: 30s
-            </Paragraph>
+            </p>
           </div>
         </details>
 
@@ -134,13 +135,13 @@ export function TotpSetupClient() {
           ))}
         </div>
 
-        <Paragraph style={{ color: "var(--rvo-color-rood-700)", fontWeight: "600" }}>
-          ⚠ Deze codes worden niet opnieuw getoond. Kopieer ze nu.
+        <Paragraph>
+          <strong>Deze codes worden niet opnieuw getoond. Kopieer ze nu.</strong>
         </Paragraph>
 
-        <a href="/dashboard" className="utrecht-button utrecht-button--primary-action">
+        <Link href="/dashboard" className="utrecht-button utrecht-button--primary-action">
           Doorgaan naar dashboard
-        </a>
+        </Link>
       </div>
     );
   }

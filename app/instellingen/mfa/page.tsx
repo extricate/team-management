@@ -18,9 +18,9 @@ export default async function MfaPage() {
     .where(eq(users.id, session.user.id));
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
-      <Link href="/instellingen" style={{ fontSize: "0.875rem", color: "var(--rvo-color-hemelblauw-700)" }}>
-        ← Terug naar instellingen
+    <div style={{ maxWidth: "600px" }}>
+      <Link href="/instellingen" className="utrecht-link">
+        Terug naar instellingen
       </Link>
       <Heading level={1} style={{ marginTop: "1rem" }}>Twee-factor authenticatie</Heading>
 
@@ -34,6 +34,6 @@ export default async function MfaPage() {
       ) : (
         <TotpSetupClient />
       )}
-    </main>
+    </div>
   );
 }

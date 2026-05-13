@@ -12,9 +12,8 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatDate, formatCurrency, prorateCost } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
-import { TransferPositionButton } from "@/components/ui/TransferPositionButton";
-import { DecouplePositionButton } from "@/components/ui/DecouplePositionButton";
 import { RemoveFundingButton } from "@/components/ui/RemoveFundingButton";
+import { PositionActionsMenu } from "@/components/ui/PositionActionsMenu";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableTeamMembersTable } from "@/components/ui/FilterableTeamMembersTable";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-types";
@@ -154,11 +153,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
           <Heading level={2}>Posities</Heading>
           {!isArchived && (
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              <Link href={`/teams/${team.id}/posities/koppelen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+              <Link href={`/teams/${team.id}/posities/koppelen`} className="utrecht-button utrecht-button--secondary-action">
                 Bestaande koppelen
               </Link>
-              <Link href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--primary-action" style={{ fontSize: "0.875rem" }}>
-                + Nieuwe positie
+              <Link href={`/teams/${team.id}/posities/nieuw`} className="utrecht-button utrecht-button--primary-action">
+                Nieuwe positie
               </Link>
             </div>
           )}
@@ -184,14 +183,14 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                 <div key={pos.id} className="position-card">
                   {/* Position header */}
                   <div className="position-card__header">
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-                      <strong style={{ fontSize: "1rem" }}>{pos.type}</strong>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <strong>{pos.type}</strong>
                       {pos.positionCode && (
-                        <span style={{ color: "var(--rvo-color-grijs-600)", fontSize: "0.875rem" }}>{pos.positionCode}</span>
+                        <span className="field-label" style={{ marginBottom: 0 }}>{pos.positionCode}</span>
                       )}
                       {opfDef && (
                         <>
-                          <span style={{ fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>{opfDef.label}</span>
+                          <span className="field-label" style={{ marginBottom: 0 }}>{opfDef.label}</span>
                           <StatusBadge label={CATEGORY_LABELS[opfDef.naturalCategory]} color={CATEGORY_BADGE_COLOR[opfDef.naturalCategory]} />
                         </>
                       )}
@@ -210,22 +209,14 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                       />
                     </div>
                     {!isArchived && (
-                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                        <Link href={`/teams/${team.id}/posities/${pos.id}/financieren`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
-                          Financieren
-                        </Link>
-                        <Link href={`/teams/${team.id}/posities/${pos.id}/bewerken`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
-                          Bewerken
-                        </Link>
-                        <TransferPositionButton positionId={pos.id} positionName={pos.type} currentTeamId={team.id} activeCouplingId={coupling.id} />
-                        <DecouplePositionButton couplingId={coupling.id} positionName={pos.type} size="sm" />
-                        <ArchiveButton
-                          entityName={pos.type}
-                          apiPath={`/api/positions/${pos.id}`}
-                          warningText="Actieve toewijzingen worden afgesloten."
-                          size="sm"
-                        />
-                      </div>
+                      <PositionActionsMenu
+                        positionId={pos.id}
+                        positionType={pos.type}
+                        teamId={team.id}
+                        couplingId={coupling.id}
+                        financierenHref={`/teams/${team.id}/posities/${pos.id}/financieren`}
+                        bewerkenHref={`/teams/${team.id}/posities/${pos.id}/bewerken`}
+                      />
                     )}
                   </div>
 
