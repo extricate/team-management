@@ -238,8 +238,9 @@ main {
 /* ── Position actions kebab menu ─────────────────────────────── */
 
 .actions-menu__trigger {
+  /* Ghost icon-button: invisible at rest, revealed on hover/active */
   background: none;
-  border: 1px solid var(--rvo-color-grijs-300, #cccccc);
+  border: none;
   border-radius: var(--rhc-border-radius-md, 5px);
   cursor: pointer;
   width: 2rem;
@@ -250,12 +251,12 @@ main {
   color: var(--rvo-color-grijs-600, #5a5a5a);
   padding: 0;
   flex-shrink: 0;
-  transition: background 0.1s, border-color 0.1s, color 0.1s;
+  transition: background 0.1s, color 0.1s;
 }
 
-.actions-menu__trigger:hover {
-  background: var(--rvo-color-grijs-100, #f1f1f1);
-  border-color: var(--rvo-color-grijs-500, #767676);
+.actions-menu__trigger:hover,
+.actions-menu__trigger[aria-expanded="true"] {
+  background: var(--rvo-color-hemelblauw-100, #d3e4f5);
   color: var(--rvo-color-hemelblauw-700, #154273);
 }
 
@@ -342,7 +343,7 @@ main {
 .position-card {
   border: 1px solid var(--rhc-card-border-color, #c8c8c8);
   border-radius: var(--rhc-border-radius-md, 5px);
-  overflow: hidden;
+  /* No overflow:hidden — would clip the kebab dropdown */
 }
 
 .position-card__header {
@@ -353,6 +354,8 @@ main {
   background: var(--rvo-color-hemelblauw-50, #eef4fb);
   flex-wrap: wrap;
   gap: 0.5rem;
+  /* Round only top corners to match parent card */
+  border-radius: var(--rhc-border-radius-md, 5px) var(--rhc-border-radius-md, 5px) 0 0;
 }
 
 .position-card__body {

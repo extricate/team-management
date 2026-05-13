@@ -267,10 +267,6 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                               {formatCurrency(annualCost)} p.j. – start {pos.expectedStart ? formatDate(pos.expectedStart) : "?"}
                             </div>
                           )}
-                          {/* Progress bar */}
-                          <div className="progress-bar">
-                            <div className="progress-bar__fill" style={{ width: `${coveragePct ?? 0}%`, background: coveragePct! >= 100 ? "var(--rvo-color-groen-600)" : "var(--rvo-color-hemelblauw-500)" }} />
-                          </div>
                         </>
                       ) : (
                         <span style={{ color: "var(--rvo-color-grijs-500)", fontSize: "0.875rem" }}>Geen kosten ingesteld</span>
