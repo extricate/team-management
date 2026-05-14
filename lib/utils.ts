@@ -30,7 +30,7 @@ export function formatCompactCurrency(value: string | number | null | undefined)
     const decimals = abs >= 10_000_000 ? 1 : 2;
     return `€ ${mln.toLocaleString("nl-NL", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}M`;
   }
-  if (abs >= 100_000) {
+  if (abs >= 10_000) {
     return `€ ${Math.round(num / 1_000).toLocaleString("nl-NL")}k`;
   }
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(num);
