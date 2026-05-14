@@ -1,0 +1,34 @@
+#!/bin/sh
+MSG=$(cat "$1")
+
+# Detect bump type from conventional commits
+# breaking change (type!: or BREAKING CHANGE in body) → major
+# fix: → patch
+# everything else (feat:, chore:, docs:, no prefix, …) → minor
+if echo "$MSG" | grep -qE '^[a-zA-Z]+(\(.+\))?!:' || echo "$MSG" | grep -qE 'BREAKING CHANGE'; then
+  BUMP="major"
+elif echo "$MSG" | grep -qE '^fix(\(.+\))?:'; then
+  BUMP="patch"
+else
+  BUMP="minor"
+fi
+
+CURRENT=$(node -e "process.stdout.write(require('./package.json').version)")
+
+NEW=$(node -e "
+const [maj, min, pat] = '$CURRENT'.split('.').map(Number);
+if ('$BUMP' === 'major') process.stdout.write((maj+1) + '.0.0');
+else if ('$BUMP' === 'minor') process.stdout.write(maj + '.' + (min+1) + '.0');
+else process.stdout.write(maj + '.' + min + '.' + (pat+1));
+")
+
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+pkg.version = '$NEW';
+fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+"
+
+git add package.json
+
+echo "Version bumped: $CURRENT → $NEW ($BUMP)"
