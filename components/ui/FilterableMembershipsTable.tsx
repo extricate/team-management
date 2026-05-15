@@ -19,7 +19,7 @@ interface Props {
   memberships: Membership[];
 }
 
-export function FilterableMembershipsTable({ employeeId, memberships }: Props) {
+export function FilterableMembershipsTable({ employeeId: _employeeId, memberships }: Props) {
   const [showInactive, setShowInactive] = useState(false);
 
   const visible = showInactive ? memberships : memberships.filter(m => m.status === "active");

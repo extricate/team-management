@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatCurrency } from "@/lib/utils";
 
 interface BudgetRow { id: string; year: number; amount: string; status: "concept" | "released"; }
 interface Props { budgets: BudgetRow[]; }

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { loginRateLimits } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_ATTEMPTS = 20;

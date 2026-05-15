@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { db } from "@/lib/db";
 import { users, totpRecoveryCodes } from "@/lib/db/schema";
 import {
-  ok, badRequest, notFound, requireAuth, withErrorHandling, RouteContext,
+  ok, badRequest, notFound, requireAuth, withErrorHandling,
 } from "@/lib/api";
 import {
   generateTotpSecret,
@@ -26,7 +26,7 @@ function generateRecoveryCode(): string {
 
 // POST /api/users/totp  — start TOTP setup for the authenticated user
 // Returns a new (unconfirmed) secret + QR URI. Does NOT enable TOTP yet.
-export const POST = withErrorHandling(async (req: Request) => {
+export const POST = withErrorHandling(async (_req: Request) => {
   const session = await requireAuth();
   const userId = session.user.id;
 

@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { financialTypes, financialSources } from "@/lib/db/schema";
-import { ok, created, badRequest, notFound, requireAuth, withErrorHandling } from "@/lib/api";
+import { created, badRequest, notFound, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 const Schema = z.object({
   financialSourceId: z.string().uuid(),

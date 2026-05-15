@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Heading, Alert, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { companyPersexBudgets, fundingAllocations } from "@/lib/db/schema";
+import { fundingAllocations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";

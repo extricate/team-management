@@ -172,7 +172,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
           <div>
             <Heading level={2} style={{ margin: 0 }}>Budgetplanning</Heading>
             <p className="field-label" style={{ marginTop: "0.25rem" }}>
-              Bedragen in euro's per jaar · PERSEX = personele kosten, MATEX = materiële kosten
+              Bedragen in euro&apos;s per jaar · PERSEX = personele kosten, MATEX = materiële kosten
             </p>
           </div>
         </div>

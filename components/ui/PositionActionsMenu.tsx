@@ -309,7 +309,6 @@ export function PositionActionsMenu({
             <div className="form-alert" role="alert"><p>{error}</p></div>
           )}
           <div className="confirm-dialog__actions">
-            {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
             <button autoFocus type="button" className="utrecht-button utrecht-button--secondary-action" onClick={closeDialog} disabled={loading}>
               Annuleren
             </button>

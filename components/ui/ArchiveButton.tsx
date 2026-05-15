@@ -75,7 +75,6 @@ export function ArchiveButton({ entityName, apiPath, redirectTo, warningText, si
           <div className="confirm-dialog__actions">
             <button
               ref={cancelRef}
-              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               type="button"
               className="utrecht-button utrecht-button--secondary-action"

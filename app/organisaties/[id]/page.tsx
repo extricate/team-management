@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { organisations, teams, employees, financialSources, positions, comments, auditEvents, teamPositionCouplings } from "@/lib/db/schema";
+import { organisations, teams, employees, financialSources, comments, auditEvents, teamPositionCouplings } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
@@ -11,7 +11,6 @@ import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
-import { formatCurrency } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {

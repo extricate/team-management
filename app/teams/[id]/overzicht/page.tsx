@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";

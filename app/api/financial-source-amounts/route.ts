@@ -1,9 +1,9 @@
 import { db } from "@/lib/db";
 import { financialSourceAmounts, financialSources } from "@/lib/db/schema";
-import { ok, created, badRequest, notFound, requireAuth, withErrorHandling } from "@/lib/api";
+import { created, badRequest, notFound, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { FinancialSourceAmountSchema } from "@/lib/schemas";
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();

@@ -35,7 +35,7 @@ import { POST } from '@/app/api/team-position-couplings/route'
 import { PATCH } from '@/app/api/team-position-couplings/[id]/route'
 import { auth } from '@/lib/auth'
 
-const ORG_ID  = 'aaaaaaaa-0000-0000-0000-000000000001'
+
 const TEAM_ID = 'bbbbbbbb-0000-0000-0000-000000000001'
 const POS_ID  = 'cccccccc-0000-0000-0000-000000000001'
 

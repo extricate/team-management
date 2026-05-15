@@ -104,7 +104,7 @@ export function NieuweBestellingForm({ orgs, types, defaultOrganisationId }: Pro
           <label htmlFor="geraamdBedrag" className="utrecht-form-label">Geraamd bedrag</label>
           <input id="geraamdBedrag" name="geraamdBedrag" type="number" min="0.01" step="0.01" className="utrecht-textbox"
             style={{ maxWidth: "200px" }} placeholder="bijv. 15000" />
-          <p className="form-hint">Geschatte totaalkosten in euro's.</p>
+          <p className="form-hint">Geschatte totaalkosten in euro&apos;s.</p>
         </div>
 
         <div className="form-field">

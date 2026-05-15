@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { Paragraph } from "@rijkshuisstijl-community/components-react";
 
@@ -83,7 +84,7 @@ export function EditGebruikerForm({ user, organisations, action }: Props) {
       <button type="submit" disabled={pending} className="utrecht-button utrecht-button--primary-action">
         {pending ? "Bezig…" : "Opslaan"}
       </button>
-      <a href="/beheer/gebruikers" style={{ marginLeft: "1rem" }}>Annuleren</a>
+      <Link href="/beheer/gebruikers" style={{ marginLeft: "1rem" }}>Annuleren</Link>
     </form>
   );
 }

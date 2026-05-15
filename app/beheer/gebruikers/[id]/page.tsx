@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
@@ -39,9 +40,9 @@ export default async function GebruikerDetailPage({ params }: { params: Promise<
   return (
     <main style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
       <div style={{ marginBottom: "0.5rem" }}>
-        <a href="/beheer/gebruikers" style={{ fontSize: "0.9em", color: "var(--rvo-color-grijs-600)" }}>
+        <Link href="/beheer/gebruikers" style={{ fontSize: "0.9em", color: "var(--rvo-color-grijs-600)" }}>
           ← Gebruikersbeheer
-        </a>
+        </Link>
       </div>
 
       <Heading level={1}>Gebruiker bewerken</Heading>

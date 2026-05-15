@@ -71,11 +71,6 @@ export default async function TeamsPage({
     return `/teams?${p}`;
   }
 
-  function filterHref(params: Record<string, string>) {
-    const p = new URLSearchParams(params);
-    return `/teams?${p}`;
-  }
-
   return (
     <div>
       <Breadcrumbs crumbs={[{ label: "Teams" }]} />

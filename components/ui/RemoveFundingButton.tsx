@@ -82,7 +82,6 @@ export function RemoveFundingButton({ allocationId, sourceName }: Props) {
               className="utrecht-button utrecht-button--secondary-action"
               onClick={close}
               disabled={loading}
-              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
             >
               Annuleren
