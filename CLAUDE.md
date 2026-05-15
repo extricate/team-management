@@ -58,7 +58,7 @@ First run `npm run db:status` — if all show `[OK]`, the migration already ran 
 If `[PENDING]` migrations exist, it is failing silently. Diagnose by running each pending SQL manually:
 
 ```js
-// node --env-file=.env --env-file=.env.local --input-type=module
+// node --env-file=.env --input-type=module
 import postgres from 'postgres';
 import { readFileSync } from 'fs';
 const sql = postgres(process.env.DATABASE_URL);

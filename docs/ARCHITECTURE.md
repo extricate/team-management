@@ -493,7 +493,7 @@ cd team-management
 npm install
 
 # Environment variables
-cp .env.example .env.local
+cp .env.example .env
 # Required: DATABASE_URL, AUTH_SECRET (min 32 random chars — used to sign sessions and
 #   derive the TOTP encryption key; changing this invalidates all sessions and TOTP secrets)
 

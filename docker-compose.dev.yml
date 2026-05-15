@@ -1,0 +1,35 @@
+# Development overlay — adds the Next.js app with hot-reload to the base infra.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# The app runs inside Docker but reads your local source tree via a volume mount,
+# so file changes are picked up immediately (polling enabled for WSL/Windows hosts).
+#
+# DATABASE_URL and MEILISEARCH_HOST are overridden here to use Docker service names
+# instead of localhost, since the app container is on the Docker network.
+
+services:
+  app:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install --legacy-peer-deps && npm run db:migrate && npm run dev"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/team_management
+      MEILISEARCH_HOST: http://meilisearch:7700
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+    restart: unless-stopped

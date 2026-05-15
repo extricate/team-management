@@ -1,0 +1,30 @@
+# Production overlay — builds and runs the Next.js app from the production image.
+#
+# Usage (via Makefile):
+#   make prod
+#
+# Or directly:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+#   npm run db:migrate   # run migrations before starting (requires local Node + .env)
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# DATABASE_URL and MEILISEARCH_HOST are overridden here to use Docker service names.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/team_management
+      MEILISEARCH_HOST: http://meilisearch:7700
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+    restart: unless-stopped
