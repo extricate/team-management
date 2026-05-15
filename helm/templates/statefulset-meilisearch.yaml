@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "team-management.fullname" . }}-meilisearch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "team-management.labels" . | nindent 4 }}
+    {{- include "team-management.meilisearchSelectorLabels" . | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: {{ include "team-management.fullname" . }}-meilisearch
+  selector:
+    matchLabels:
+      {{- include "team-management.meilisearchSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "team-management.labels" . | nindent 8 }}
+        {{- include "team-management.meilisearchSelectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: meilisearch
+          image: {{ .Values.meilisearch.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 7700
+              protocol: TCP
+          env:
+            - name: MEILI_NO_ANALYTICS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "team-management.configmapName" . }}
+                  key: MEILI_NO_ANALYTICS
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "team-management.secretName" . }}
+                  key: MEILISEARCH_KEY
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: meilidata
+              mountPath: /meili_data
+      volumes:
+        - name: meilidata
+          persistentVolumeClaim:
+            claimName: {{ include "team-management.fullname" . }}-meilidata

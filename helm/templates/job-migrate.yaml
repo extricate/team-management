@@ -1,0 +1,32 @@
+# Migration Job — runs drizzle-kit migrate before every install or upgrade.
+# Uses the migrator image (builder stage of the Dockerfile, which has drizzle-kit).
+# Helm blocks the rollout until this Job succeeds; on failure the upgrade is aborted.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "team-management.fullname" . }}-migrate
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "team-management.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-delete-policy: hook-succeeded
+    helm.sh/hook-weight: "0"
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "team-management.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}-migrator:{{ .Values.migrator.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "team-management.secretName" . }}
+                  key: DATABASE_URL

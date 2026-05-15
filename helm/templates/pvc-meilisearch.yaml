@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "team-management.fullname" . }}-meilidata
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "team-management.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.meilisearch.storageSize }}
+  {{- if .Values.meilisearch.storageClassName }}
+  storageClassName: {{ .Values.meilisearch.storageClassName }}
+  {{- end }}

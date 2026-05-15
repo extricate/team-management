@@ -1,0 +1,41 @@
+# Default values — override per environment via values.<env>.yaml or --set flags.
+
+image:
+  repository: <registry>/team-management
+  tag: latest
+  pullPolicy: IfNotPresent
+
+migrator:
+  image:
+    # Defaults to same tag as app image; override with --set migrator.image.tag=<version>
+    tag: latest
+
+app:
+  replicas: 1
+  authUrl: http://localhost:3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+meilisearch:
+  image: getmeili/meilisearch:v1.42.1
+  storageSize: 5Gi
+  storageClassName: ""  # Uses cluster default when empty
+
+ingress:
+  enabled: true
+  host: ""
+  # className: nginx
+  annotations: {}
+  tls:
+    enabled: false
+    secretName: team-management-tls
+
+# ExternalSecret configuration — fill in the SecretStore name for the org's secrets manager.
+externalSecret:
+  secretStoreName: ""
+  refreshInterval: 1h

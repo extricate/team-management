@@ -34,3 +34,8 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]
+
+# Stage 4: Migration runner (for K8s Job)
+FROM builder AS migrator
+WORKDIR /app
+CMD ["npm", "run", "db:migrate"]

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "team-management.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "team-management.labels" . | nindent 4 }}
+    {{- include "team-management.selectorLabels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "team-management.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

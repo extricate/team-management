@@ -1,0 +1,17 @@
+# Production overrides — supply image.tag and migrator.image.tag at deploy time via --set.
+
+app:
+  replicas: 2
+  authUrl: https://teambeheer.example.nl  # Replace with actual hostname
+
+ingress:
+  host: teambeheer.example.nl  # Replace with actual hostname
+  tls:
+    enabled: true
+    secretName: team-management-tls
+
+meilisearch:
+  storageSize: 10Gi  # Adjust to actual data volume
+
+externalSecret:
+  secretStoreName: vault  # Replace with org's SecretStore name
