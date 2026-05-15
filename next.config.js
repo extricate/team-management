@@ -4,7 +4,8 @@ const { version } = require('./package.json')
 const csp = [
   "default-src 'self'",
   // 'unsafe-inline' required for Next.js App Router RSC streaming scripts and styled-jsx
-  "script-src 'self' 'unsafe-inline'",
+  // 'unsafe-eval' required by React in development mode for call-stack reconstruction
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== 'production' ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",

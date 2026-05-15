@@ -18,6 +18,11 @@ export async function checkLoginRateLimit(key: string, maxAttempts = MAX_ATTEMPT
   const now = new Date();
   const windowCutoff = new Date(now.getTime() - WINDOW_MS);
 
+  // Cast dates to timestamptz literals; postgres.js cannot infer the type of raw
+  // Date objects inside sql`` template fragments and calls Buffer.from(Date) which throws.
+  const nowIso = now.toISOString();
+  const cutoffIso = windowCutoff.toISOString();
+
   // Upsert: insert or increment. If the window has expired, reset it.
   const rows = await db
     .insert(loginRateLimits)
@@ -26,13 +31,13 @@ export async function checkLoginRateLimit(key: string, maxAttempts = MAX_ATTEMPT
       target: loginRateLimits.key,
       set: {
         attempts: sql`CASE
-          WHEN ${loginRateLimits.windowStart} < ${windowCutoff}
+          WHEN ${loginRateLimits.windowStart} < ${cutoffIso}::timestamptz
           THEN 1
           ELSE ${loginRateLimits.attempts} + 1
         END`,
         windowStart: sql`CASE
-          WHEN ${loginRateLimits.windowStart} < ${windowCutoff}
-          THEN ${now}
+          WHEN ${loginRateLimits.windowStart} < ${cutoffIso}::timestamptz
+          THEN ${nowIso}::timestamptz
           ELSE ${loginRateLimits.windowStart}
         END`,
       },
