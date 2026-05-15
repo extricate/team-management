@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+export const FORCE_CHANGE_COOKIE = "auth_force_pw_change";
+
 const PROTECTED_PREFIXES = [
   "/dashboard",
   "/organisaties",
@@ -7,13 +9,36 @@ const PROTECTED_PREFIXES = [
   "/medewerkers",
   "/financiering",
   "/instellingen",
+  "/posities",
+  "/indelen",
+  "/bezetting",
+  "/bestellingen",
+  "/bedrijfspersex",
+  "/beheer",
 ];
+
+const FORCE_CHANGE_BYPASS = ["/wachtwoord-wijzigen", "/inloggen", "/api/"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Forward current path as a header so server layouts can read it for the
+  // DB-backed mustChangePassword check (cookie alone can be cleared by the user).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-current-path", pathname);
+
+  // Fast-path: if the force-change cookie is set and the user isn't already on
+  // an allowed path, redirect to the change-password page.
+  const isForceBypassed = FORCE_CHANGE_BYPASS.some((p) => pathname.startsWith(p));
+  if (!isForceBypassed && request.cookies.get(FORCE_CHANGE_COOKIE)?.value === "1") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/wachtwoord-wijzigen";
+    if (pathname !== "/") url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
+  }
+
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
-  if (!isProtected) return NextResponse.next();
+  if (!isProtected) return NextResponse.next({ request: { headers: requestHeaders } });
 
   // NextAuth v5 with a database adapter issues opaque UUID session tokens, not
   // JWTs. Running the full NextAuth middleware here would cause it to attempt
@@ -31,7 +56,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {

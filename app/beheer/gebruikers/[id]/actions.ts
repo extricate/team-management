@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, sessions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api";
 import { hashPassword } from "@/lib/auth/password";
@@ -32,9 +32,13 @@ export async function updateUser(
     ...(role ? { role: role as "admin" | "manager" | "viewer" } : {}),
     ...(organisationId !== undefined ? { organisationId } : {}),
     isEnabled,
-    ...(passwordHash ? { passwordHash } : {}),
+    ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
     updatedAt: new Date(),
   }).where(eq(users.id, userId));
+
+  if (passwordHash) {
+    await db.delete(sessions).where(eq(sessions.userId, userId));
+  }
 
   redirect("/beheer/gebruikers");
 }

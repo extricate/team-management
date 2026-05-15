@@ -21,6 +21,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.role = user.role ?? "viewer";
       session.user.organisationId = user.organisationId ?? null;
       session.user.defaultOrganisationId = user.defaultOrganisationId ?? null;
+      session.user.mustChangePassword = user.mustChangePassword ?? false;
       return session;
     },
   },

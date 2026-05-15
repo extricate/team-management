@@ -12,6 +12,7 @@ import { and, isNull } from "drizzle-orm";
 import { verifyPassword } from "@/lib/auth/password";
 import { checkLoginRateLimit } from "@/lib/auth/rate-limit";
 import { getTotpEncryptionKey, getTotpFallbackKey, getTotpLegacyKeys } from "@/lib/auth/totp-key";
+import { FORCE_CHANGE_COOKIE } from "@/proxy";
 
 const PENDING_COOKIE = "auth_totp_pending";
 const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -49,6 +50,9 @@ async function createSession(userId: string, callbackUrl?: string | null): Promi
   const sessionToken = randomUUID();
   const expires = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8-hour workday session
   await db.insert(sessions).values({ sessionToken, userId, expires });
+
+  const [user] = await db.select({ mustChangePassword: users.mustChangePassword }).from(users).where(eq(users.id, userId)).limit(1);
+
   const jar = await cookies();
   jar.set("authjs.session-token", sessionToken, {
     httpOnly: true,
@@ -58,6 +62,18 @@ async function createSession(userId: string, callbackUrl?: string | null): Promi
     secure: process.env.NODE_ENV === "production",
   });
   jar.delete(PENDING_COOKIE);
+
+  if (user?.mustChangePassword) {
+    jar.set(FORCE_CHANGE_COOKIE, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    });
+    const callbackParam = callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : "";
+    redirect(`/wachtwoord-wijzigen${callbackParam}`);
+  }
+
   redirect(sanitizeRedirect(callbackUrl));
 }
 

@@ -45,6 +45,7 @@ export const users = pgTable("users", {
   isEnabled: boolean("is_enabled").notNull().default(true),
   failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
   lockedUntil: timestamp("locked_until", { mode: "date" }),
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
   // TOTP — secret stored AES-256-GCM encrypted
   totpSecret: text("totp_secret"),
   totpEnabled: boolean("totp_enabled").notNull().default(false),

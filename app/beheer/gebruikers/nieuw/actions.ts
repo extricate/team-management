@@ -32,7 +32,7 @@ export async function createUser(
   const { password, ...rest } = parsed.data;
   const passwordHash = await hashPassword(password);
 
-  await db.insert(users).values({ ...rest, passwordHash, isEnabled: true });
+  await db.insert(users).values({ ...rest, passwordHash, isEnabled: true, mustChangePassword: true });
 
   redirect("/beheer/gebruikers");
 }

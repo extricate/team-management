@@ -249,3 +249,14 @@ export const UpdateUserSchema = z.object({
 export const UpdateMyPreferencesSchema = z.object({
   defaultOrganisationId: z.string().uuid().nullable(),
 });
+
+// ── ChangePassword ─────────────────────────────────────────────────────────────
+export const ChangePasswordSchema = z
+  .object({
+    password: z.string().min(12, "Wachtwoord moet minimaal 12 tekens bevatten"),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Wachtwoorden komen niet overeen",
+    path: ["confirmPassword"],
+  });

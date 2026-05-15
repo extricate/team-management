@@ -33,7 +33,7 @@ export const POST = withErrorHandling(async (req: Request) => {
   const { password, ...rest } = parsed.data;
   const passwordHash = await hashPassword(password);
 
-  const [newUser] = await db.insert(users).values({ ...rest, passwordHash }).returning({
+  const [newUser] = await db.insert(users).values({ ...rest, passwordHash, mustChangePassword: true }).returning({
     id: users.id,
     name: users.name,
     email: users.email,

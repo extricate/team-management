@@ -12,6 +12,7 @@ declare module "next-auth" {
       role: UserRole;
       organisationId: string | null;
       defaultOrganisationId: string | null;
+      mustChangePassword: boolean;
     };
   }
 
@@ -19,6 +20,7 @@ declare module "next-auth" {
     role: UserRole;
     organisationId?: string | null;
     defaultOrganisationId?: string | null;
+    mustChangePassword?: boolean;
   }
 }
 
@@ -27,5 +29,6 @@ declare module "next-auth/adapters" {
     role: UserRole;
     organisationId?: string | null;
     defaultOrganisationId?: string | null;
+    mustChangePassword?: boolean;
   }
 }
