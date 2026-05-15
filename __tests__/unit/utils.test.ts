@@ -32,15 +32,15 @@ describe('formatCompactCurrency', () => {
     expect(formatCompactCurrency(undefined)).toBe('—')
   })
 
-  it('returns full format for amounts below €100k', () => {
-    const result = formatCompactCurrency(85000)
-    expect(result).toMatch(/85.000/)
+  it('returns full format for amounts below €10k', () => {
+    const result = formatCompactCurrency(8000)
+    expect(result).toMatch(/8.000/)
     expect(result).not.toMatch(/k|M/)
   })
 
-  it('abbreviates amounts >= €100k with "k"', () => {
-    expect(formatCompactCurrency(100000)).toMatch(/100k/)
-    expect(formatCompactCurrency(850000)).toMatch(/850k/)
+  it('abbreviates amounts >= €10k with "k"', () => {
+    expect(formatCompactCurrency(10000)).toMatch(/10k/)
+    expect(formatCompactCurrency(85000)).toMatch(/85k/)
   })
 
   it('abbreviates amounts >= €1M with "M"', () => {

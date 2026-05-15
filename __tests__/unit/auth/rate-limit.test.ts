@@ -51,4 +51,14 @@ describe('checkLoginRateLimit', () => {
     mockReturning.mockResolvedValue([{ attempts: 1, windowStart: new Date() }])
     expect(await checkLoginRateLimit('5.6.7.8')).toBe(false)
   })
+
+  it('respects a custom maxAttempts limit — blocks at 11 when limit is 10', async () => {
+    mockReturning.mockResolvedValue([{ attempts: 11, windowStart: new Date() }])
+    expect(await checkLoginRateLimit('totp:user-uuid', 10)).toBe(true)
+  })
+
+  it('does not block at exactly the custom limit', async () => {
+    mockReturning.mockResolvedValue([{ attempts: 10, windowStart: new Date() }])
+    expect(await checkLoginRateLimit('totp:user-uuid', 10)).toBe(false)
+  })
 })

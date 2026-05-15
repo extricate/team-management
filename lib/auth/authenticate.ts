@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { verifyPassword } from "@/lib/auth/password";
 import { verifyTotpCodeWithCounter, decryptTotpSecretWithFallback, encryptTotpSecret } from "@/lib/auth/totp";
-import { getTotpEncryptionKey, getTotpFallbackKey } from "@/lib/auth/totp-key";
+import { getTotpEncryptionKey, getTotpFallbackKey, getTotpLegacyKeys } from "@/lib/auth/totp-key";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -66,11 +66,11 @@ export async function authenticate(
   if (!totpCode) return { status: "totp_required", userId: user.id };
 
   const currentKey = getTotpEncryptionKey();
-  const fallbackKey = getTotpFallbackKey();
+  const fallbackKeys = [getTotpFallbackKey(), ...getTotpLegacyKeys()].filter((k): k is Buffer => k !== undefined);
   const { secret: rawSecret, usedFallback } = decryptTotpSecretWithFallback(
     user.totpSecret,
     currentKey,
-    fallbackKey,
+    fallbackKeys,
   );
 
   const matchedCounter = verifyTotpCodeWithCounter(

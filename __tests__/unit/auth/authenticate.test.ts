@@ -33,11 +33,12 @@ vi.mock('@/lib/db', () => ({
 vi.mock('@/lib/db/schema', () => ({ users: {} }))
 vi.mock('drizzle-orm', () => ({ eq: vi.fn() }))
 
-const TOTP_KEY = 'testkey_must_be_32_chars_padded!!'
+const TOTP_KEY = Buffer.alloc(32, 0x61) // 32 bytes of 'a' — valid AES-256 key length
 
 vi.mock('@/lib/auth/totp-key', () => ({
-  getTotpEncryptionKey: () => 'testkey_must_be_32_chars_padded!!',
+  getTotpEncryptionKey: () => Buffer.alloc(32, 0x61),
   getTotpFallbackKey: () => undefined,
+  getTotpLegacyKeys: () => [],
 }))
 
 import { authenticate } from '@/lib/auth/authenticate'
@@ -125,7 +126,6 @@ describe('authenticate', () => {
 
   it('locks account after 5 failed password attempts', async () => {
     mockFindUser.mockResolvedValue([{ id: '1', passwordHash, isEnabled: true, totpEnabled: false, failedLoginAttempts: 4, lockedUntil: null }])
-    const captureSpy = vi.fn().mockResolvedValue([])
     vi.mocked(mockUpdateUser).mockResolvedValue([])
     // Just verify the function calls update with locking data after 5th failure
     await authenticate('user@example.com', 'wrong-password', undefined)

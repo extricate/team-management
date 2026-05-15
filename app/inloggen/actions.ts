@@ -11,7 +11,7 @@ import { totpRecoveryCodes } from "@/lib/db/schema";
 import { and, isNull } from "drizzle-orm";
 import { verifyPassword } from "@/lib/auth/password";
 import { checkLoginRateLimit } from "@/lib/auth/rate-limit";
-import { getTotpEncryptionKey, getTotpFallbackKey } from "@/lib/auth/totp-key";
+import { getTotpEncryptionKey, getTotpFallbackKey, getTotpLegacyKeys } from "@/lib/auth/totp-key";
 
 const PENDING_COOKIE = "auth_totp_pending";
 const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -130,6 +130,11 @@ export async function signInWithTotp(
     return;
   }
 
+  // Rate-limit TOTP attempts per user (10 per 15 min) to prevent brute-force on the 10^6 code space.
+  if (await checkLoginRateLimit(`totp:${userId}`, 10)) {
+    return { error: "Te veel pogingen. Probeer het over 15 minuten opnieuw." };
+  }
+
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user?.totpEnabled || !user.isEnabled) {
     redirect("/inloggen?fout=sessie-verlopen");
@@ -167,11 +172,11 @@ export async function signInWithTotp(
   // Validate the TOTP code directly — the pending cookie already proves the password was verified.
   const { verifyTotpCodeWithCounter, decryptTotpSecretWithFallback, encryptTotpSecret } = await import("@/lib/auth/totp");
   const currentKey = getTotpEncryptionKey();
-  const fallbackKey = getTotpFallbackKey();
+  const fallbackKeys = [getTotpFallbackKey(), ...getTotpLegacyKeys()].filter((k): k is Buffer => k !== undefined);
   const { secret: rawSecret, usedFallback } = decryptTotpSecretWithFallback(
     user.totpSecret!,
     currentKey,
-    fallbackKey,
+    fallbackKeys,
   );
   const matchedCounter = verifyTotpCodeWithCounter(
     rawSecret,

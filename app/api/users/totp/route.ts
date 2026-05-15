@@ -12,7 +12,7 @@ import {
   encryptTotpSecret,
   decryptTotpSecretWithFallback,
 } from "@/lib/auth/totp";
-import { getTotpEncryptionKey, getTotpFallbackKey } from "@/lib/auth/totp-key";
+import { getTotpEncryptionKey, getTotpFallbackKey, getTotpLegacyKeys } from "@/lib/auth/totp-key";
 import { hashPassword } from "@/lib/auth/password";
 
 function generateRecoveryCode(): string {
@@ -55,10 +55,12 @@ export const PUT = withErrorHandling(async (req: Request) => {
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user?.totpSecret) return badRequest("Geen TOTP-configuratie gevonden. Start opnieuw.");
 
+  const currentKey = getTotpEncryptionKey();
+  const fallbackKeys = [getTotpFallbackKey(), ...getTotpLegacyKeys()].filter((k): k is Buffer => k !== undefined);
   const { secret: rawSecret } = decryptTotpSecretWithFallback(
     user.totpSecret,
-    getTotpEncryptionKey(),
-    getTotpFallbackKey(),
+    currentKey,
+    fallbackKeys,
   );
   const matchedCounter = verifyTotpCodeWithCounter(rawSecret, code);
   if (matchedCounter === null) return badRequest("Ongeldige verificatiecode.");

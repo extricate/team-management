@@ -103,7 +103,7 @@ describe('getTotpUri', () => {
 })
 
 describe('encryptTotpSecret / decryptTotpSecret', () => {
-  const KEY = 'a'.repeat(32)
+  const KEY = Buffer.alloc(32, 0x61) // 32 bytes of 'a'
 
   it('round-trips a secret correctly', () => {
     const original = generateTotpSecret()
@@ -111,7 +111,7 @@ describe('encryptTotpSecret / decryptTotpSecret', () => {
     expect(decryptTotpSecret(cipher, KEY)).toBe(original)
   })
 
-  it('produces different ciphertexts for the same input', () => {
+  it('produces different ciphertexts for the same input (random IV)', () => {
     const secret = generateTotpSecret()
     const a = encryptTotpSecret(secret, KEY)
     const b = encryptTotpSecret(secret, KEY)
@@ -125,6 +125,6 @@ describe('encryptTotpSecret / decryptTotpSecret', () => {
 
   it('throws when decrypting with the wrong key', () => {
     const cipher = encryptTotpSecret(generateTotpSecret(), KEY)
-    expect(() => decryptTotpSecret(cipher, 'b'.repeat(32))).toThrow()
+    expect(() => decryptTotpSecret(cipher, Buffer.alloc(32, 0x62))).toThrow()
   })
 })

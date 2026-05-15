@@ -101,49 +101,53 @@ export function getTotpUri(secret: string, accountName: string, issuer: string):
 }
 
 // ── TOTP secret encryption (AES-256-GCM) ──────────────────────────────────────
-// key must be exactly 32 bytes (as hex or a 32-char string).
+// key must be a 32-byte Buffer (from getTotpEncryptionKey / getTotpFallbackKey).
 
-export function encryptTotpSecret(secret: string, key: string): string {
-  const keyBuf = Buffer.from(key.padEnd(32, "\0").slice(0, 32), "utf8");
-  const iv = randomBytes(16);
-  const cipher = createCipheriv("aes-256-gcm", keyBuf, iv);
+export function encryptTotpSecret(secret: string, key: Buffer): string {
+  const iv = randomBytes(12); // 12 bytes is the GCM standard IV size
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
   const encrypted = Buffer.concat([cipher.update(secret, "utf8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
   return `${iv.toString("base64")}:${authTag.toString("base64")}:${encrypted.toString("base64")}`;
 }
 
-function decryptWithKey(stored: string, key: string): string {
+function decryptWithKey(stored: string, key: Buffer): string {
   const parts = stored.split(":");
   if (parts.length !== 3) throw new Error("Invalid encrypted TOTP secret format");
   const [ivB64, authTagB64, cipherB64] = parts;
-  const keyBuf = Buffer.from(key.padEnd(32, "\0").slice(0, 32), "utf8");
   const iv = Buffer.from(ivB64, "base64");
   const authTag = Buffer.from(authTagB64, "base64");
   const ciphertext = Buffer.from(cipherB64, "base64");
-  const decipher = createDecipheriv("aes-256-gcm", keyBuf, iv);
+  const decipher = createDecipheriv("aes-256-gcm", key, iv);
   decipher.setAuthTag(authTag);
   return decipher.update(ciphertext).toString("utf8") + decipher.final("utf8");
 }
 
-export function decryptTotpSecret(stored: string, key: string): string {
+export function decryptTotpSecret(stored: string, key: Buffer): string {
   return decryptWithKey(stored, key);
 }
 
 /**
- * Tries the current key first; falls back to fallbackKey if provided.
- * Returns the decrypted secret and whether the fallback was used — callers
+ * Tries the primary key first; then each fallbackKey in order.
+ * Returns the decrypted secret and whether a fallback was used — callers
  * should re-encrypt and persist the secret when usedFallback is true.
+ * fallbackKeys should include both AUTH_SECRET_PREVIOUS-derived keys and
+ * legacy keys (from getTotpLegacyKeys) to cover all migration paths.
  */
 export function decryptTotpSecretWithFallback(
   stored: string,
-  key: string,
-  fallbackKey: string | undefined,
+  key: Buffer,
+  fallbackKeys: Buffer[],
 ): { secret: string; usedFallback: boolean } {
   try {
     return { secret: decryptWithKey(stored, key), usedFallback: false };
   } catch {
-    if (fallbackKey) {
-      return { secret: decryptWithKey(stored, fallbackKey), usedFallback: true };
+    for (const fallback of fallbackKeys) {
+      try {
+        return { secret: decryptWithKey(stored, fallback), usedFallback: true };
+      } catch {
+        // try next key
+      }
     }
     throw new Error("TOTP secret decryption failed with all available keys");
   }

@@ -56,10 +56,9 @@ describe('GET /api/comments', () => {
     expect((await res.json()).data).toEqual([])
   })
 
-  it('returns empty array when only type is provided', async () => {
+  it('returns 400 when only type is provided without id', async () => {
     const res = await GET(makeRequest('/api/comments', { searchParams: { type: 'team' } }))
-    expect(res.status).toBe(200)
-    expect((await res.json()).data).toEqual([])
+    expect(res.status).toBe(400)
   })
 
   it('returns comments matching the given type and id', async () => {

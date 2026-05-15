@@ -6,12 +6,15 @@ const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_ATTEMPTS = 20;
 
 /**
- * Records a login attempt for the given key (IP address) and returns whether
- * the caller is currently rate-limited. Resets the window after WINDOW_MS.
+ * Records an attempt for the given key and returns whether the caller is
+ * currently rate-limited. Resets the window after WINDOW_MS.
+ *
+ * key    — rate-limit bucket (e.g. IP address or "totp:<userId>")
+ * maxAttempts — defaults to 20; pass a lower value for sensitive operations
  *
  * Returns true when the attempt should be blocked.
  */
-export async function checkLoginRateLimit(key: string): Promise<boolean> {
+export async function checkLoginRateLimit(key: string, maxAttempts = MAX_ATTEMPTS): Promise<boolean> {
   const now = new Date();
   const windowCutoff = new Date(now.getTime() - WINDOW_MS);
 
@@ -37,5 +40,5 @@ export async function checkLoginRateLimit(key: string): Promise<boolean> {
     .returning();
 
   const row = rows[0];
-  return row.attempts > MAX_ATTEMPTS;
+  return row.attempts > maxAttempts;
 }
