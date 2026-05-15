@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 import { users, sessions } from "@/lib/db/schema";
@@ -10,6 +10,8 @@ import { authenticate } from "@/lib/auth/authenticate";
 import { totpRecoveryCodes } from "@/lib/db/schema";
 import { and, isNull } from "drizzle-orm";
 import { verifyPassword } from "@/lib/auth/password";
+import { checkLoginRateLimit } from "@/lib/auth/rate-limit";
+import { getTotpEncryptionKey, getTotpFallbackKey } from "@/lib/auth/totp-key";
 
 const PENDING_COOKIE = "auth_totp_pending";
 const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -17,13 +19,6 @@ const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes
 function sanitizeRedirect(url?: string | null): string {
   if (url && url.startsWith("/") && !url.startsWith("//")) return url;
   return "/dashboard";
-}
-
-function totpKey(): string {
-  // Derive a 32-char key from AUTH_SECRET so TOTP secrets are encrypted
-  // with a key that rotates with the auth secret.
-  const secret = process.env.AUTH_SECRET ?? "";
-  return createHmac("sha256", secret).update("totp-encryption-key").digest("hex").slice(0, 32);
 }
 
 function signPendingToken(userId: string, expires: number): string {
@@ -52,7 +47,7 @@ function verifyPendingToken(token: string): string | null {
 
 async function createSession(userId: string, callbackUrl?: string | null): Promise<void> {
   const sessionToken = randomUUID();
-  const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const expires = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8-hour workday session
   await db.insert(sessions).values({ sessionToken, userId, expires });
   const jar = await cookies();
   jar.set("authjs.session-token", sessionToken, {
@@ -74,7 +69,13 @@ export async function signInWithPassword(
   const password = (formData.get("password") as string | null) ?? "";
   const callbackUrl = formData.get("callbackUrl") as string | null;
 
-  const result = await authenticate(email, password, undefined, totpKey());
+  const reqHeaders = await headers();
+  const ip = reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (await checkLoginRateLimit(ip)) {
+    return { error: "Te veel inlogpogingen. Probeer het over 15 minuten opnieuw." };
+  }
+
+  const result = await authenticate(email, password, undefined);
 
   switch (result.status) {
     case "success":
@@ -164,8 +165,14 @@ export async function signInWithTotp(
   }
 
   // Validate the TOTP code directly — the pending cookie already proves the password was verified.
-  const { verifyTotpCodeWithCounter, decryptTotpSecret } = await import("@/lib/auth/totp");
-  const rawSecret = decryptTotpSecret(user.totpSecret!, totpKey());
+  const { verifyTotpCodeWithCounter, decryptTotpSecretWithFallback, encryptTotpSecret } = await import("@/lib/auth/totp");
+  const currentKey = getTotpEncryptionKey();
+  const fallbackKey = getTotpFallbackKey();
+  const { secret: rawSecret, usedFallback } = decryptTotpSecretWithFallback(
+    user.totpSecret!,
+    currentKey,
+    fallbackKey,
+  );
   const matchedCounter = verifyTotpCodeWithCounter(
     rawSecret,
     code,
@@ -176,31 +183,17 @@ export async function signInWithTotp(
     return { error: "Ongeldige verificatiecode. Probeer opnieuw." };
   }
 
+  const newTotpSecret = usedFallback ? encryptTotpSecret(rawSecret, currentKey) : undefined;
+
   await db
     .update(users)
-    .set({ lastTotpCounter: matchedCounter, updatedAt: new Date() })
+    .set({
+      lastTotpCounter: matchedCounter,
+      ...(newTotpSecret ? { totpSecret: newTotpSecret } : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(users.id, userId));
 
   await createSession(userId, callbackUrl);
 }
 
-export async function devSignIn(formData: FormData) {
-  if (process.env.NODE_ENV !== "development") return;
-
-  const callbackUrl = formData.get("callbackUrl") as string | null;
-  const adminEmail = "admin@example.com";
-
-  let [user] = await db.select().from(users).where(eq(users.email, adminEmail)).limit(1);
-
-  if (!user) {
-    [user] = await db.insert(users).values({
-      email: adminEmail,
-      name: "Administrator",
-      role: "admin",
-      emailVerified: new Date(),
-      isEnabled: true,
-    }).returning();
-  }
-
-  await createSession(user.id, callbackUrl);
-}

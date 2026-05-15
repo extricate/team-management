@@ -112,7 +112,7 @@ export function encryptTotpSecret(secret: string, key: string): string {
   return `${iv.toString("base64")}:${authTag.toString("base64")}:${encrypted.toString("base64")}`;
 }
 
-export function decryptTotpSecret(stored: string, key: string): string {
+function decryptWithKey(stored: string, key: string): string {
   const parts = stored.split(":");
   if (parts.length !== 3) throw new Error("Invalid encrypted TOTP secret format");
   const [ivB64, authTagB64, cipherB64] = parts;
@@ -123,4 +123,28 @@ export function decryptTotpSecret(stored: string, key: string): string {
   const decipher = createDecipheriv("aes-256-gcm", keyBuf, iv);
   decipher.setAuthTag(authTag);
   return decipher.update(ciphertext).toString("utf8") + decipher.final("utf8");
+}
+
+export function decryptTotpSecret(stored: string, key: string): string {
+  return decryptWithKey(stored, key);
+}
+
+/**
+ * Tries the current key first; falls back to fallbackKey if provided.
+ * Returns the decrypted secret and whether the fallback was used — callers
+ * should re-encrypt and persist the secret when usedFallback is true.
+ */
+export function decryptTotpSecretWithFallback(
+  stored: string,
+  key: string,
+  fallbackKey: string | undefined,
+): { secret: string; usedFallback: boolean } {
+  try {
+    return { secret: decryptWithKey(stored, key), usedFallback: false };
+  } catch {
+    if (fallbackKey) {
+      return { secret: decryptWithKey(stored, fallbackKey), usedFallback: true };
+    }
+    throw new Error("TOTP secret decryption failed with all available keys");
+  }
 }

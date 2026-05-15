@@ -18,10 +18,18 @@ spec:
         {{- include "team-management.labels" . | nindent 8 }}
         {{- include "team-management.meilisearchSelectorLabels" . | nindent 8 }}
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
         - name: meilisearch
           image: {{ .Values.meilisearch.image }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           ports:
             - name: http
               containerPort: 7700

@@ -1,6 +1,6 @@
 {
   "name": "team-management",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "scripts": {
     "prepare": "husky",
@@ -20,6 +20,7 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "node --env-file=.env --import tsx ./lib/db/seed.ts",
     "db:seed:demo": "node --env-file=.env --import tsx ./lib/db/seed/index.ts",
+    "db:purge-audit": "node --env-file=.env ./scripts/purge-audit.mjs",
     "search:reindex": "node --env-file=.env --import tsx ./lib/search/reindex.ts"
   },
   "dependencies": {

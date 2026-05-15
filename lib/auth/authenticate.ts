@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { verifyPassword } from "@/lib/auth/password";
-import { verifyTotpCodeWithCounter, decryptTotpSecret } from "@/lib/auth/totp";
+import { verifyTotpCodeWithCounter, decryptTotpSecretWithFallback, encryptTotpSecret } from "@/lib/auth/totp";
+import { getTotpEncryptionKey, getTotpFallbackKey } from "@/lib/auth/totp-key";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -19,7 +20,6 @@ export async function authenticate(
   email: string,
   password: string,
   totpCode: string | undefined,
-  totpKey: string,
 ): Promise<AuthResult> {
   const [user] = await db
     .select()
@@ -65,7 +65,14 @@ export async function authenticate(
 
   if (!totpCode) return { status: "totp_required", userId: user.id };
 
-  const rawSecret = decryptTotpSecret(user.totpSecret, totpKey);
+  const currentKey = getTotpEncryptionKey();
+  const fallbackKey = getTotpFallbackKey();
+  const { secret: rawSecret, usedFallback } = decryptTotpSecretWithFallback(
+    user.totpSecret,
+    currentKey,
+    fallbackKey,
+  );
+
   const matchedCounter = verifyTotpCodeWithCounter(
     rawSecret,
     totpCode,
@@ -74,9 +81,18 @@ export async function authenticate(
 
   if (matchedCounter === null) return { status: "invalid_totp" };
 
+  // Lazy re-encryption: if the secret was decrypted with the old key, migrate it now.
+  const newTotpSecret = usedFallback
+    ? encryptTotpSecret(rawSecret, currentKey)
+    : undefined;
+
   await db
     .update(users)
-    .set({ lastTotpCounter: matchedCounter, updatedAt: new Date() })
+    .set({
+      lastTotpCounter: matchedCounter,
+      ...(newTotpSecret ? { totpSecret: newTotpSecret } : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(users.id, user.id))
     .returning();
 

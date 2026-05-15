@@ -11,8 +11,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Ensure public directory exists so the COPY command in runner doesn't fail
-RUN mkdir -p public 
+RUN mkdir -p public
 ENV NEXT_TELEMETRY_DISABLED=1
+# Fail the build on high-severity CVEs in production dependencies
+RUN npm audit --audit-level=high --omit=dev
 RUN npm run build
 
 # Stage 3: Production runner

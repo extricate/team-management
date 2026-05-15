@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
-import { devSignIn } from "./actions";
 import { PasswordLoginForm } from "./PasswordLoginForm";
 import { TotpLoginForm } from "./TotpLoginForm";
 
@@ -50,14 +49,6 @@ export default async function InloggenPage({ searchParams }: { searchParams: Pro
         : <PasswordLoginForm callbackUrl={callbackUrl} />
       }
 
-      {process.env.NODE_ENV === "development" && !isTotpStep && (
-        <form action={devSignIn} style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid var(--rvo-color-grijs-300)" }}>
-          <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/dashboard"} />
-          <button type="submit" className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.85em" }}>
-            Dev: direct inloggen als admin
-          </button>
-        </form>
-      )}
     </div>
   );
 }

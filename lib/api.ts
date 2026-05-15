@@ -1,6 +1,29 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
+// Paths whose GET requests are logged for BIO incident-response traceability.
+const LOGGED_PREFIXES = [
+  "/api/employees",
+  "/api/teams",
+  "/api/positions",
+  "/api/users",
+];
+
+function logReadAccess(req: Request, actorUserId: string | undefined): void {
+  const url = new URL(req.url);
+  // Structured JSON to stdout — captured by Kubernetes logging backend.
+  process.stdout.write(
+    JSON.stringify({
+      level: "access",
+      ts: new Date().toISOString(),
+      method: req.method,
+      path: url.pathname,
+      query: url.search || undefined,
+      actorUserId,
+    }) + "\n",
+  );
+}
+
 // Shared route context type for dynamic segments — avoids repeating this in every [id] route.
 export type RouteContext = { params: Promise<{ id: string }> };
 
@@ -27,6 +50,9 @@ export function badRequest(message: string): Response {
 }
 export function conflict(message: string): Response {
   return err(message, 409);
+}
+export function payloadTooLarge(message: string): Response {
+  return err(message, 413);
 }
 export function serverError(message = "Internal server error"): Response {
   return err(message, 500);
@@ -74,6 +100,14 @@ export function withErrorHandling<TArgs extends unknown[]>(
 ): (...args: TArgs) => Promise<Response> {
   return async (...args) => {
     try {
+      const req = args[0] as Request | undefined;
+      if (req instanceof Request && req.method === "GET") {
+        const url = new URL(req.url);
+        if (LOGGED_PREFIXES.some((p) => url.pathname.startsWith(p))) {
+          const session = await auth();
+          logReadAccess(req, session?.user?.id);
+        }
+      }
       return await handler(...args);
     } catch (error) {
       if (error instanceof AuthError) return unauthorized(error.message);

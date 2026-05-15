@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { employees, organisations } from "@/lib/db/schema";
-import { ok, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
+import { ok, badRequest, payloadTooLarge, requireAuth, withErrorHandling } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { syncEmployee } from "@/lib/search/sync";
 import { and, eq, isNull } from "drizzle-orm";
@@ -47,12 +47,23 @@ function parseCsv(text: string): string[][] {
 
 const REQUIRED_COLUMNS = ["voornaam", "achternaam", "organisatie"] as const;
 
+const MAX_CSV_BYTES = 2 * 1024 * 1024; // 2 MB
+
 export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireAuth();
+
+  const contentType = req.headers.get("content-type") ?? "";
+  if (!contentType.includes("multipart/form-data")) {
+    return badRequest("Verwacht multipart/form-data.");
+  }
 
   const formData = await req.formData();
   const file = formData.get("file");
   if (!(file instanceof Blob)) return badRequest("Geen bestand aangeleverd.");
+
+  if (file.size > MAX_CSV_BYTES) {
+    return payloadTooLarge(`Bestand te groot (max ${MAX_CSV_BYTES / 1024 / 1024} MB).`);
+  }
 
   const text = await file.text();
   const rows = parseCsv(text);

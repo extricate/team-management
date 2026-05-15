@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { teams, teamPositionCouplings } from "@/lib/db/schema";
 import { eq, isNull } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { PrintButton } from "@/components/ui/PrintButton";
 import { formatFullName, formatDate } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -69,14 +70,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
           </Paragraph>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }} className="no-print">
-          <button
-            onClick={undefined}
-            className="utrecht-button utrecht-button--secondary-action"
-            style={{ fontSize: "0.875rem" }}
-            // handled by inline onclick below — server component
-          >
-            Afdrukken
-          </button>
+          <PrintButton />
           <Link href={`/teams/${team.id}`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
             ← Terug
           </Link>
@@ -175,17 +169,6 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
           <Paragraph style={{ color: "var(--rvo-color-grijs-700)" }}>{team.description}</Paragraph>
         </section>
       )}
-
-      {/* Print button script */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            document.querySelectorAll('.no-print button').forEach(btn => {
-              btn.addEventListener('click', () => window.print());
-            });
-          `,
-        }}
-      />
 
       <style>{`
         @media print {

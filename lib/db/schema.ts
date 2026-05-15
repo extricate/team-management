@@ -314,6 +314,14 @@ export const auditEvents = pgTable("audit_events", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+// ── Login rate limits ──────────────────────────────────────────────────────────
+// One row per IP address; window resets after RATE_LIMIT_WINDOW_MS (15 min).
+export const loginRateLimits = pgTable("login_rate_limits", {
+  key: text("key").primaryKey(),
+  attempts: integer("attempts").notNull().default(1),
+  windowStart: timestamp("window_start", { mode: "date" }).notNull().defaultNow(),
+});
+
 // ── Drizzle Relations ──────────────────────────────────────────────────────────
 export const organisationsRelations = relations(organisations, ({ many }) => ({
   teams: many(teams),

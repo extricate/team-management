@@ -1,4 +1,3 @@
-import { createHmac } from "crypto";
 import { eq, and, isNull } from "drizzle-orm";
 import QRCode from "qrcode";
 import { db } from "@/lib/db";
@@ -11,14 +10,10 @@ import {
   verifyTotpCodeWithCounter,
   getTotpUri,
   encryptTotpSecret,
-  decryptTotpSecret,
+  decryptTotpSecretWithFallback,
 } from "@/lib/auth/totp";
+import { getTotpEncryptionKey, getTotpFallbackKey } from "@/lib/auth/totp-key";
 import { hashPassword } from "@/lib/auth/password";
-
-function totpKey(): string {
-  const secret = process.env.AUTH_SECRET ?? "";
-  return createHmac("sha256", secret).update("totp-encryption-key").digest("hex").slice(0, 32);
-}
 
 function generateRecoveryCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -36,7 +31,7 @@ export const POST = withErrorHandling(async (req: Request) => {
   const userId = session.user.id;
 
   const rawSecret = generateTotpSecret();
-  const encryptedSecret = encryptTotpSecret(rawSecret, totpKey());
+  const encryptedSecret = encryptTotpSecret(rawSecret, getTotpEncryptionKey());
 
   await db.update(users)
     .set({ totpSecret: encryptedSecret, totpEnabled: false, updatedAt: new Date() })
@@ -60,7 +55,11 @@ export const PUT = withErrorHandling(async (req: Request) => {
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user?.totpSecret) return badRequest("Geen TOTP-configuratie gevonden. Start opnieuw.");
 
-  const rawSecret = decryptTotpSecret(user.totpSecret, totpKey());
+  const { secret: rawSecret } = decryptTotpSecretWithFallback(
+    user.totpSecret,
+    getTotpEncryptionKey(),
+    getTotpFallbackKey(),
+  );
   const matchedCounter = verifyTotpCodeWithCounter(rawSecret, code);
   if (matchedCounter === null) return badRequest("Ongeldige verificatiecode.");
 
