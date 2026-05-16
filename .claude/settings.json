@@ -14,7 +14,8 @@
       "Bash(npm install *)",
       "Bash(xargs cat)",
       "Bash(./node_modules/.bin/tsc --noEmit)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npm run *)"
     ]
   }
 }

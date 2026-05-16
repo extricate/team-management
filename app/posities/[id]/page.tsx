@@ -12,7 +12,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatDate, formatCurrency, buildEntityMetadata } from "@/lib/utils";
 import { getOPFType } from "@/lib/opf-types";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -36,7 +36,7 @@ const STATUS_COLORS: Record<string, "green" | "orange" | "blue" | "grey"> = {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const row = await db.query.positions.findFirst({ where: eq(positions.id, id) });
-  return { title: row ? `${row.type} – Teambeheer` : "Positie – Teambeheer" };
+  return buildEntityMetadata(row?.type, "Positie");
 }
 
 export default async function PositieDetailPage({ params }: { params: Promise<{ id: string }> }) {

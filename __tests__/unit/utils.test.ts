@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatCurrency, formatCompactCurrency, formatDate, formatFullName, getInitials } from '@/lib/utils'
+import { formatCurrency, formatCompactCurrency, formatDate, formatFullName, getInitials, buildEntityMetadata } from '@/lib/utils'
 
 describe('formatCurrency', () => {
   it('formats a positive integer as Dutch EUR', () => {
@@ -136,5 +136,15 @@ describe('formatFullName', () => {
 
   it('omits prefix when null', () => {
     expect(formatFullName({ firstName: 'Jan', prefixName: null, lastName: 'Pietersen' })).toBe('Jan Pietersen')
+  })
+})
+
+describe('buildEntityMetadata', () => {
+  it('returns name with app suffix when name is defined', () => {
+    expect(buildEntityMetadata('Mijn Team', 'Team')).toEqual({ title: 'Mijn Team – Teambeheer' })
+  })
+
+  it('returns fallback with app suffix when name is undefined', () => {
+    expect(buildEntityMetadata(undefined, 'Team')).toEqual({ title: 'Team – Teambeheer' })
   })
 })

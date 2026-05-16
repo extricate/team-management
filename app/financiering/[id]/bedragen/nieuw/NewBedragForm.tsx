@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 
 interface FinancialType { id: string; type: string; year: number; }
 
@@ -15,46 +15,25 @@ interface Props {
 }
 
 export function NewBedragForm({ sourceId, sourceName, types }: Props) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit("/api/financial-source-amounts", "POST", {
+    redirectTo: `/financiering/${sourceId}`,
+  });
   const [status, setStatus] = useState<"concept" | "released">("concept");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-
     const effectiveDateStr = fd.get("effectiveDate") as string;
     const releaseDateStr = fd.get("releaseDate") as string;
     const amountRaw = (fd.get("amount") as string).replace(",", ".");
-
-    try {
-      const res = await fetch("/api/financial-source-amounts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          financialSourceId: sourceId,
-          financialTypeId: fd.get("financialTypeId") as string,
-          amount: parseFloat(amountRaw),
-          status: fd.get("status"),
-          effectiveDate: effectiveDateStr ? new Date(effectiveDateStr).toISOString() : undefined,
-          releaseDate: releaseDateStr ? new Date(releaseDateStr).toISOString() : undefined,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-      router.push(`/financiering/${sourceId}`);
-      router.refresh();
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    await submit({
+      financialSourceId: sourceId,
+      financialTypeId: fd.get("financialTypeId") as string,
+      amount: parseFloat(amountRaw),
+      status: fd.get("status"),
+      effectiveDate: effectiveDateStr ? new Date(effectiveDateStr).toISOString() : undefined,
+      releaseDate: releaseDateStr ? new Date(releaseDateStr).toISOString() : undefined,
+    });
   }
 
   return (

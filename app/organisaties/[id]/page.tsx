@@ -12,11 +12,12 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
+import { buildEntityMetadata } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const org = await db.query.organisations.findFirst({ where: eq(organisations.id, id) });
-  return { title: org ? `${org.name} – Teambeheer` : "Organisatie – Teambeheer" };
+  return buildEntityMetadata(org?.name, "Organisatie");
 }
 
 export default async function OrganisatieDetailPage({ params }: { params: Promise<{ id: string }> }) {

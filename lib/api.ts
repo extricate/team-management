@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import type { z } from "zod";
 
 // Paths whose GET requests are logged for BIO incident-response traceability.
 const LOGGED_PREFIXES = [
@@ -119,4 +120,21 @@ export function withErrorHandling<TArgs extends unknown[]>(
       return serverError();
     }
   };
+}
+
+type MutationSession = Awaited<ReturnType<typeof requireAuth>>;
+
+// Wraps auth + JSON body parsing + Zod validation for POST/PATCH handlers.
+// The handler receives a typed { session, data, req, ctx } and only needs to contain domain logic.
+export function withMutation<T>(
+  schema: z.ZodType<T>,
+  handler: (params: { session: MutationSession; data: T; req: Request; ctx: RouteContext }) => Promise<Response>
+): (req: Request, ctx: RouteContext) => Promise<Response> {
+  return withErrorHandling(async (req: Request, ctx: RouteContext) => {
+    const session = await requireAuth();
+    const body = await req.json();
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) return badRequest(parsed.error.errors[0].message);
+    return handler({ session, data: parsed.data, req, ctx });
+  });
 }

@@ -4,11 +4,12 @@ import { db } from "@/lib/db";
 import { organisations, teams } from "@/lib/db/schema";
 import { eq, isNull, and } from "drizzle-orm";
 import { TeamEditForm } from "./EditForm";
+import { buildEntityMetadata } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const team = await db.query.teams.findFirst({ where: and(eq(teams.id, id), isNull(teams.deletedAt)) });
-  return { title: team ? `${team.name} bewerken – Teambeheer` : "Team bewerken – Teambeheer" };
+  return buildEntityMetadata(team ? `${team.name} bewerken` : undefined, "Team bewerken");
 }
 
 export default async function TeamBewerkenPage({ params }: { params: Promise<{ id: string }> }) {

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { bestellingen } from "@/lib/db/schema";
-import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
+import { ok, notFound, withMutation, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { BestellingUpdateSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
@@ -28,25 +28,19 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
   return ok(row);
 });
 
-export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
-  const session = await requireAuth();
+export const PATCH = withMutation(BestellingUpdateSchema, async ({ session, data, ctx }) => {
   const { id } = await ctx.params;
   const [before] = await db.select().from(bestellingen).where(eq(bestellingen.id, id));
   if (!before || before.deletedAt) return notFound();
 
-  const body = await req.json();
-  const parsed = BestellingUpdateSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const data = {
-    ...parsed.data,
-    geraamdBedrag: parsed.data.geraamdBedrag != null ? String(parsed.data.geraamdBedrag) : parsed.data.geraamdBedrag === null ? null : undefined,
-    werkelijkBedrag: parsed.data.werkelijkBedrag != null ? String(parsed.data.werkelijkBedrag) : parsed.data.werkelijkBedrag === null ? null : undefined,
-    aanvraagDatum: parsed.data.aanvraagDatum,
+  const updateData = {
+    ...data,
+    geraamdBedrag: data.geraamdBedrag != null ? String(data.geraamdBedrag) : data.geraamdBedrag === null ? null : undefined,
+    werkelijkBedrag: data.werkelijkBedrag != null ? String(data.werkelijkBedrag) : data.werkelijkBedrag === null ? null : undefined,
     updatedAt: new Date(),
   };
 
-  const [after] = await db.update(bestellingen).set(data).where(eq(bestellingen.id, id)).returning();
+  const [after] = await db.update(bestellingen).set(updateData).where(eq(bestellingen.id, id)).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "bestelling", entityId: id, action: "update", before, after });
   return ok(after);
 });

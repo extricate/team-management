@@ -17,6 +17,7 @@ import {
   serverError,
   AuthError,
   withErrorHandling,
+  withMutation,
   requireAuth,
 } from '@/lib/api'
 import { auth } from '@/lib/auth'
@@ -119,6 +120,55 @@ describe('withErrorHandling', () => {
     const res = await withErrorHandling(handler)()
     expect(res.status).toBe(500)
     consoleSpy.mockRestore()
+  })
+})
+
+describe('withMutation', () => {
+  const schema = { safeParse: (body: unknown) => {
+    const b = body as Record<string, unknown>
+    if (!b?.name) return { success: false as const, error: { errors: [{ message: 'Name is required' }] } }
+    return { success: true as const, data: { name: b.name } }
+  }}
+
+  it('calls the handler with session and parsed data on a valid request', async () => {
+    const handler = vi.fn().mockResolvedValue(created({ id: '1' }))
+    const req = new Request('http://localhost/api/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Test' }),
+    })
+    const res = await withMutation(schema, handler)(req, { params: Promise.resolve({ id: '' }) })
+    expect(res.status).toBe(201)
+    expect(handler).toHaveBeenCalledWith(expect.objectContaining({
+      data: { name: 'Test' },
+      session: expect.objectContaining({ user: expect.objectContaining({ id: 'user-1' }) }),
+    }))
+  })
+
+  it('returns 400 when schema validation fails', async () => {
+    const handler = vi.fn()
+    const req = new Request('http://localhost/api/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    const res = await withMutation(schema, handler)(req, { params: Promise.resolve({ id: '' }) })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Name is required' })
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('returns 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null as never)
+    const handler = vi.fn()
+    const req = new Request('http://localhost/api/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Test' }),
+    })
+    const res = await withMutation(schema, handler)(req, { params: Promise.resolve({ id: '' }) })
+    expect(res.status).toBe(401)
+    expect(handler).not.toHaveBeenCalled()
   })
 })
 

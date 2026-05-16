@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { comments } from "@/lib/db/schema";
-import { ok, created, badRequest, unauthorized, requireAuth, withErrorHandling } from "@/lib/api";
+import { ok, created, badRequest, unauthorized, requireAuth, withErrorHandling, withMutation } from "@/lib/api";
 import { CommentSchema } from "@/lib/schemas";
 import { and, eq } from "drizzle-orm";
 
@@ -30,15 +30,10 @@ export const GET = withErrorHandling(async (req: Request) => {
   return ok(rows);
 });
 
-export const POST = withErrorHandling(async (req: Request) => {
-  const session = await requireAuth();
+export const POST = withMutation(CommentSchema, async ({ session, data }) => {
   const userId = session.user?.id;
   if (!userId) return unauthorized();
 
-  const body = await req.json();
-  const parsed = CommentSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const [row] = await db.insert(comments).values({ ...parsed.data, createdBy: userId }).returning();
+  const [row] = await db.insert(comments).values({ ...data, createdBy: userId }).returning();
   return created(row);
 });

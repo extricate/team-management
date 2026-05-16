@@ -12,12 +12,12 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableMembershipsTable } from "@/components/ui/FilterableMembershipsTable";
-import { formatFullName, formatDate } from "@/lib/utils";
+import { formatFullName, formatDate, buildEntityMetadata } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const emp = await db.query.employees.findFirst({ where: eq(employees.id, id) });
-  return { title: emp ? `${emp.firstName} ${emp.lastName} – Teambeheer` : "Medewerker – Teambeheer" };
+  return buildEntityMetadata(emp ? formatFullName(emp) : undefined, "Medewerker");
 }
 
 export default async function MedewerkerDetailPage({ params }: { params: Promise<{ id: string }> }) {

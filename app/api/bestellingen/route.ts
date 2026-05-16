@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { bestellingen } from "@/lib/db/schema";
-import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
+import { ok, created, withMutation, withErrorHandling, requireAuth } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { BestellingSchema } from "@/lib/schemas";
 import { isNull } from "drizzle-orm";
@@ -21,20 +21,14 @@ export const GET = withErrorHandling(async () => {
   return ok(rows);
 });
 
-export const POST = withErrorHandling(async (req: Request) => {
-  const session = await requireAuth();
-  const body = await req.json();
-  const parsed = BestellingSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const data = {
-    ...parsed.data,
-    geraamdBedrag: parsed.data.geraamdBedrag != null ? String(parsed.data.geraamdBedrag) : undefined,
-    werkelijkBedrag: parsed.data.werkelijkBedrag != null ? String(parsed.data.werkelijkBedrag) : undefined,
-    aanvraagDatum: parsed.data.aanvraagDatum,
+export const POST = withMutation(BestellingSchema, async ({ session, data }) => {
+  const insertData = {
+    ...data,
+    geraamdBedrag: data.geraamdBedrag != null ? String(data.geraamdBedrag) : undefined,
+    werkelijkBedrag: data.werkelijkBedrag != null ? String(data.werkelijkBedrag) : undefined,
   };
 
-  const [row] = await db.insert(bestellingen).values(data).returning();
+  const [row] = await db.insert(bestellingen).values(insertData).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "bestelling", entityId: row.id, action: "create", after: row });
   return created(row);
 });

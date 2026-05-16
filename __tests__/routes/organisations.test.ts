@@ -1,32 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { makeRequest } from '../helpers/request'
 
-// Proxy-based db mock: any Drizzle chain (select/insert/update/query) resolves
-// with the value set via dbMock.set(). Multiple calls dequeue in order.
-const { db, dbMock } = vi.hoisted(() => {
-  const q: unknown[] = []
-  const val = () => (q.length > 1 ? q.shift() : q.length === 1 ? q[0] : [])
-  const p = (): unknown =>
-    new Proxy(function () {}, {
-      get(_, k: string | symbol) {
-        if (typeof k === 'symbol') return undefined
-        if (k === 'then') return (res: (v: unknown) => unknown, rej?: (e: unknown) => unknown) =>
-          Promise.resolve(val()).then(res, rej)
-        if (k === 'catch') return (fn: (e: unknown) => unknown) => Promise.resolve(val()).catch(fn)
-        if (k === 'finally') return (fn: () => void) => Promise.resolve(val()).finally(fn)
-        return p()
-      },
-      apply: () => p(),
-    })
-  return {
-    db: p(),
-    dbMock: {
-      // Each argument becomes the result for one sequential db call
-      set: (...d: unknown[]) => { q.length = 0; q.push(...d) },
-      reset: () => { q.length = 0 },
-    },
-  }
-})
+type DbMockGlobal = { createDbMock: () => { db: unknown; dbMock: { set: (...d: unknown[]) => void; reset: () => void } } }
+const { db, dbMock } = vi.hoisted(() => (globalThis as unknown as DbMockGlobal).createDbMock())
 
 vi.mock('@/lib/db', () => ({ db }))
 vi.mock('@/lib/auth', () => ({

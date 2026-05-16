@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { financialSources, organisations } from "@/lib/db/schema";
-import { ok, notFound, badRequest, requireAuth, withErrorHandling, assertOrgAccess, RouteContext } from "@/lib/api";
+import { ok, notFound, badRequest, requireAuth, withErrorHandling, withMutation, assertOrgAccess, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { dispatchSync } from "@/lib/search/sync";
 import { FinancialSourceUpdateSchema } from "@/lib/schemas";
@@ -28,23 +28,18 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
   return ok(row);
 });
 
-export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
-  const session = await requireAuth();
+export const PATCH = withMutation(FinancialSourceUpdateSchema, async ({ session, data, ctx }) => {
   const { id } = await ctx.params;
   const [before] = await db.select().from(financialSources).where(eq(financialSources.id, id));
   if (!before || before.deletedAt) return notFound();
   assertOrgAccess(session, before.organisationId);
 
-  const body = await req.json();
-  const parsed = FinancialSourceUpdateSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  if (parsed.data.organisationId) {
-    const [org] = await db.select().from(organisations).where(eq(organisations.id, parsed.data.organisationId));
+  if (data.organisationId) {
+    const [org] = await db.select().from(organisations).where(eq(organisations.id, data.organisationId));
     if (!org || org.deletedAt) return badRequest("Organisatie niet gevonden.");
   }
 
-  const [after] = await db.update(financialSources).set({ ...parsed.data, updatedAt: new Date() }).where(eq(financialSources.id, id)).returning();
+  const [after] = await db.update(financialSources).set({ ...data, updatedAt: new Date() }).where(eq(financialSources.id, id)).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: id, action: "update", before, after });
   dispatchSync("financialSource", id);
   return ok(after);

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
-import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
+import { ok, notFound, requireAuth, withErrorHandling, withMutation, RouteContext } from "@/lib/api";
 import { TeamUpdateSchema } from "@/lib/schemas";
 import { updateTeam, archiveTeam } from "@/lib/services/teams";
 import { eq } from "drizzle-orm";
@@ -21,13 +21,9 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
   return ok(row);
 });
 
-export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
-  const session = await requireAuth();
+export const PATCH = withMutation(TeamUpdateSchema, async ({ session, data, ctx }) => {
   const { id } = await ctx.params;
-  const body = await req.json();
-  const parsed = TeamUpdateSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-  return ok(await updateTeam(id, parsed.data, session, session.user?.id));
+  return ok(await updateTeam(id, data, session, session.user?.id));
 });
 
 export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext) => {

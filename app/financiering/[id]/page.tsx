@@ -14,13 +14,13 @@ import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { TransferButton } from "@/components/ui/TransferButton";
 import { BudgetGridEditor, type GridInitialEntry } from "@/components/ui/BudgetGridEditor";
-import { formatCurrency, formatDate, prorateCost } from "@/lib/utils";
+import { formatCurrency, formatDate, prorateCost, buildEntityMetadata } from "@/lib/utils";
 import { detectFinancialConflicts, type FinancialConflict as Conflict } from "@/lib/financial-conflicts";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const source = await db.query.financialSources.findFirst({ where: eq(financialSources.id, id) });
-  return { title: source ? `${source.name} – Teambeheer` : "Financieringsbron – Teambeheer" };
+  return buildEntityMetadata(source?.name, "Financieringsbron");
 }
 
 export default async function FinancieringDetailPage({ params }: { params: Promise<{ id: string }> }) {

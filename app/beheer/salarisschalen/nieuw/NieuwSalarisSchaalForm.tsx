@@ -1,52 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 
 export function NieuwSalarisSchaalForm() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit("/api/salarisschalen", "POST", {
+    redirectTo: "/beheer/salarisschalen",
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-
     const primaryCost = parseFloat((fd.get("primaryCost") as string).replace(",", "."));
     const secondaryEffects = parseFloat((fd.get("secondaryEffects") as string).replace(",", ".") || "0");
     const tertiaryEffects = parseFloat((fd.get("tertiaryEffects") as string).replace(",", ".") || "0");
-
-    try {
-      const res = await fetch("/api/salarisschalen", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schaalCode: (fd.get("schaalCode") as string).trim(),
-          year: parseInt(fd.get("year") as string, 10),
-          primaryCost,
-          secondaryEffects: isNaN(secondaryEffects) ? 0 : secondaryEffects,
-          tertiaryEffects: isNaN(tertiaryEffects) ? 0 : tertiaryEffects,
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-
-      router.push("/beheer/salarisschalen");
-      router.refresh();
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    await submit({
+      schaalCode: (fd.get("schaalCode") as string).trim(),
+      year: parseInt(fd.get("year") as string, 10),
+      primaryCost,
+      secondaryEffects: isNaN(secondaryEffects) ? 0 : secondaryEffects,
+      tertiaryEffects: isNaN(tertiaryEffects) ? 0 : tertiaryEffects,
+    });
   }
 
   return (

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 import type { Salarisschaal } from "@/lib/db/schema";
 
 interface Props {
@@ -13,64 +14,44 @@ interface Props {
 
 export function EditSalarisSchaalForm({ schaal }: Props) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error: patchError, saving, submit } = useApiSubmit(`/api/salarisschalen/${schaal.id}`, "PATCH", {
+    redirectTo: "/beheer/salarisschalen",
+  });
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const error = patchError ?? deleteError;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-
     const primaryCost = parseFloat((fd.get("primaryCost") as string).replace(",", "."));
     const secondaryEffects = parseFloat((fd.get("secondaryEffects") as string).replace(",", ".") || "0");
     const tertiaryEffects = parseFloat((fd.get("tertiaryEffects") as string).replace(",", ".") || "0");
-
-    try {
-      const res = await fetch(`/api/salarisschalen/${schaal.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schaalCode: (fd.get("schaalCode") as string).trim(),
-          year: parseInt(fd.get("year") as string, 10),
-          primaryCost,
-          secondaryEffects: isNaN(secondaryEffects) ? 0 : secondaryEffects,
-          tertiaryEffects: isNaN(tertiaryEffects) ? 0 : tertiaryEffects,
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-
-      router.push("/beheer/salarisschalen");
-      router.refresh();
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    await submit({
+      schaalCode: (fd.get("schaalCode") as string).trim(),
+      year: parseInt(fd.get("year") as string, 10),
+      primaryCost,
+      secondaryEffects: isNaN(secondaryEffects) ? 0 : secondaryEffects,
+      tertiaryEffects: isNaN(tertiaryEffects) ? 0 : tertiaryEffects,
+    });
   }
 
   async function handleDelete() {
     if (!confirm(`Salarisschaal "${schaal.schaalCode}" (${schaal.year}) verwijderen?`)) return;
     setDeleting(true);
-    setError(null);
+    setDeleteError(null);
 
     try {
       const res = await fetch(`/api/salarisschalen/${schaal.id}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json();
-        setError(body.error ?? "Verwijderen mislukt.");
+        setDeleteError(body.error ?? "Verwijderen mislukt.");
         return;
       }
       router.push("/beheer/salarisschalen");
       router.refresh();
     } catch {
-      setError("Er is een verbindingsfout opgetreden.");
+      setDeleteError("Er is een verbindingsfout opgetreden.");
     } finally {
       setDeleting(false);
     }

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { financialTypes, financialSources } from "@/lib/db/schema";
-import { created, badRequest, notFound, requireAuth, withErrorHandling } from "@/lib/api";
+import { created, notFound, withMutation } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { eq } from "drizzle-orm";
 
@@ -11,24 +11,19 @@ const Schema = z.object({
   year: z.number().int().min(2000).max(2099),
 });
 
-export const POST = withErrorHandling(async (req: Request) => {
-  const session = await requireAuth();
-  const body = await req.json();
-  const parsed = Schema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
+export const POST = withMutation(Schema, async ({ session, data }) => {
   const [source] = await db
     .select({ id: financialSources.id })
     .from(financialSources)
-    .where(eq(financialSources.id, parsed.data.financialSourceId));
+    .where(eq(financialSources.id, data.financialSourceId));
   if (!source) return notFound("Financieringsbron niet gevonden.");
 
-  const [row] = await db.insert(financialTypes).values(parsed.data).returning();
+  const [row] = await db.insert(financialTypes).values(data).returning();
 
   await logAudit({
     actorUserId: session.user?.id,
     entityType: "financialSource",
-    entityId: parsed.data.financialSourceId,
+    entityId: data.financialSourceId,
     action: "update",
     after: row,
   });

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { fundingAllocations } from "@/lib/db/schema";
-import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
+import { ok, notFound, withMutation, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { FundingAllocationUpdateSchema } from "@/lib/schemas";
 import { updateFundingAllocation, deleteFundingAllocation } from "@/lib/services/funding-allocations";
 import { eq } from "drizzle-orm";
@@ -13,13 +13,9 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
   return ok(row);
 });
 
-export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
-  const session = await requireAuth();
+export const PATCH = withMutation(FundingAllocationUpdateSchema, async ({ session, data, ctx }) => {
   const { id } = await ctx.params;
-  const body = await req.json();
-  const parsed = FundingAllocationUpdateSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-  return ok(await updateFundingAllocation(id, parsed.data, session.user?.id));
+  return ok(await updateFundingAllocation(id, data, session.user?.id));
 });
 
 export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext) => {

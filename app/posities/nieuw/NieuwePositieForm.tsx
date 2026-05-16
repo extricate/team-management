@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading, Alert } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 import { OPF_TYPES, getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-types";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatCurrency } from "@/lib/utils";
@@ -29,9 +29,9 @@ interface SchaalInfo {
 }
 
 export function NieuwePositieForm({ organisations, defaultOrganisationId }: Props) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit<{ id: string }>("/api/positions", "POST", {
+    redirectTo: (data) => `/posities/${data.id}`,
+  });
   const [selectedOpfType, setSelectedOpfType] = useState<string>("");
   const [schaalCode, setSchaalCode] = useState<string>("");
   const [expectedStartStr, setExpectedStartStr] = useState<string>("");
@@ -68,42 +68,18 @@ export function NieuwePositieForm({ organisations, defaultOrganisationId }: Prop
     const endStr = fd.get("expectedEnd") as string;
     const requiredBeforeStr = fd.get("requiredBefore") as string;
     const costStr = annualCost.replace(",", ".");
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/positions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organisationId: fd.get("organisationId"),
-          type: fd.get("type"),
-          opfType: (fd.get("opfType") as string) || null,
-          positionCode: (fd.get("positionCode") as string) || undefined,
-          schaal: schaalCode || undefined,
-          annualCost: costStr ? parseFloat(costStr) : undefined,
-          status: fd.get("status"),
-          expectedStart: startStr ? new Date(startStr).toISOString() : undefined,
-          expectedEnd: endStr ? new Date(endStr).toISOString() : undefined,
-          requiredBefore: requiredBeforeStr ? new Date(requiredBeforeStr).toISOString() : undefined,
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-
-      const { data } = await res.json();
-      router.push(`/posities/${data.id}`);
-      router.refresh();
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    await submit({
+      organisationId: fd.get("organisationId"),
+      type: fd.get("type"),
+      opfType: (fd.get("opfType") as string) || null,
+      positionCode: (fd.get("positionCode") as string) || undefined,
+      schaal: schaalCode || undefined,
+      annualCost: costStr ? parseFloat(costStr) : undefined,
+      status: fd.get("status"),
+      expectedStart: startStr ? new Date(startStr).toISOString() : undefined,
+      expectedEnd: endStr ? new Date(endStr).toISOString() : undefined,
+      requiredBefore: requiredBeforeStr ? new Date(requiredBeforeStr).toISOString() : undefined,
+    });
   }
 
   return (

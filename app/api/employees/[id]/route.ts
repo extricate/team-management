@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { employees } from "@/lib/db/schema";
-import { ok, notFound, badRequest, requireAuth, withErrorHandling, assertOrgAccess, RouteContext } from "@/lib/api";
+import { ok, notFound, requireAuth, withErrorHandling, withMutation, assertOrgAccess, RouteContext } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { dispatchSync } from "@/lib/search/sync";
 import { EmployeeUpdateSchema } from "@/lib/schemas";
@@ -21,18 +21,13 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
   return ok(row);
 });
 
-export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
-  const session = await requireAuth();
+export const PATCH = withMutation(EmployeeUpdateSchema, async ({ session, data, ctx }) => {
   const { id } = await ctx.params;
   const [before] = await db.select().from(employees).where(eq(employees.id, id));
   if (!before || before.deletedAt) return notFound();
   assertOrgAccess(session, before.organisationId);
 
-  const body = await req.json();
-  const parsed = EmployeeUpdateSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const [after] = await db.update(employees).set({ ...parsed.data, updatedAt: new Date() }).where(eq(employees.id, id)).returning();
+  const [after] = await db.update(employees).set({ ...data, updatedAt: new Date() }).where(eq(employees.id, id)).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "employee", entityId: id, action: "update", before, after });
   dispatchSync("employee", id);
   return ok(after);

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
+import { ok, created, requireAuth, withErrorHandling, withMutation } from "@/lib/api";
 import { FundingAllocationSchema } from "@/lib/schemas";
 import { createFundingAllocation } from "@/lib/services/funding-allocations";
 
@@ -16,11 +16,7 @@ export const GET = withErrorHandling(async () => {
   return ok(rows);
 });
 
-export const POST = withErrorHandling(async (req: Request) => {
-  const session = await requireAuth();
-  const body = await req.json();
-  const parsed = FundingAllocationSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-  const { row, warnings } = await createFundingAllocation(parsed.data, session.user?.id);
+export const POST = withMutation(FundingAllocationSchema, async ({ session, data }) => {
+  const { row, warnings } = await createFundingAllocation(data, session.user?.id);
   return created(warnings.length > 0 ? { ...row, warnings } : row);
 });

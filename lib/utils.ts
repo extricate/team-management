@@ -74,3 +74,7 @@ export function prorateCost(
   if (activeDays >= totalDaysInYear) return annualCost;
   return annualCost * (activeDays / totalDaysInYear);
 }
+
+export function buildEntityMetadata(name: string | undefined, fallback: string): { title: string } {
+  return { title: name ? `${name} – Teambeheer` : `${fallback} – Teambeheer` };
+}

@@ -1,50 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 
 interface Org { id: string; name: string; }
 
 interface Props { orgs: Org[]; defaultOrganisationId?: string | null; }
 
 export function NieuweMedewerkerForm({ orgs, defaultOrganisationId }: Props) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit<{ id: string }>("/api/employees", "POST", {
+    redirectTo: (data) => `/medewerkers/${data.id}`,
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-    try {
-      const personeelsnummer = (fd.get("personeelsnummer") as string) || undefined;
-      const res = await fetch("/api/employees", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organisationId: fd.get("organisationId"),
-          personeelsnummer,
-          firstName: fd.get("firstName"),
-          prefixName: (fd.get("prefixName") as string) || undefined,
-          lastName: fd.get("lastName"),
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-      const { data } = await res.json();
-      router.push(`/medewerkers/${data.id}`);
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    await submit({
+      organisationId: fd.get("organisationId"),
+      personeelsnummer: (fd.get("personeelsnummer") as string) || undefined,
+      firstName: fd.get("firstName"),
+      prefixName: (fd.get("prefixName") as string) || undefined,
+      lastName: fd.get("lastName"),
+    });
   }
 
   return (

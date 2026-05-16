@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { formatDate, formatCurrency, prorateCost } from "@/lib/utils";
+import { formatDate, formatCurrency, prorateCost, buildEntityMetadata } from "@/lib/utils";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { RemoveFundingButton } from "@/components/ui/RemoveFundingButton";
@@ -21,7 +21,7 @@ import { getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-typ
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const team = await db.query.teams.findFirst({ where: eq(teams.id, id) });
-  return { title: team ? `${team.name} – Teambeheer` : "Team – Teambeheer" };
+  return buildEntityMetadata(team?.name, "Team");
 }
 
 export default async function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {

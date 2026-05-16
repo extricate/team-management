@@ -1,42 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 import type { Organisation } from "@/lib/db/schema";
 
 interface Props { org: Organisation; }
 
 export function OrganisatieEditForm({ org }: Props) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit(`/api/organisations/${org.id}`, "PATCH", {
+    redirectTo: `/organisaties/${org.id}`,
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/organisations/${org.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: fd.get("name"), type: fd.get("type") }),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-      router.push(`/organisaties/${org.id}`);
-      router.refresh();
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    await submit({ name: fd.get("name"), type: fd.get("type") });
   }
 
   return (

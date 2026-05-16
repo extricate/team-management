@@ -1,47 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 
 interface Org { id: string; name: string; }
 
 interface Props { orgs: Org[]; defaultOrganisationId?: string | null; }
 
 export function NieuwTeamForm({ orgs, defaultOrganisationId }: Props) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit<{ id: string }>("/api/teams", "POST", {
+    redirectTo: (data) => `/teams/${data.id}`,
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organisationId: fd.get("organisationId"),
-          name: fd.get("name"),
-          description: fd.get("description") || undefined,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-      const { data } = await res.json();
-      router.push(`/teams/${data.id}`);
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    await submit({
+      organisationId: fd.get("organisationId"),
+      name: fd.get("name"),
+      description: fd.get("description") || undefined,
+    });
   }
 
   return (

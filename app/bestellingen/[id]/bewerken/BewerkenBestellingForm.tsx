@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 
 interface BestellingType { id: string; naam: string; }
 interface Bestelling {
@@ -21,43 +20,25 @@ interface Bestelling {
 interface Props { bestelling: Bestelling; types: BestellingType[]; }
 
 export function BewerkenBestellingForm({ bestelling, types }: Props) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit(`/api/bestellingen/${bestelling.id}`, "PATCH", {
+    redirectTo: `/bestellingen/${bestelling.id}`,
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-    try {
-      const geraamdRaw = fd.get("geraamdBedrag") as string;
-      const werkelijkRaw = fd.get("werkelijkBedrag") as string;
-      const aanvraagRaw = fd.get("aanvraagDatum") as string;
-      const res = await fetch(`/api/bestellingen/${bestelling.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          typeId: fd.get("typeId"),
-          atbNummer: fd.get("atbNummer"),
-          omschrijving: fd.get("omschrijving"),
-          geraamdBedrag: geraamdRaw ? Number(geraamdRaw) : null,
-          werkelijkBedrag: werkelijkRaw ? Number(werkelijkRaw) : null,
-          aanvraagDatum: aanvraagRaw ? new Date(aanvraagRaw).toISOString() : null,
-          notities: (fd.get("notities") as string) || null,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-      router.push(`/bestellingen/${bestelling.id}`);
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    const geraamdRaw = fd.get("geraamdBedrag") as string;
+    const werkelijkRaw = fd.get("werkelijkBedrag") as string;
+    const aanvraagRaw = fd.get("aanvraagDatum") as string;
+    await submit({
+      typeId: fd.get("typeId"),
+      atbNummer: fd.get("atbNummer"),
+      omschrijving: fd.get("omschrijving"),
+      geraamdBedrag: geraamdRaw ? Number(geraamdRaw) : null,
+      werkelijkBedrag: werkelijkRaw ? Number(werkelijkRaw) : null,
+      aanvraagDatum: aanvraagRaw ? new Date(aanvraagRaw).toISOString() : null,
+      notities: (fd.get("notities") as string) || null,
+    });
   }
 
   const defaultDate = bestelling.aanvraagDatum

@@ -11,13 +11,13 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatDate, formatCurrency, buildEntityMetadata } from "@/lib/utils";
 import { detectBestellingConflicts, calculateBestellingAllocation } from "@/lib/bestellingen";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const row = await db.query.bestellingen.findFirst({ where: eq(bestellingen.id, id) });
-  return { title: row ? `${row.atbNummer} – Teambeheer` : "Bestelling – Teambeheer" };
+  return buildEntityMetadata(row?.atbNummer, "Bestelling");
 }
 
 export default async function BestellingDetailPage({ params }: { params: Promise<{ id: string }> }) {

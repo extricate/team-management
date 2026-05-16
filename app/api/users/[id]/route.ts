@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { ok, notFound, badRequest, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
+import { ok, notFound, withMutation, requireAuth, withErrorHandling, RouteContext } from "@/lib/api";
 import { UpdateUserSchema } from "@/lib/schemas";
 import { hashPassword } from "@/lib/auth/password";
 import { eq } from "drizzle-orm";
@@ -25,14 +25,9 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
   return ok(user);
 });
 
-export const PATCH = withErrorHandling(async (req: Request, ctx: RouteContext) => {
-  await requireAuth();
+export const PATCH = withMutation(UpdateUserSchema, async ({ data, ctx }) => {
   const { id } = await ctx.params;
-  const body = await req.json();
-  const parsed = UpdateUserSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const { password, ...rest } = parsed.data;
+  const { password, ...rest } = data;
   const extra = password ? { passwordHash: await hashPassword(password) } : {};
 
   const [updated] = await db

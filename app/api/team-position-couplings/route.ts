@@ -1,19 +1,14 @@
 import { db } from "@/lib/db";
 import { teamPositionCouplings } from "@/lib/db/schema";
-import { created, badRequest, conflict, requireAuth, withErrorHandling } from "@/lib/api";
+import { created, conflict, withMutation } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { TeamPositionCouplingSchema } from "@/lib/schemas";
 import { and, eq, isNull } from "drizzle-orm";
 
-export const POST = withErrorHandling(async (req: Request) => {
-  const session = await requireAuth();
-  const body = await req.json();
-  const parsed = TeamPositionCouplingSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
+export const POST = withMutation(TeamPositionCouplingSchema, async ({ session, data }) => {
   const active = await db.query.teamPositionCouplings.findFirst({
     where: and(
-      eq(teamPositionCouplings.positionId, parsed.data.positionId),
+      eq(teamPositionCouplings.positionId, data.positionId),
       isNull(teamPositionCouplings.endDate),
     ),
   });
@@ -22,7 +17,7 @@ export const POST = withErrorHandling(async (req: Request) => {
   const [row] = await db
     .insert(teamPositionCouplings)
     .values({
-      ...parsed.data,
+      ...data,
       createdBy: session.user?.id,
     })
     .returning();

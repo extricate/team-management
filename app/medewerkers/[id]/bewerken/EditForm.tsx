@@ -1,50 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { formatFullName } from "@/lib/utils";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 import type { Employee } from "@/lib/db/schema";
 
 interface Org { id: string; name: string; }
 interface Props { emp: Employee; orgs: Org[]; }
 
 export function MedewerkerEditForm({ emp, orgs }: Props) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit(`/api/employees/${emp.id}`, "PATCH", {
+    redirectTo: `/medewerkers/${emp.id}`,
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/employees/${emp.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organisationId: fd.get("organisationId"),
-          personeelsnummer: (fd.get("personeelsnummer") as string) || null,
-          firstName: fd.get("firstName"),
-          prefixName: (fd.get("prefixName") as string) || null,
-          lastName: fd.get("lastName"),
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-      router.push(`/medewerkers/${emp.id}`);
-      router.refresh();
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    await submit({
+      organisationId: fd.get("organisationId"),
+      personeelsnummer: (fd.get("personeelsnummer") as string) || null,
+      firstName: fd.get("firstName"),
+      prefixName: (fd.get("prefixName") as string) || null,
+      lastName: fd.get("lastName"),
+    });
   }
 
   const fullName = formatFullName(emp);

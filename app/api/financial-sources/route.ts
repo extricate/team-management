@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { financialSources } from "@/lib/db/schema";
-import { ok, created, badRequest, requireAuth, withErrorHandling } from "@/lib/api";
+import { ok, created, requireAuth, withErrorHandling, withMutation } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { dispatchSync } from "@/lib/search/sync";
 import { FinancialSourceSchema } from "@/lib/schemas";
@@ -19,13 +19,8 @@ export const GET = withErrorHandling(async () => {
   return ok(rows);
 });
 
-export const POST = withErrorHandling(async (req: Request) => {
-  const session = await requireAuth();
-  const body = await req.json();
-  const parsed = FinancialSourceSchema.safeParse(body);
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
-
-  const [row] = await db.insert(financialSources).values(parsed.data).returning();
+export const POST = withMutation(FinancialSourceSchema, async ({ session, data }) => {
+  const [row] = await db.insert(financialSources).values(data).returning();
   await logAudit({ actorUserId: session.user?.id, entityType: "financialSource", entityId: row.id, action: "create", after: row });
   dispatchSync("financialSource", row.id);
   return created(row);

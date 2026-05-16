@@ -1,54 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heading } from "@rijkshuisstijl-community/components-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { useApiSubmit } from "@/lib/hooks/useApiSubmit";
 
 interface Org { id: string; name: string; }
 interface BestellingType { id: string; naam: string; }
 interface Props { orgs: Org[]; types: BestellingType[]; defaultOrganisationId?: string | null; }
 
 export function NieuweBestellingForm({ orgs, types, defaultOrganisationId }: Props) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { error, saving, submit } = useApiSubmit<{ id: string }>("/api/bestellingen", "POST", {
+    redirectTo: (data) => `/bestellingen/${data.id}`,
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    setSaving(true);
-    setError(null);
-    try {
-      const geraamdRaw = fd.get("geraamdBedrag") as string;
-      const werkelijkRaw = fd.get("werkelijkBedrag") as string;
-      const res = await fetch("/api/bestellingen", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organisationId: fd.get("organisationId"),
-          typeId: fd.get("typeId"),
-          atbNummer: fd.get("atbNummer"),
-          omschrijving: fd.get("omschrijving"),
-          geraamdBedrag: geraamdRaw ? Number(geraamdRaw) : undefined,
-          werkelijkBedrag: werkelijkRaw ? Number(werkelijkRaw) : undefined,
-          aanvraagDatum: fd.get("aanvraagDatum") ? new Date(fd.get("aanvraagDatum") as string).toISOString() : undefined,
-          notities: fd.get("notities") || undefined,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Er is een fout opgetreden.");
-        return;
-      }
-      const { data } = await res.json();
-      router.push(`/bestellingen/${data.id}`);
-    } catch {
-      setError("Er is een verbindingsfout opgetreden.");
-    } finally {
-      setSaving(false);
-    }
+    const geraamdRaw = fd.get("geraamdBedrag") as string;
+    const werkelijkRaw = fd.get("werkelijkBedrag") as string;
+    await submit({
+      organisationId: fd.get("organisationId"),
+      typeId: fd.get("typeId"),
+      atbNummer: fd.get("atbNummer"),
+      omschrijving: fd.get("omschrijving"),
+      geraamdBedrag: geraamdRaw ? Number(geraamdRaw) : undefined,
+      werkelijkBedrag: werkelijkRaw ? Number(werkelijkRaw) : undefined,
+      aanvraagDatum: fd.get("aanvraagDatum") ? new Date(fd.get("aanvraagDatum") as string).toISOString() : undefined,
+      notities: fd.get("notities") || undefined,
+    });
   }
 
   return (

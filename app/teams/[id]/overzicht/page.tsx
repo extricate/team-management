@@ -7,12 +7,12 @@ import { teams, teamPositionCouplings } from "@/lib/db/schema";
 import { eq, isNull } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PrintButton } from "@/components/ui/PrintButton";
-import { formatFullName, formatDate } from "@/lib/utils";
+import { formatFullName, formatDate, buildEntityMetadata } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const team = await db.query.teams.findFirst({ where: eq(teams.id, id) });
-  return { title: team ? `${team.name} – Overzicht – Teambeheer` : "Teamoverzicht – Teambeheer" };
+  return buildEntityMetadata(team ? `${team.name} – Overzicht` : undefined, "Teamoverzicht");
 }
 
 export default async function TeamOverzichtPage({ params }: { params: Promise<{ id: string }> }) {
