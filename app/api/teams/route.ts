@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
-import { ok, created, requireAuth, withErrorHandling, withMutation } from "@/lib/api";
+import { ok, created, requireAuth, withErrorHandling, withMutation, actorFromSession } from "@/lib/api";
 import { TeamSchema } from "@/lib/schemas";
 import { createTeam } from "@/lib/services/teams";
 import { isNull } from "drizzle-orm";
@@ -15,5 +15,5 @@ export const GET = withErrorHandling(async () => {
 });
 
 export const POST = withMutation(TeamSchema, async ({ session, data }) => {
-  return created(await createTeam(data, session.user?.id));
+  return created(await createTeam(data, actorFromSession(session)));
 });

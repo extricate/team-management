@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { positions } from "@/lib/db/schema";
-import { ok, created, requireAuth, withErrorHandling, withMutation } from "@/lib/api";
+import { ok, created, requireAuth, withErrorHandling, withMutation, actorFromSession } from "@/lib/api";
 import { PositionSchema } from "@/lib/schemas";
 import { createPosition } from "@/lib/services/positions";
 import { isNull } from "drizzle-orm";
@@ -19,5 +19,5 @@ export const GET = withErrorHandling(async () => {
 });
 
 export const POST = withMutation(PositionSchema, async ({ session, data }) => {
-  return created(await createPosition(data, session.user?.id));
+  return created(await createPosition(data, actorFromSession(session)));
 });

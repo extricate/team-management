@@ -3,8 +3,9 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph, DataSummary, DataSummaryItem } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { positions, comments, auditEvents } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { positions } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { fetchDetailSidebar } from "@/lib/loaders/detail";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -72,18 +73,7 @@ export default async function PositieDetailPage({ params }: { params: Promise<{ 
 
   const activeCoupling = row.teamCouplings.find(c => !c.endDate) ?? null;
 
-  const rowComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "position"), eq(comments.commentableId, id)),
-    with: { createdByUser: true },
-    orderBy: [desc(comments.createdAt)],
-  });
-
-  const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "position"), eq(auditEvents.entityId, id)),
-    with: { actorUser: true },
-    orderBy: [desc(auditEvents.createdAt)],
-    limit: 50,
-  });
+  const { comments: rowComments, audit } = await fetchDetailSidebar("position", id);
 
   const opfDef = getOPFType(row.opfType ?? "");
   const activeAssignment = row.assignments.find(a => a.status === "active");

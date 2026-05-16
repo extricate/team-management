@@ -10,6 +10,7 @@ import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Pagination } from "@/components/ui/Pagination";
 import { SortHeader } from "@/components/ui/SortHeader";
+import { paginate } from "@/lib/loaders/paginate";
 
 export const metadata: Metadata = { title: "Bestellingen – Teambeheer" };
 
@@ -38,11 +39,6 @@ export default async function BestellingenPage({
   if (effectiveOrgId) conditions.push(eq(bestellingen.organisationId, effectiveOrgId));
   const whereClause = and(...conditions);
 
-  const [{ total }] = await db.select({ total: count() }).from(bestellingen).where(whereClause);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const currentPage = Math.min(page, Math.max(1, totalPages));
-  const offset = (currentPage - 1) * PAGE_SIZE;
-
   const orderFn = sortOrder === "asc" ? asc : desc;
   const orderByClause =
     sortCol === "organisation" ? [orderFn(organisations.name), desc(bestellingen.aanvraagDatum)] :
@@ -50,20 +46,25 @@ export default async function BestellingenPage({
     sortCol === "omschrijving" ? [orderFn(bestellingen.omschrijving)] :
     [orderFn(bestellingen.aanvraagDatum)];
 
-  const rows = await db.query.bestellingen.findMany({
-    where: whereClause,
-    with: {
-      type: true,
-      organisation: true,
-      fundingAllocations: true,
+  const { rows, total, totalPages, currentPage, from, to } = await paginate({
+    count: async () => {
+      const [{ total }] = await db.select({ total: count() }).from(bestellingen).where(whereClause);
+      return total;
     },
-    orderBy: orderByClause,
-    limit: PAGE_SIZE,
-    offset,
+    fetch: (limit, offset) => db.query.bestellingen.findMany({
+      where: whereClause,
+      with: {
+        type: true,
+        organisation: true,
+        fundingAllocations: true,
+      },
+      orderBy: orderByClause,
+      limit,
+      offset,
+    }),
+    page,
+    pageSize: PAGE_SIZE,
   });
-
-  const from = offset + 1;
-  const to = Math.min(offset + PAGE_SIZE, total);
 
   function buildSortHref(col: string, order: "asc" | "desc") {
     const p = new URLSearchParams();

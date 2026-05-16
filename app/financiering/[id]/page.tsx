@@ -3,8 +3,9 @@ import { redirect, notFound } from "next/navigation";
 import { Alert, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { financialSources, comments, auditEvents } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { financialSources } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { fetchDetailSidebar } from "@/lib/loaders/detail";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
@@ -55,18 +56,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
 
   const isArchived = !!source.deletedAt;
 
-  const sourceComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "financialSource"), eq(comments.commentableId, id)),
-    with: { createdByUser: true },
-    orderBy: [desc(comments.createdAt)],
-  });
-
-  const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "financialSource"), eq(auditEvents.entityId, id)),
-    with: { actorUser: true },
-    orderBy: [desc(auditEvents.createdAt)],
-    limit: 50,
-  });
+  const { comments: sourceComments, audit } = await fetchDetailSidebar("financialSource", id);
 
   // ── Budget summary ─────────────────────────────────────────────────────────
   const totalBudget = source.amounts.reduce((s, a) => s + Number(a.amount), 0);

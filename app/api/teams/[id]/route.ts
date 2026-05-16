@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
-import { ok, notFound, requireAuth, withErrorHandling, withMutation, RouteContext } from "@/lib/api";
+import { ok, notFound, requireAuth, withErrorHandling, withMutation, actorFromSession, RouteContext } from "@/lib/api";
 import { TeamUpdateSchema } from "@/lib/schemas";
 import { updateTeam, archiveTeam } from "@/lib/services/teams";
 import { eq } from "drizzle-orm";
@@ -23,12 +23,12 @@ export const GET = withErrorHandling(async (_req: Request, ctx: RouteContext) =>
 
 export const PATCH = withMutation(TeamUpdateSchema, async ({ session, data, ctx }) => {
   const { id } = await ctx.params;
-  return ok(await updateTeam(id, data, session, session.user?.id));
+  return ok(await updateTeam(id, data, actorFromSession(session)));
 });
 
 export const DELETE = withErrorHandling(async (_req: Request, ctx: RouteContext) => {
   const session = await requireAuth();
   const { id } = await ctx.params;
-  await archiveTeam(id, session, session.user?.id);
+  await archiveTeam(id, actorFromSession(session));
   return ok({ message: "Gearchiveerd" });
 });

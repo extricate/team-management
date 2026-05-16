@@ -3,8 +3,9 @@ import { redirect, notFound } from "next/navigation";
 import { Card, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { employees, comments, auditEvents } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { employees } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { fetchDetailSidebar } from "@/lib/loaders/detail";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
@@ -38,18 +39,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
 
   const isArchived = !!emp.deletedAt;
 
-  const empComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "employee"), eq(comments.commentableId, id)),
-    with: { createdByUser: true },
-    orderBy: [desc(comments.createdAt)],
-  });
-
-  const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "employee"), eq(auditEvents.entityId, id)),
-    with: { actorUser: true },
-    orderBy: [desc(auditEvents.createdAt)],
-    limit: 50,
-  });
+  const { comments: empComments, audit } = await fetchDetailSidebar("employee", id);
 
   const fullName      = formatFullName(emp);
   const activeTeams   = emp.memberships.filter(m => m.status === "active" && !m.endDate);

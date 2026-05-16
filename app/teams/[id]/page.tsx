@@ -3,8 +3,9 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { teams, comments, auditEvents, teamPositionCouplings, financialSourceAmounts, companyPersexBudgets } from "@/lib/db/schema";
-import { eq, isNull, desc, and, inArray } from "drizzle-orm";
+import { teams, teamPositionCouplings, financialSourceAmounts, companyPersexBudgets } from "@/lib/db/schema";
+import { eq, isNull, inArray } from "drizzle-orm";
+import { fetchDetailSidebar } from "@/lib/loaders/detail";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
@@ -86,18 +87,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
     : [];
   const persexBudgetMap = new Map(persexBudgets.map(b => [b.id, b]));
 
-  const teamComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "team"), eq(comments.commentableId, id)),
-    with: { createdByUser: true },
-    orderBy: [desc(comments.createdAt)],
-  });
-
-  const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "team"), eq(auditEvents.entityId, id)),
-    with: { actorUser: true },
-    orderBy: [desc(auditEvents.createdAt)],
-    limit: 50,
-  });
+  const { comments: teamComments, audit } = await fetchDetailSidebar("team", id);
 
   const activeMembers    = team.memberships.filter(m => m.status === "active" && !m.endDate);
   const totalPositions   = teamPositions.length;

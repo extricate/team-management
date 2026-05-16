@@ -9,6 +9,7 @@ import { SortHeader } from "@/components/ui/SortHeader";
 import { db } from "@/lib/db";
 import { teams, organisations, teamPositionCouplings } from "@/lib/db/schema";
 import { isNull, count, ilike, eq, asc, desc } from "drizzle-orm";
+import { paginate } from "@/lib/loaders/paginate";
 
 export const metadata: Metadata = { title: "Teams – Teambeheer" };
 
@@ -41,26 +42,26 @@ export default async function TeamsPage({
   const { and } = await import("drizzle-orm");
   const whereClause = and(...whereConditions);
 
-  const [{ total }] = await db.select({ total: count() }).from(teams).where(whereClause);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const currentPage = Math.min(page, Math.max(1, totalPages));
-  const offset = (currentPage - 1) * PAGE_SIZE;
-
   const orderFn = sortOrder === "asc" ? asc : desc;
   const orderByClause = sortCol === "organisation"
     ? [orderFn(organisations.name), asc(teams.name)]
     : [orderFn(teams.name)];
 
-  const pageTeams = await db.query.teams.findMany({
-    where: whereClause,
-    with: { organisation: true, positionCouplings: { where: isNull(teamPositionCouplings.endDate), with: { position: { columns: { status: true, deletedAt: true } } } }, memberships: true },
-    orderBy: orderByClause,
-    limit: PAGE_SIZE,
-    offset,
+  const { rows: pageTeams, total, totalPages, currentPage, from, to } = await paginate({
+    count: async () => {
+      const [{ total }] = await db.select({ total: count() }).from(teams).where(whereClause);
+      return total;
+    },
+    fetch: (limit, offset) => db.query.teams.findMany({
+      where: whereClause,
+      with: { organisation: true, positionCouplings: { where: isNull(teamPositionCouplings.endDate), with: { position: { columns: { status: true, deletedAt: true } } } }, memberships: true },
+      orderBy: orderByClause,
+      limit,
+      offset,
+    }),
+    page,
+    pageSize: PAGE_SIZE,
   });
-
-  const from = offset + 1;
-  const to = Math.min(offset + PAGE_SIZE, total);
 
   function buildSortHref(col: string, order: "asc" | "desc") {
     const p = new URLSearchParams();

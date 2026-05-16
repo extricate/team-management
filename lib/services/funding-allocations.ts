@@ -1,9 +1,10 @@
 import { db } from "@/lib/db";
 import { fundingAllocations, financialSourceAmounts } from "@/lib/db/schema";
 import { logAudit } from "@/lib/audit";
-import { detectFinancialConflicts, type FinancialConflict } from "@/lib/financial-conflicts";
+import { evaluateSourceAmountConflicts, type FinancialConflict } from "@/lib/financial-conflicts";
 import { FundingAllocationSchema, FundingAllocationUpdateSchema } from "@/lib/schemas";
 import { eq } from "drizzle-orm";
+import type { Actor } from "@/lib/api";
 import type { z } from "zod";
 
 function notFound(): Error {
@@ -32,24 +33,7 @@ async function checkSourceAmountConflicts(
     },
   });
   if (!sourceAmount) return [];
-
-  const conflicts = detectFinancialConflicts([{
-    amount: sourceAmount.amount,
-    status: sourceAmount.status,
-    releaseDate: sourceAmount.releaseDate,
-    type: sourceAmount.type ? { type: sourceAmount.type.type, year: sourceAmount.type.year } : null,
-    allocations: [
-      ...sourceAmount.allocations.map(al => ({
-        status: al.status,
-        amount: al.amount,
-        startDate: al.startDate,
-        position: al.position ? { expectedStart: al.position.expectedStart, expectedEnd: al.position.expectedEnd } : null,
-      })),
-      { status: "active", amount: extraAllocation.amount ?? null, startDate: extraAllocation.startDate ?? null },
-    ],
-  }]);
-
-  return conflicts;
+  return evaluateSourceAmountConflicts(sourceAmount, extraAllocation);
 }
 
 export type CreateFundingAllocationResult = {
@@ -59,7 +43,7 @@ export type CreateFundingAllocationResult = {
 
 export async function createFundingAllocation(
   data: z.infer<typeof FundingAllocationSchema>,
-  userId: string | undefined,
+  actor: Actor,
 ): Promise<CreateFundingAllocationResult> {
   if (data.financialSourceAmountId) {
     const conflicts = await checkSourceAmountConflicts(data.financialSourceAmountId, {
@@ -70,20 +54,20 @@ export async function createFundingAllocation(
     if (errors.length > 0) throw conflictError(errors[0].message);
     const warnings = conflicts.filter(c => c.severity === "warning");
 
-    const [row] = await db.insert(fundingAllocations).values({ ...data, createdBy: userId }).returning();
-    await logAudit({ actorUserId: userId, entityType: "fundingAllocation", entityId: row.id, action: "assign", after: row, reason: data.reason });
+    const [row] = await db.insert(fundingAllocations).values({ ...data, createdBy: actor.userId }).returning();
+    await logAudit({ actorUserId: actor.userId, entityType: "fundingAllocation", entityId: row.id, action: "assign", after: row, reason: data.reason });
     return { row, warnings };
   }
 
-  const [row] = await db.insert(fundingAllocations).values({ ...data, createdBy: userId }).returning();
-  await logAudit({ actorUserId: userId, entityType: "fundingAllocation", entityId: row.id, action: "assign", after: row, reason: data.reason });
+  const [row] = await db.insert(fundingAllocations).values({ ...data, createdBy: actor.userId }).returning();
+  await logAudit({ actorUserId: actor.userId, entityType: "fundingAllocation", entityId: row.id, action: "assign", after: row, reason: data.reason });
   return { row, warnings: [] };
 }
 
 export async function updateFundingAllocation(
   id: string,
   data: z.infer<typeof FundingAllocationUpdateSchema>,
-  userId: string | undefined,
+  actor: Actor,
 ) {
   const [before] = await db.select().from(fundingAllocations).where(eq(fundingAllocations.id, id));
   if (!before) throw notFound();
@@ -98,14 +82,14 @@ export async function updateFundingAllocation(
   }
 
   const [after] = await db.update(fundingAllocations).set({ ...data, updatedAt: new Date() }).where(eq(fundingAllocations.id, id)).returning();
-  await logAudit({ actorUserId: userId, entityType: "fundingAllocation", entityId: id, action: "update", before, after });
+  await logAudit({ actorUserId: actor.userId, entityType: "fundingAllocation", entityId: id, action: "update", before, after });
   return after;
 }
 
-export async function deleteFundingAllocation(id: string, userId: string | undefined) {
+export async function deleteFundingAllocation(id: string, actor: Actor) {
   const [before] = await db.select().from(fundingAllocations).where(eq(fundingAllocations.id, id));
   if (!before) throw notFound();
 
   await db.delete(fundingAllocations).where(eq(fundingAllocations.id, id));
-  await logAudit({ actorUserId: userId, entityType: "fundingAllocation", entityId: id, action: "delete", before });
+  await logAudit({ actorUserId: actor.userId, entityType: "fundingAllocation", entityId: id, action: "delete", before });
 }

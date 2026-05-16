@@ -20,15 +20,12 @@ export function SiteFooter() {
             <h3>Ondersteuning</h3>
             <ul>
               <li><Link href="/help">Helpcentrum</Link></li>
-              <li><Link href="/contact">Contact</Link></li>
             </ul>
           </div>
           <div className={styles.column}>
             <h3>Overheid</h3>
             <ul>
               <li><a href="https://www.defensie.nl" target="_blank" rel="noopener noreferrer">Defensie.nl</a></li>
-              <li><Link href="/toegankelijkheid">Toegankelijkheidsverklaring</Link></li>
-              <li><Link href="/privacy">Privacyverklaring</Link></li>
             </ul>
           </div>
         </div>

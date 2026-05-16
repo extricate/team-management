@@ -3,8 +3,9 @@ import { redirect, notFound } from "next/navigation";
 import { Alert, DataSummary, DataSummaryItem, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { bestellingen, comments, auditEvents } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { bestellingen } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { fetchDetailSidebar } from "@/lib/loaders/detail";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { AuditLog } from "@/components/ui/AuditLog";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -48,18 +49,7 @@ export default async function BestellingDetailPage({ params }: { params: Promise
 
   const isArchived = !!row.deletedAt;
 
-  const rowComments = await db.query.comments.findMany({
-    where: and(eq(comments.commentableType, "bestelling"), eq(comments.commentableId, id)),
-    with: { createdByUser: true },
-    orderBy: [desc(comments.createdAt)],
-  });
-
-  const audit = await db.query.auditEvents.findMany({
-    where: and(eq(auditEvents.entityType, "bestelling"), eq(auditEvents.entityId, id)),
-    with: { actorUser: true },
-    orderBy: [desc(auditEvents.createdAt)],
-    limit: 50,
-  });
+  const { comments: rowComments, audit } = await fetchDetailSidebar("bestelling", id);
 
   const allocationSummary = calculateBestellingAllocation({
     geraamdBedrag: row.geraamdBedrag,

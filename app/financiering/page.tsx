@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { financialSources, organisations } from "@/lib/db/schema";
 import { isNull, count, ilike, eq, asc, desc, and } from "drizzle-orm";
+import { paginate } from "@/lib/loaders/paginate";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Pagination } from "@/components/ui/Pagination";
@@ -38,11 +39,6 @@ export default async function FinancieringPage({
   if (effectiveOrgId) conditions.push(eq(financialSources.organisationId, effectiveOrgId));
   const whereClause = and(...conditions);
 
-  const [{ total }] = await db.select({ total: count() }).from(financialSources).where(whereClause);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const currentPage = Math.min(page, Math.max(1, totalPages));
-  const offset = (currentPage - 1) * PAGE_SIZE;
-
   const orderFn = sortOrder === "asc" ? asc : desc;
   const orderByClause = sortCol === "organisation"
     ? [orderFn(organisations.name), asc(financialSources.name)]
@@ -50,20 +46,25 @@ export default async function FinancieringPage({
     ? [orderFn(financialSources.projectId)]
     : [orderFn(financialSources.name)];
 
-  const sources = await db.query.financialSources.findMany({
-    where: whereClause,
-    with: {
-      organisation: true,
-      types: true,
-      amounts: { with: { allocations: true } },
+  const { rows: sources, total, totalPages, currentPage, from, to } = await paginate({
+    count: async () => {
+      const [{ total }] = await db.select({ total: count() }).from(financialSources).where(whereClause);
+      return total;
     },
-    orderBy: orderByClause,
-    limit: PAGE_SIZE,
-    offset,
+    fetch: (limit, offset) => db.query.financialSources.findMany({
+      where: whereClause,
+      with: {
+        organisation: true,
+        types: true,
+        amounts: { with: { allocations: true } },
+      },
+      orderBy: orderByClause,
+      limit,
+      offset,
+    }),
+    page,
+    pageSize: PAGE_SIZE,
   });
-
-  const from = offset + 1;
-  const to = Math.min(offset + PAGE_SIZE, total);
 
   function buildSortHref(col: string, order: "asc" | "desc") {
     const p = new URLSearchParams();

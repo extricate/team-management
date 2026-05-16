@@ -15,7 +15,9 @@
       "Bash(xargs cat)",
       "Bash(./node_modules/.bin/tsc --noEmit)",
       "WebSearch",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Skill(improve-codebase-architecture)",
+      "Skill(improve-codebase-architecture:*)"
     ]
   }
 }

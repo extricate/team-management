@@ -35,6 +35,44 @@ function effectiveAllocationAmount(
   return prorateCost(raw, al.position.expectedStart, al.position.expectedEnd ?? null, year);
 }
 
+// The shape returned by the financialSourceAmounts DB query in the funding-allocations service.
+// Defined here so tests can construct it without touching the DB.
+export interface SourceAmountWithAllocations {
+  amount: string | number;
+  status: "concept" | "released";
+  releaseDate: Date | null | undefined;
+  type: { type: string; year: number } | null | undefined;
+  allocations: Array<{
+    status: string;
+    amount: string | number | null;
+    startDate: Date | null | undefined;
+    position?: { expectedStart: Date | null | undefined; expectedEnd: Date | null | undefined } | null;
+  }>;
+}
+
+// Pure function — no DB access. Builds a ConflictAmount from a pre-fetched source amount and the
+// proposed extra allocation, then runs detectFinancialConflicts. Testable without mocks.
+export function evaluateSourceAmountConflicts(
+  sourceAmount: SourceAmountWithAllocations,
+  extraAllocation: { amount: string | null | undefined; startDate: Date | null | undefined },
+): FinancialConflict[] {
+  return detectFinancialConflicts([{
+    amount: sourceAmount.amount,
+    status: sourceAmount.status,
+    releaseDate: sourceAmount.releaseDate,
+    type: sourceAmount.type ? { type: sourceAmount.type.type, year: sourceAmount.type.year } : null,
+    allocations: [
+      ...sourceAmount.allocations.map(al => ({
+        status: al.status,
+        amount: al.amount,
+        startDate: al.startDate,
+        position: al.position ? { expectedStart: al.position.expectedStart, expectedEnd: al.position.expectedEnd } : null,
+      })),
+      { status: "active", amount: extraAllocation.amount ?? null, startDate: extraAllocation.startDate ?? null },
+    ],
+  }]);
+}
+
 export function detectFinancialConflicts(amounts: ConflictAmount[]): FinancialConflict[] {
   const conflicts: FinancialConflict[] = [];
 

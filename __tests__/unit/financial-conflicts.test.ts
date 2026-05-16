@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { detectFinancialConflicts, calcUtilizationPercent, type ConflictAmount } from '@/lib/financial-conflicts'
+import {
+  detectFinancialConflicts,
+  evaluateSourceAmountConflicts,
+  calcUtilizationPercent,
+  type ConflictAmount,
+  type SourceAmountWithAllocations,
+} from '@/lib/financial-conflicts'
 
 
 function makeAmount(overrides: Partial<ConflictAmount> = {}): ConflictAmount {
@@ -136,6 +142,49 @@ describe('detectFinancialConflicts', () => {
   })
 })
 
+
+describe('evaluateSourceAmountConflicts', () => {
+  function makeSource(overrides: Partial<SourceAmountWithAllocations> = {}): SourceAmountWithAllocations {
+    return {
+      amount: 100_000,
+      status: 'released',
+      releaseDate: null,
+      type: { type: 'PERSEX', year: 2025 },
+      allocations: [],
+      ...overrides,
+    }
+  }
+
+  it('returns no conflicts when existing + extra allocation is within budget', () => {
+    const source = makeSource({ allocations: [{ status: 'active', amount: 40_000, startDate: null }] })
+    expect(evaluateSourceAmountConflicts(source, { amount: '50000', startDate: null })).toHaveLength(0)
+  })
+
+  it('returns an error when existing + extra allocation exceeds budget', () => {
+    const source = makeSource({ allocations: [{ status: 'active', amount: 80_000, startDate: null }] })
+    const result = evaluateSourceAmountConflicts(source, { amount: '30000', startDate: null })
+    expect(result).toHaveLength(1)
+    expect(result[0].severity).toBe('error')
+  })
+
+  it('treats null extra amount as zero', () => {
+    const source = makeSource({ allocations: [{ status: 'active', amount: 100_000, startDate: null }] })
+    expect(evaluateSourceAmountConflicts(source, { amount: null, startDate: null })).toHaveLength(0)
+  })
+
+  it('returns warning when extra allocation starts before release date', () => {
+    const releaseDate = new Date('2025-06-01')
+    const source = makeSource({ releaseDate })
+    const result = evaluateSourceAmountConflicts(source, { amount: '10000', startDate: new Date('2025-01-01') })
+    expect(result.some(c => c.severity === 'warning' && c.message.includes('vrijgavedatum'))).toBe(true)
+  })
+
+  it('returns warning when source amount is concept', () => {
+    const source = makeSource({ status: 'concept' })
+    const result = evaluateSourceAmountConflicts(source, { amount: '10000', startDate: null })
+    expect(result.some(c => c.severity === 'warning' && c.message.includes('conceptbedrag'))).toBe(true)
+  })
+})
 
 describe('calcUtilizationPercent', () => {
   it('returns 0 when nothing is allocated', () => {

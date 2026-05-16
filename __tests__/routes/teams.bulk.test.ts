@@ -34,7 +34,11 @@ describe('POST /api/teams/bulk', () => {
       body: { organisationId: ORG_ID, names: ['Team A', 'Team B'] },
     })
     await POST(req)
-    expect(createTeamsBulk).toHaveBeenCalledWith(ORG_ID, ['Team A', 'Team B'], 'user-mock')
+    expect(createTeamsBulk).toHaveBeenCalledWith(
+      ORG_ID,
+      ['Team A', 'Team B'],
+      expect.objectContaining({ userId: 'user-mock', role: 'admin' }),
+    )
   })
 
   it('returns 400 when organisationId is missing', async () => {

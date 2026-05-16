@@ -10,6 +10,7 @@ import { formatFullName } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Pagination } from "@/components/ui/Pagination";
 import { SortHeader } from "@/components/ui/SortHeader";
+import { paginate } from "@/lib/loaders/paginate";
 
 export const metadata: Metadata = { title: "Medewerkers – Teambeheer" };
 
@@ -47,30 +48,30 @@ export default async function MedewerkersPage({
   }
   const whereClause = and(...conditions);
 
-  const [{ total }] = await db.select({ total: count() }).from(employees).where(whereClause);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const currentPage = Math.min(page, Math.max(1, totalPages));
-  const offset = (currentPage - 1) * PAGE_SIZE;
-
   const orderFn = sortOrder === "asc" ? asc : desc;
   const orderByClause = sortCol === "organisation"
     ? [orderFn(organisations.name), asc(employees.lastName), asc(employees.firstName)]
     : [orderFn(employees.lastName), orderFn(employees.firstName)];
 
-  const pageEmployees = await db.query.employees.findMany({
-    where: whereClause,
-    with: {
-      organisation: true,
-      memberships: { with: { team: true } },
-      positionAssignments: { with: { position: true } },
+  const { rows: pageEmployees, total, totalPages, currentPage, from, to } = await paginate({
+    count: async () => {
+      const [{ total }] = await db.select({ total: count() }).from(employees).where(whereClause);
+      return total;
     },
-    orderBy: orderByClause,
-    limit: PAGE_SIZE,
-    offset,
+    fetch: (limit, offset) => db.query.employees.findMany({
+      where: whereClause,
+      with: {
+        organisation: true,
+        memberships: { with: { team: true } },
+        positionAssignments: { with: { position: true } },
+      },
+      orderBy: orderByClause,
+      limit,
+      offset,
+    }),
+    page,
+    pageSize: PAGE_SIZE,
   });
-
-  const from = offset + 1;
-  const to = Math.min(offset + PAGE_SIZE, total);
 
   function buildSortHref(col: string, order: "asc" | "desc") {
     const p = new URLSearchParams();

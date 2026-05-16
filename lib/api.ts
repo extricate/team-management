@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import type { UserRole } from "@/lib/db/schema";
 import type { z } from "zod";
 
 // Paths whose GET requests are logged for BIO incident-response traceability.
@@ -63,6 +64,22 @@ export async function requireAuth() {
   const session = await auth();
   if (!session?.user) throw new AuthError("Not authenticated");
   return session;
+}
+
+// The minimal caller identity passed through service functions.
+// Extracted once from the session at the route boundary; services never call auth() themselves.
+export type Actor = {
+  userId: string;
+  organisationId: string | null;
+  role: UserRole;
+};
+
+export function actorFromSession(session: { user: { id: string; organisationId: string | null; role: UserRole } }): Actor {
+  return {
+    userId: session.user.id,
+    organisationId: session.user.organisationId,
+    role: session.user.role,
+  };
 }
 
 export class AuthError extends Error {

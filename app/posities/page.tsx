@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { positions, organisations, teamPositionCouplings } from "@/lib/db/schema";
 import { isNull, count, ilike, eq, asc, desc, and, ne } from "drizzle-orm";
+import { paginate } from "@/lib/loaders/paginate";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Pagination } from "@/components/ui/Pagination";
@@ -63,30 +64,30 @@ export default async function PosistiesPage({
   if (statusFilter) conditions.push(eq(positions.status, statusFilter as never));
   const whereClause = and(...conditions);
 
-  const [{ total }] = await db.select({ total: count() }).from(positions).where(whereClause);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const currentPage = Math.min(page, Math.max(1, totalPages));
-  const offset = (currentPage - 1) * PAGE_SIZE;
-
   const orderFn = sortOrder === "asc" ? asc : desc;
   const orderByClause =
     sortCol === "status" ? [orderFn(positions.status), asc(positions.type)] :
     sortCol === "opfType" ? [orderFn(positions.opfType), asc(positions.type)] :
     [orderFn(positions.type)];
 
-  const rows = await db.query.positions.findMany({
-    where: whereClause,
-    with: {
-      organisation: true,
-      teamCouplings: { where: isNull(teamPositionCouplings.endDate), with: { team: true } },
+  const { rows, total, totalPages, currentPage, from, to } = await paginate({
+    count: async () => {
+      const [{ total }] = await db.select({ total: count() }).from(positions).where(whereClause);
+      return total;
     },
-    orderBy: orderByClause,
-    limit: PAGE_SIZE,
-    offset,
+    fetch: (limit, offset) => db.query.positions.findMany({
+      where: whereClause,
+      with: {
+        organisation: true,
+        teamCouplings: { where: isNull(teamPositionCouplings.endDate), with: { team: true } },
+      },
+      orderBy: orderByClause,
+      limit,
+      offset,
+    }),
+    page,
+    pageSize: PAGE_SIZE,
   });
-
-  const from = offset + 1;
-  const to = Math.min(offset + PAGE_SIZE, total);
 
   function filterHref(params: Record<string, string>) {
     const p = new URLSearchParams(params);

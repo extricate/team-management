@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { organisations, teams, employees, financialSources, comments, auditEvents, teamPositionCouplings } from "@/lib/db/schema";
+import { organisations, teams, employees, financialSources, teamPositionCouplings, comments, auditEvents } from "@/lib/db/schema";
 import { eq, isNull, and, desc } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CommentSection } from "@/components/ui/CommentSection";

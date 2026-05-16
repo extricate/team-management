@@ -1,6 +1,6 @@
 # Teambeheer — Architectural Design Document
 
-**Version:** 1.2  
+**Version:** 1.3  
 **Last updated:** May 2026  
 **Audience:** Engineers, tech leads
 
@@ -23,9 +23,9 @@ The application is scoped to authenticated internal users. It does not expose a 
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Framework | Next.js 14 (App Router) | Server Components by default |
+| Framework | Next.js 16 (App Router) | Server Components by default |
 | Language | TypeScript 5 | Strict mode |
-| Database | PostgreSQL | Via Supabase or direct connection |
+| Database | PostgreSQL 16 | Direct connection (no Supabase) |
 | ORM | Drizzle ORM | Type-safe, schema-first |
 | Auth | NextAuth.js v5 (beta) | Credentials (username/password + TOTP MFA). No external mail service — fully offline. |
 | UI Library | @rijkshuisstijl-community/components-react v15 | NL Design System / Rijksoverheid |
@@ -42,14 +42,23 @@ The application is scoped to authenticated internal users. It does not expose a 
 ```
 Organisation
  ├──< Team
- │    ├──< Position ──< PositionAssignment >── Employee
+ │    ├──< TeamPositionCoupling >── Position ──< PositionAssignment >── Employee
  │    ├──< TeamMembership >── Employee
  │    └──< FundingAllocation (team-level)
  ├──< Employee
+ ├──< Bestelling (ATB order, categorised by BestellingType)
+ │    └──< Position (optional: position linked to a bestelling)
  └──< FinancialSource
       └──< FinancialSourceAmount
-           └──< FundingAllocation (position-level or team-level)
+           └──< FundingAllocation → Position | Team | Bestelling | CompanyPersexBudget
+
+CompanyPersexBudget (singleton per year, government-wide personnel budget)
+ └──< FundingAllocation
+
+Salarisschaal (salary grade lookup table, schaalCode × year)
 ```
+
+Positions belong to an organisation and are associated with a team via the temporal `TeamPositionCoupling` junction. A position may be recoupled to a different team over time.
 
 ### 3.2 Entity Descriptions
 
@@ -63,7 +72,10 @@ A group within an organisation. Has many positions and many employees (via TeamM
 A person employed in the organisation. Belongs to one organisation but can be a member of multiple teams over time (via TeamMembership). Holds positions over time (via PositionAssignment).
 
 **Position**  
-A role slot within a team. Statuses: `planned → open → filled → closed`. A position can be filled by multiple employees sequentially (never concurrently). The `positionCode` is an optional external reference (e.g. from HR systems). The optional `requiredBefore` date signals the deadline by which the position must be staffed — used by the dashboard conflict detector to flag late starts.
+A role slot within an organisation, associated with a team via `TeamPositionCoupling`. Status lifecycle: `gepland → gewenst → toegezegd → open → gevuld → gesloten`. A position can be filled by multiple employees sequentially (never concurrently). The `positionCode` is an optional external reference (e.g. from HR systems). `opfType` holds the OPF classification key (e.g. "OPF1", "OPF9-inhuur"). The optional `requiredBefore` date signals the deadline by which the position must be staffed — used by the dashboard conflict detector to flag late starts. A position may optionally be linked to a `Bestelling` to represent an external order driving the position.
+
+**TeamPositionCoupling**  
+Temporal junction between Position and Team. Records which team a position belongs to at any point in time, with a `startDate` and nullable `endDate`. A position can be recoupled to a different team by ending the current coupling and creating a new one. Current coupling: `endDate IS NULL`.
 
 **TeamMembership**  
 Junction between Employee and Team, with a date range (`startDate`/`endDate`) and a `status`. Represents "employee X was a member of team Y from date A to date B". Historical memberships are retained.
@@ -80,26 +92,40 @@ A categorisation of money within a source: `PERSEX` (personnel expenses), `MATEX
 **FinancialSourceAmount**  
 A specific amount within a source, tied to a financial type. Status is `concept` until formally `released`. Has effective and release dates.
 
+**Bestelling**  
+An ATB (Aanvraag Tot Bestelling) procurement order. Belongs to an organisation and is categorised by a `BestellingType`. Carries an `atbNummer`, `geraamdBedrag` (estimated amount), and optional `werkelijkBedrag` (actual amount). Bestellingen are soft-deleted and fully audited.
+
+**BestellingType**  
+Lookup table categorising bestellingen (e.g. "Inhuur", "Investering"). Each bestelling references exactly one type.
+
+**Salarisschaal**  
+Reference table for salary grade cost data. Keyed by `schaalCode` × `year` (unique index). Stores `primaryCost`, `secondaryEffects`, and `tertiaryEffects`. Used for workforce cost planning. Lookups fall back to the nearest available year when an exact match is not found.
+
+**CompanyPersexBudget**  
+Government-wide personnel expense budget, one record per year. Carries a total `amount` and a `status` (`concept` or `released`). Funding allocations can draw from this budget instead of from a project-specific financial source.
+
 **FundingAllocation**  
-Links a FinancialSourceAmount to either a Position or a Team. Supports partial allocations via `amount` and `percentage`. Status tracks `active → reallocated | expired`. The original allocation is never deleted — it is marked `reallocated` and a new allocation is created. This is the cornerstone of financial traceability.
+Links a `FinancialSourceAmount` or a `CompanyPersexBudget` to a target: a `Position`, a `Team`, or a `Bestelling`. Exactly one source and one target must be set (validated via Zod `.refine()`). Supports partial allocations via `amount` and `percentage`. Status tracks `active → reallocated | expired`. The original allocation is never deleted — it is marked `reallocated` and a new allocation is created. This is the cornerstone of financial traceability.
 
 **Comment**  
-Polymorphic comment on any entity (team, employee, position, financialSource, fundingAllocation). Stored with `commentableType` + `commentableId` discriminator.
+Polymorphic comment on any entity (team, employee, position, financialSource, fundingAllocation, bestelling, teamMembership, positionAssignment). Stored with `commentableType` + `commentableId` discriminator.
 
 **AuditEvent**  
 Append-only log of every mutation. Stores `beforeJson` and `afterJson` snapshots, the acting user, the action type, and an optional reason. Never updated or deleted.
 
 ### 3.3 Key Constraints
 
-- A Position belongs to exactly one Team (never moved).
-- A FundingAllocation must reference either a Position or a Team (validated via Zod `.refine()`).
+- A Position is associated with a team via `TeamPositionCoupling`. The current team is the coupling with `endDate IS NULL`. Positions can be recoupled to a different team by ending the current coupling.
+- A FundingAllocation must reference exactly one source (`financialSourceAmountId` or `companyPersexBudgetId`) and exactly one target (`positionId`, `teamId`, or `bestellingId`), validated via Zod `.refine()`.
+- A `Salarisschaal` is unique by `(schaalCode, year)`.
+- A `CompanyPersexBudget` is unique by `year` (one row per calendar year).
 - Historical integrity is enforced by retaining all records with `endDate`; state at any point in time is derivable.
 - Soft delete: all major entities have a `deletedAt` column; deletion sets this timestamp rather than removing the row.
 
 ### 3.4 Status Lifecycles
 
 ```
-Position:   planned → open → filled → closed
+Position:   gepland → gewenst → toegezegd → open → gevuld → gesloten
 Membership: active → ended
 Allocation: active → reallocated | expired
 Amount:     concept → released
@@ -259,46 +285,104 @@ A "Afdrukken" button triggers `window.print()` via an inline `<script>`. `@media
 ### 5.1 API Route Structure
 
 ```
-/api/organisations          GET (list), POST (create)
-/api/organisations/[id]     GET, PATCH, DELETE
-/api/teams                  GET, POST
-/api/teams/[id]             GET, PATCH, DELETE
-/api/employees              GET, POST
-/api/employees/[id]         GET, PATCH, DELETE
-/api/positions              GET, POST (fields: teamId, type, status, opfType?, positionCode?, schaal?, annualCost?, expectedStart?, expectedEnd?, requiredBefore?)
-/api/positions/[id]         GET, PATCH, DELETE  (PATCH accepts requiredBefore: ISO string | null to set/clear)
-/api/position-assignments   POST
-/api/team-memberships       GET, POST, PATCH (used by DragDropTeamBuilder to end/create memberships)
-/api/financial-sources      GET, POST
-/api/financial-sources/[id] GET, PATCH, DELETE
-/api/funding-allocations    GET, POST
-/api/comments               GET (by type+id), POST
-/api/audit-events           GET (by entityType+entityId)
-/api/users                  GET, POST
-/api/users/[id]             GET, PATCH, DELETE
-/api/users/totp             POST (start TOTP setup — returns secret + URI), PUT (confirm setup + get recovery codes), DELETE (disable TOTP)
+/api/organisations               GET (list), POST (create)
+/api/organisations/[id]          GET, PATCH, DELETE
+/api/teams                       GET, POST
+/api/teams/[id]                  GET, PATCH, DELETE
+/api/teams/bulk                  POST (bulk create by name array)
+/api/employees                   GET, POST
+/api/employees/[id]              GET, PATCH, DELETE
+/api/positions                   GET, POST
+/api/positions/[id]              GET, PATCH, DELETE
+/api/position-assignments        POST
+/api/team-memberships            GET, POST, PATCH (used by DragDropTeamBuilder)
+/api/team-position-couplings     GET, POST
+/api/team-position-couplings/[id] PATCH, DELETE
+/api/bestellingen                GET, POST
+/api/bestellingen/[id]           GET, PATCH, DELETE
+/api/bestelling-types            GET, POST
+/api/financial-sources           GET, POST
+/api/financial-sources/[id]      GET, PATCH, DELETE
+/api/financial-source-amounts    GET, POST, PATCH, DELETE
+/api/financial-types             GET, POST, DELETE
+/api/funding-allocations         GET, POST
+/api/funding-allocations/[id]    PATCH, DELETE
+/api/salarisschalen              GET, POST
+/api/salarisschalen/[id]         PATCH, DELETE
+/api/salarisschalen/lookup       GET (lookup by schaalCode + year with nearest-year fallback)
+/api/company-persex              GET (list per year)
+/api/company-persex/[id]         PATCH
+/api/comments                    GET (by type+id), POST
+/api/audit-events                GET (by entityType+entityId)
+/api/notifications               GET (in-app notifications for current user)
+/api/users                       GET, POST
+/api/users/[id]                  GET, PATCH, DELETE
+/api/users/me                    GET (current user profile)
+/api/users/totp                  POST (start TOTP setup), PUT (confirm + get recovery codes), DELETE (disable TOTP)
+/api/search                      GET (Meilisearch proxy)
+/api/health                      GET (liveness check)
 ```
 
 ### 5.2 Request Handling Pattern
 
-All route handlers use `withErrorHandling()` from `lib/api.ts`:
+Route handlers use one of two wrappers from `lib/api.ts`:
+
+**`withErrorHandling()`** — base wrapper for GET routes and bespoke handlers. Catches `AuthError` → 401, `ForbiddenError` → 403, `ApiError` → its status, and unhandled errors → 500.
+
+**`withMutation(schema)`** — higher-level wrapper for POST/PATCH routes. Runs `withErrorHandling`, calls `requireAuth()`, parses and validates the request body with the provided Zod schema, and hands the parsed body + session to the inner handler. Eliminates the boilerplate auth + parse + 400 pattern from every mutation route.
 
 ```typescript
-export const POST = withErrorHandling(async (req: Request) => {
-  const session = await requireAuth();      // 401 if not authenticated
-  const body = await req.json();
-  const parsed = Schema.safeParse(body);    // 400 if invalid
-  if (!parsed.success) return badRequest(parsed.error.errors[0].message);
+// GET route
+export const GET = withErrorHandling(async (req) => {
+  const session = await requireAuth();
+  // ... fetch and return ok(data)
+});
 
-  const [row] = await db.insert(table).values(parsed.data).returning();
-  await logAudit({ ... });
-  return created(row);                      // 201
+// POST route (mutation)
+export const POST = withMutation(CreateSchema, async (data, session) => {
+  const actor = actorFromSession(session);
+  const result = await createEntity(data, actor);
+  return created(result);
 });
 ```
 
-`withErrorHandling<TArgs>` is generic so TypeScript infers handler argument types without casting. `AuthError` is automatically caught and mapped to 401.
+Mutation routes extract an `Actor` (`{ userId, organisationId, role }`) via `actorFromSession()` and pass it to the service layer. The Actor is the single contract between route handlers and services.
 
-### 5.3 Validation
+**Response helpers:** `ok(data)` → 200, `created(data)` → 201, `notFound()` → 404, `badRequest(msg)` → 400, `conflict(msg)` → 409.
+
+### 5.3 Service Layer
+
+Domain logic lives in `lib/services/`. Each service module owns one entity domain:
+
+| File | Responsibilities |
+|---|---|
+| `lib/services/teams.ts` | `createTeam`, `updateTeam`, `archiveTeam`, `createTeamsBulk` |
+| `lib/services/positions.ts` | `createPosition`, `updatePosition`, `archivePosition` |
+| `lib/services/organisations.ts` | `updateOrganisation`, `archiveOrganisation` |
+| `lib/services/funding-allocations.ts` | `createFundingAllocation`, `updateFundingAllocation`, `deleteFundingAllocation` |
+
+Every service function takes an `Actor` (not a session object). Internally, services:
+1. Fetch the current state from the DB
+2. Assert org access via `assertOrgAccess()` if needed
+3. Apply the mutation
+4. Call `logAudit()` with before/after snapshots
+5. Dispatch a search index sync via `dispatchSync()`
+
+Routes are kept thin: parse → `actorFromSession()` → call service → return response helper.
+
+### 5.4 Server-side Loaders
+
+Shared data-fetching patterns used by multiple server pages live in `lib/loaders/`:
+
+**`lib/loaders/paginate.ts`** — `paginate({ count, fetch, page, pageSize })` → `PageResult<T>`
+
+Centralises the count → ceil → clamp → fetch pipeline used by all list pages. Prevents page-count logic from being duplicated across `/teams`, `/medewerkers`, `/posities`, `/financiering`, `/bestellingen`, etc.
+
+**`lib/loaders/detail.ts`** — `fetchDetailSidebar(entityType, entityId)` → `{ comments, audit }`
+
+Fetches the comments + audit log for any entity detail page in a single `Promise.all`. Supported entity types: `team`, `employee`, `position`, `financialSource`, `fundingAllocation`, `bestelling`, `teamMembership`, `positionAssignment`.
+
+### 5.5 Validation
 
 Zod schemas at the API boundary enforce:
 - Required fields and types
@@ -308,7 +392,7 @@ Zod schemas at the API boundary enforce:
 
 The Zod schemas and TypeScript types in `lib/db/schema.ts` are the single source of truth.
 
-### 5.4 Audit Logging
+### 5.6 Audit Logging
 
 Every mutation calls `logAudit()` from `lib/audit.ts`:
 
@@ -445,7 +529,7 @@ When funding is reallocated, the original `FundingAllocation` record is marked `
 
 ### 8.4 Polymorphic Comments
 
-Comments use a `commentableType` + `commentableId` discriminator rather than separate FK columns per entity type. Supported types: `team`, `employee`, `position`, `financialSource`, `fundingAllocation`. No DB-level FK constraint exists on `commentableId` (by design, to support multiple entity types).
+Comments use a `commentableType` + `commentableId` discriminator rather than separate FK columns per entity type. Supported types: `team`, `employee`, `position`, `financialSource`, `fundingAllocation`, `bestelling`, `teamMembership`, `positionAssignment`. No DB-level FK constraint exists on `commentableId` (by design, to support multiple entity types).
 
 ---
 
@@ -454,13 +538,16 @@ Comments use a `commentableType` + `commentableId` discriminator rather than sep
 ### 9.1 Position Lifecycle
 
 ```
-1. Manager creates a Position (status: planned, no employee)
-2. Budget is allocated to the position via FundingAllocation
-3. Position is opened (status: open)
-4. Employee is assigned via PositionAssignment (status: filled)
-5. If employee leaves: PositionAssignment.endDate set, status: open
-6. If position is abolished: status: closed, FundingAllocation marked reallocated
+1. Manager creates a Position (status: gepland, no employee)
+2. Position moves through planning stages (gewenst → toegezegd) as it is approved
+3. Budget is allocated to the position via FundingAllocation
+4. Position is opened for hiring (status: open)
+5. Employee is assigned via PositionAssignment (status: gevuld)
+6. If employee leaves: PositionAssignment.endDate set, position reverts to open
+7. If position is abolished: status: gesloten, FundingAllocation marked reallocated
 ```
+
+The `gepland → gewenst → toegezegd` pre-open stages represent the position approval pipeline before it becomes active.
 
 ### 9.2 Financial Traceability
 
@@ -498,7 +585,7 @@ cp .env.example .env
 #   derive the TOTP encryption key; changing this invalidates all sessions and TOTP secrets)
 
 # Database
-npx drizzle-kit migrate  # apply all migrations (including auth columns)
+npm run db:migrate       # apply all migrations
 npm run db:seed          # optional: seed with test data
 
 # Dev server
@@ -509,7 +596,7 @@ npm run test:watch       # watch mode
 
 ### 10.2 Code Conventions
 
-- **API routes**: use `withErrorHandling()` wrapper, `requireAuth()`, Zod schema at the top
+- **API routes**: use `withMutation(schema)` for POST/PATCH, `withErrorHandling()` for GET; extract `Actor` via `actorFromSession()` and pass it to the service
 - **Page files**: Server Components, `redirect("/inloggen")` if unauthenticated, `notFound()` for 404
 - **Forms**: Client Components, call API routes via `fetch`, show inline errors, `router.push()` on success
 - **Types**: use `$inferSelect` / `$inferInsert` from schema; never define duplicate interfaces
@@ -521,13 +608,15 @@ npm run test:watch       # watch mode
 ### 10.3 Adding a New Entity
 
 1. Add table + relations to `lib/db/schema.ts`
-2. Run `npx drizzle-kit generate` + `npx drizzle-kit push`
-3. Add API routes: `app/api/<entity>/route.ts` + `app/api/<entity>/[id]/route.ts`
-4. Add list page: `app/<entity>/page.tsx`
-5. Add detail page: `app/<entity>/[id]/page.tsx`
-6. Add create form: `app/<entity>/nieuw/page.tsx` (server wrapper) + `Nieuw<Entity>Form.tsx` (client form)
-7. Add edit form: `app/<entity>/[id]/bewerken/page.tsx` + `EditForm.tsx`
-8. Add Vitest route tests: `__tests__/routes/<entity>.test.ts`
+2. Run `npm run db:generate` to produce the migration SQL, review it, then `npm run db:migrate`
+3. Add a service module: `lib/services/<entity>.ts` with `create<Entity>`, `update<Entity>`, `archive<Entity>` functions taking an `Actor`
+4. Add API routes: `app/api/<entity>/route.ts` + `app/api/<entity>/[id]/route.ts` (use `withMutation` for mutations)
+5. Add list page: `app/<entity>/page.tsx` (use `paginate()` from `lib/loaders/paginate.ts`)
+6. Add detail page: `app/<entity>/[id]/page.tsx` (use `fetchDetailSidebar()` from `lib/loaders/detail.ts`)
+7. Add create form: `app/<entity>/nieuw/page.tsx` (server wrapper) + `Nieuw<Entity>Form.tsx` (client form)
+8. Add edit form: `app/<entity>/[id]/bewerken/page.tsx` + `EditForm.tsx`
+9. Add Vitest route tests: `__tests__/routes/<entity>.test.ts`
+10. Add Vitest service tests: `__tests__/unit/services/<entity>.test.ts`
 
 ### 10.4 Testing
 
@@ -535,23 +624,47 @@ Tests are in `__tests__/`. The Drizzle `db` is mocked with a Proxy that handles 
 
 ```
 __tests__/
-├── helpers/request.ts       — creates mock Request objects
-├── setup.ts                 — global afterEach clearAllMocks
+├── helpers/request.ts            — creates mock Request objects
+├── setup.ts                      — global afterEach clearAllMocks
 ├── unit/
-│   ├── api.test.ts          — lib/api.ts helpers (17 tests)
-│   ├── audit.test.ts        — lib/audit.ts (3 tests)
-│   ├── dashboard.test.ts    — lib/dashboard.ts: detectPositionConflicts + collectUpcomingEvents (20 tests)
-│   └── auth/
-│       ├── password.test.ts    — hashPassword / verifyPassword (7 tests)
-│       ├── totp.test.ts        — generateTotpSecret, generateTotpCode, verifyTotpCode, encrypt/decrypt (17 tests)
-│       └── authenticate.test.ts — full auth flow with mocked DB (11 tests)
+│   ├── api.test.ts               — lib/api.ts helpers
+│   ├── audit.test.ts             — lib/audit.ts
+│   ├── dashboard.test.ts         — detectPositionConflicts + collectUpcomingEvents
+│   ├── financial-conflicts.test.ts — evaluateSourceAmountConflicts + detectBestellingConflicts
+│   ├── bestellingen.test.ts      — bestelling conflict / allocation pure functions
+│   ├── company-persex.test.ts    — CompanyPersexBudget service logic
+│   ├── drizzle-alias-collision.test.ts — regression: Drizzle alias shadowing
+│   ├── opf-types.test.ts         — OPF classification helpers
+│   ├── salarisschalen.test.ts    — salary grade lookup with nearest-year fallback
+│   ├── seed.test.ts              — DB seed script
+│   ├── utils.test.ts             — lib/utils helpers
+│   ├── auth/
+│   │   ├── password.test.ts      — hashPassword / verifyPassword
+│   │   ├── totp.test.ts          — TOTP generate / verify / encrypt / decrypt
+│   │   ├── totp-key.test.ts      — TOTP key derivation
+│   │   ├── authenticate.test.ts  — full auth flow with mocked DB
+│   │   ├── rate-limit.test.ts    — brute-force lockout logic
+│   │   ├── admin-password-reset.test.ts
+│   │   ├── change-password-action.test.ts
+│   │   ├── sign-in-force-change.test.ts — forced password change on first login
+│   │   └── user-creation-flag.test.ts
+│   └── services/
+│       ├── teams.test.ts         — createTeam, updateTeam, archiveTeam (service unit tests)
+│       └── funding-allocations.test.ts
 └── routes/
     ├── organisations.test.ts
     ├── teams.test.ts
+    ├── teams.bulk.test.ts        — POST /api/teams/bulk
     ├── employees.test.ts
-    ├── positions.test.ts    — includes POST/PATCH tests for requiredBefore
+    ├── positions.test.ts
     ├── comments.test.ts
-    └── funding-allocations.test.ts
+    ├── funding-allocations.test.ts
+    ├── bestellingen.test.ts
+    ├── budget-grid.test.ts
+    ├── notifications.test.ts
+    ├── salarisschalen.test.ts
+    ├── team-position-couplings.test.ts
+    └── users-me.test.ts
 ```
 
 **DB mock pattern** (`vi.hoisted`):
@@ -587,21 +700,27 @@ dbMock.set([EXISTING], [UPDATED])   // two DB calls: first returns [EXISTING], s
 - Self-service TOTP setup (`/instellingen/mfa`)
 - Two-step login flow with signed short-lived pending cookie
 
-### v1.3 — Access Control
+### v1.3 — Architecture & New Entities (in progress)
+- Actor type for service contracts (`lib/api.ts` + `lib/services/`)
+- Service layer extracted from API routes (`lib/services/teams`, `positions`, `organisations`, `funding-allocations`)
+- Shared loaders (`lib/loaders/paginate`, `lib/loaders/detail`)
+- Bestellingen (ATB procurement orders) with conflict detection and allocation tracking
+- Salarisschalen (salary grade reference table with nearest-year lookup)
+- CompanyPersexBudget (government-wide annual personnel budget)
+- TeamPositionCoupling (temporal team ↔ position junction replacing direct FK)
+- In-app notification centre (`/api/notifications`)
+
+### v1.4 — Access Control
 - Enforce role-based permissions at API route level
 - Scope queries to `user.organisationId`
 - Viewer role: disable all mutation buttons in UI
 
-### v1.3 — Advanced Workforce Planning
+### v1.5 — Advanced Workforce Planning
 - Dashboard: planned vs actual positions chart
 - Timeline view per employee (position history as visual timeline)
 - Position gap analysis (open positions without funding)
 
-### v1.4 — Notifications
-- Email notifications for key events (position opened, budget allocated)
-- In-app notification centre
-
-### v1.5 — Reporting
+### v1.6 — Reporting
 - Export team composition to CSV/PDF
 - Budget allocation report per organisation/year
 - Position fill rate trend chart
@@ -653,3 +772,11 @@ dbMock.set([EXISTING], [UPDATED])   // two DB calls: first returns [EXISTING], s
 ### ADR-011: Manual session creation; NextAuth for session reading only
 **Decision:** Login server actions create sessions manually (insert into `sessions` table + set `authjs.session-token` cookie). NextAuth is configured with zero providers; it only reads sessions via `auth()`.  
 **Rationale:** NextAuth's `CredentialsProvider.authorize()` is a single synchronous step. A two-step password + TOTP flow requires an intermediate "pending" state (signed cookie) between steps — something that doesn't fit the NextAuth credential provider model cleanly. Manual session creation reuses the exact same schema and cookie that NextAuth reads, so `auth()`, `signOut()`, and all session callbacks continue to work unchanged.
+
+### ADR-012: Actor type as the service layer contract
+**Decision:** Services in `lib/services/` accept an `Actor` (`{ userId, organisationId, role }`) rather than a raw `Session` or a `(session, userId)` pair.  
+**Rationale:** Session objects are shaped by NextAuth and carry authentication details irrelevant to domain logic. Actor is the minimal, domain-meaningful identity: who acted, from which org, with what role. Extracting Actor at the route boundary (`actorFromSession()`) keeps session handling in the API layer and makes service functions independently testable with a plain object — no NextAuth mock needed.
+
+### ADR-013: Shared loaders in `lib/loaders/` for server-side data fetching
+**Decision:** Repeated data-fetching patterns used across multiple server pages are extracted into `lib/loaders/` (`paginate`, `fetchDetailSidebar`) rather than inlined per page.  
+**Rationale:** Before extraction, the count → ceil → clamp → fetch pagination pipeline was copy-pasted across every list page with subtle divergence in edge-case handling (off-by-one on total pages, different defaults for pageSize). Similarly, every detail page ran two sequential DB queries for comments and audit events. Centralising these patterns ensures consistent behaviour and gives a single place to change the logic. Unlike services, loaders are pure data-fetching with no mutation or audit side effects.
