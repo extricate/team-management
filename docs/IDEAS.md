@@ -4,6 +4,20 @@
 ~~-- Add user management interface (creating and enabling management accounts);~~
 ~~-- Add MFA OTA code in the auth process;~~
 
+- Add 'functies' (or 'jobs' in English, but keep with the convention of the application in naming)
+-- A 'medewerker' has a 'functie' which is a select list of available job positions
+-- Medewerkers can have multiple functies (but always have a primary one, which need to be selectable through the edit employee screen)
+-- The whole ministry has a (constantly changing) set of 'functies' that are added in a separate management interface (much like the 'salarisschalen')
+-- Functies have an associated salary scale (and thus automatically associated cost)
+-- Functies have a title
+-- Functies have a created date
+-- Functies can be deactivated
+-- We need to be able to show all employees that have a certain functie
+-- Requested positions have an associated functie (instead of a functienaam, it needs to be selectable from the available list)
+-- If a required 'functie' does not exist, it should be created first - this should be done through a crud interface though the functies screen
+-- A requested position can also be a role, which is a functie which is yet to be formalised, in which case it can just remain the current 'functienaam', but it needs to be adjusted to 'roltitel'. Also, make it only fillable when the functie 'Niet beschikbaar' is selected in the drop down.
+
+
 - Vacature publiceren: ja/nee als wens toevoegen in positie 
 - Positiestatus: gewenst/toegezegd/gepland/etc.?
 - Posities (arbeidsplaatsen) loskoppelen van teams (je financieert een positie en koppelt die aan een team)

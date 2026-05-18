@@ -1,6 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
+import { existsSync } from "fs";
+
+// Load .env.test so E2E_TEST_EMAIL, E2E_TEST_PASSWORD, and DATABASE_URL
+// are available to globalSetup without requiring them in the shell environment.
+if (existsSync(".env.test")) {
+  process.loadEnvFile(".env.test");
+}
 
 export default defineConfig({
+  globalSetup: "./__tests__/e2e/global.setup.ts",
   testDir: "./__tests__/e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -15,8 +23,16 @@ export default defineConfig({
 
   projects: [
     {
+      name: "setup",
+      testMatch: /.*\.setup\.ts/,
+    },
+    {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: ".playwright/.auth/user.json",
+      },
+      dependencies: ["setup"],
     },
   ],
 
