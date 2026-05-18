@@ -35,10 +35,8 @@ export function MedewerkerFunctiesTable({ rows, employeeId, isArchived }: Props)
     setBusy(assignmentId);
     setError(null);
     try {
-      const res = await fetch(`/api/medewerkers/${employeeId}/functies/${assignmentId}`, {
+      const res = await fetch(`/api/medewerkers/${employeeId}/functies/${assignmentId}/primair`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isPrimary: true }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

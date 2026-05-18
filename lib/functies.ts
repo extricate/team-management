@@ -1,11 +1,15 @@
 export const NIET_BESCHIKBAAR_TITEL = "Niet beschikbaar";
 
-/**
- * Returns the display title for a position, handling all three data models:
- * - roltitel: custom title for "Niet beschikbaar" positions
- * - functie.titel: title from the linked functie (new model)
- * - type: legacy free-text field
- */
+export function isSentinel(f: { titel: string } | null | undefined): boolean {
+  return f?.titel === NIET_BESCHIKBAAR_TITEL;
+}
+
+export function assertNotSentinel(f: { titel: string }): void {
+  if (isSentinel(f)) {
+    throw Object.assign(new Error('De functie "Niet beschikbaar" kan niet worden gewijzigd.'), { status: 403 });
+  }
+}
+
 export function getPositionTitel(position: {
   type?: string | null;
   roltitel?: string | null;

@@ -6,8 +6,8 @@ import { db } from "@/lib/db";
 import { functies, medewerkerFuncties, employees } from "@/lib/db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { formatFullName } from "@/lib/utils";
-import { NIET_BESCHIKBAAR_TITEL } from "@/lib/functies";
+import { formatFullName, formatDate } from "@/lib/utils";
+import { isSentinel } from "@/lib/functies";
 
 export default async function FunctieDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -25,7 +25,7 @@ export default async function FunctieDetailPage({ params }: { params: Promise<{ 
     .where(and(eq(medewerkerFuncties.functieId, id), isNull(employees.deletedAt)))
     .orderBy(medewerkerFuncties.status, employees.lastName);
 
-  const isSentinel = functie.titel === NIET_BESCHIKBAAR_TITEL;
+  const sentinel = isSentinel(functie);
 
   return (
     <div>
@@ -43,7 +43,7 @@ export default async function FunctieDetailPage({ params }: { params: Promise<{ 
             {functie.schaalCode && ` · Schaal ${functie.schaalCode}`}
           </p>
         </div>
-        {!isSentinel && (
+        {!sentinel && (
           <Link href={`/beheer/functies/${id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">
             Bewerken
           </Link>
@@ -81,10 +81,10 @@ export default async function FunctieDetailPage({ params }: { params: Promise<{ 
                   ) : "—"}
                 </td>
                 <td className="utrecht-table__cell">
-                  {assignment.startDate ? new Date(assignment.startDate).toLocaleDateString("nl-NL") : "—"}
+                  {formatDate(assignment.startDate)}
                 </td>
                 <td className="utrecht-table__cell">
-                  {assignment.endDate ? new Date(assignment.endDate).toLocaleDateString("nl-NL") : "—"}
+                  {formatDate(assignment.endDate)}
                 </td>
                 <td className="utrecht-table__cell">
                   <span style={{ color: assignment.status === "active" ? "var(--rvo-color-groen-600)" : "var(--rvo-color-grijs-600)" }}>

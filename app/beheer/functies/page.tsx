@@ -4,10 +4,10 @@ import { Heading } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { functies } from "@/lib/db/schema";
-import { asc, isNull } from "drizzle-orm";
+import { asc, desc, isNull } from "drizzle-orm";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SortHeader } from "@/components/ui/SortHeader";
-import { NIET_BESCHIKBAAR_TITEL } from "@/lib/functies";
+import { isSentinel } from "@/lib/functies";
 
 export const metadata = { title: "Functies – Teambeheer" };
 
@@ -26,19 +26,19 @@ export default async function FunctiesPage({
   const sortCol = (["titel", "schaal", "actief"].includes(sortParam ?? "") ? sortParam : "titel") as SortCol;
   const sortOrder = orderParam === "desc" ? "desc" : "asc";
 
-  const allFuncties = await db
+  const dir = sortOrder === "desc" ? desc : asc;
+  // For boolean isActive: true (actief) should rank first when ascending
+  const activeDir = sortOrder === "asc" ? desc : asc;
+
+  const sorted = await db
     .select()
     .from(functies)
     .where(isNull(functies.deletedAt))
-    .orderBy(asc(functies.titel));
-
-  const sorted = [...allFuncties].sort((a, b) => {
-    let cmp = 0;
-    if (sortCol === "titel") cmp = a.titel.localeCompare(b.titel, "nl");
-    else if (sortCol === "schaal") cmp = (a.schaalCode ?? "").localeCompare(b.schaalCode ?? "", "nl");
-    else if (sortCol === "actief") cmp = Number(b.isActive) - Number(a.isActive);
-    return sortOrder === "desc" ? -cmp : cmp;
-  });
+    .orderBy(
+      sortCol === "schaal" ? dir(functies.schaalCode)
+      : sortCol === "actief" ? activeDir(functies.isActive)
+      : dir(functies.titel),
+    );
 
   function buildSortHref(col: string, order: "asc" | "desc") {
     const p = new URLSearchParams();
@@ -89,7 +89,7 @@ export default async function FunctiesPage({
                 </span>
               </td>
               <td className="utrecht-table__cell">
-                {f.titel !== NIET_BESCHIKBAAR_TITEL && (
+                {!isSentinel(f) && (
                   <Link href={`/beheer/functies/${f.id}/bewerken`} className="utrecht-link">
                     Bewerken
                   </Link>

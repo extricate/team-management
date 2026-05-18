@@ -66,9 +66,8 @@ describe('assignFunctie', () => {
   })
 
   it('creates a primary assignment and clears previous primary', async () => {
-    const existingPrimary = makeAssignment({ id: 'mf-old', isPrimary: true })
-    // first query: find existing primary; second: update old; third: insert new
-    dbMock.set([existingPrimary], [], [makeAssignment({ isPrimary: true })])
+    // clearPrimary issues a single UPDATE (no select); then INSERT returning
+    dbMock.set([], [makeAssignment({ isPrimary: true })])
     const row = await assignFunctie(EMP_ID, FUNCTIE_ID, START, true, ACTOR)
     expect(row.isPrimary).toBe(true)
   })

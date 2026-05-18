@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { positions, functies } from "@/lib/db/schema";
 import { eq, isNull, and, asc } from "drizzle-orm";
 import { EditPositieForm } from "./EditPositieForm";
-import { NIET_BESCHIKBAAR_TITEL } from "@/lib/functies";
+import { isSentinel } from "@/lib/functies";
 
 export const metadata: Metadata = { title: "Positie bewerken – Teambeheer" };
 
@@ -31,7 +31,7 @@ export default async function BewerkenPositiePage({ params }: { params: Promise<
   // Derive a display name for breadcrumbs: prefer roltitel or functie titel or legacy type
   const currentFunctie = allFuncties.find(f => f.id === position.functieId);
   const positieNaam =
-    (currentFunctie?.titel === NIET_BESCHIKBAAR_TITEL ? position.roltitel : currentFunctie?.titel) ??
+    (isSentinel(currentFunctie) ? position.roltitel : currentFunctie?.titel) ??
     position.type ??
     "Positie";
 

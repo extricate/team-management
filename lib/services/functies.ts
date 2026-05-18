@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { functies } from "@/lib/db/schema";
 import { logAudit } from "@/lib/audit";
-import { NIET_BESCHIKBAAR_TITEL } from "@/lib/functies";
+import { assertNotSentinel } from "@/lib/functies";
 import { FunctieSchema, FunctieUpdateSchema } from "@/lib/schemas";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import type { Actor } from "@/lib/api";
@@ -13,10 +13,6 @@ function notFound(): Error {
 
 function conflict(): Error {
   return Object.assign(new Error("Er bestaat al een functie met deze titel."), { status: 409 });
-}
-
-function forbidden(): Error {
-  return Object.assign(new Error('De functie "Niet beschikbaar" kan niet worden gearchiveerd.'), { status: 403 });
 }
 
 export async function createFunctie(data: z.infer<typeof FunctieSchema>, actor: Actor) {
@@ -34,6 +30,7 @@ export async function createFunctie(data: z.infer<typeof FunctieSchema>, actor: 
 export async function updateFunctie(id: string, data: z.infer<typeof FunctieUpdateSchema>, actor: Actor) {
   const [before] = await db.select().from(functies).where(eq(functies.id, id));
   if (!before || before.deletedAt) throw notFound();
+  assertNotSentinel(before);
 
   let after: typeof before;
   try {
@@ -49,7 +46,7 @@ export async function updateFunctie(id: string, data: z.infer<typeof FunctieUpda
 export async function archiveFunctie(id: string, actor: Actor) {
   const [before] = await db.select().from(functies).where(eq(functies.id, id));
   if (!before || before.deletedAt) throw notFound();
-  if (before.titel === NIET_BESCHIKBAAR_TITEL) throw forbidden();
+  assertNotSentinel(before);
 
   await db.update(functies).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(functies.id, id));
   await logAudit({ actorUserId: actor.userId, entityType: "functie", entityId: id, action: "archive", before });
@@ -58,7 +55,7 @@ export async function archiveFunctie(id: string, actor: Actor) {
 export async function deactivateFunctie(id: string, actor: Actor) {
   const [before] = await db.select().from(functies).where(eq(functies.id, id));
   if (!before || before.deletedAt) throw notFound();
-  if (before.titel === NIET_BESCHIKBAAR_TITEL) throw forbidden();
+  assertNotSentinel(before);
 
   const [after] = await db
     .update(functies)

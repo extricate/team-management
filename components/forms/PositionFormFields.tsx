@@ -7,7 +7,7 @@ import { FunctieCombobox, type FunctieOption } from "@/components/ui/FunctieComb
 import { OPF_TYPES, getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-types";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatCurrency } from "@/lib/utils";
-import { NIET_BESCHIKBAAR_TITEL } from "@/lib/functies";
+import { isSentinel } from "@/lib/functies";
 
 export type { FunctieOption };
 
@@ -77,7 +77,7 @@ export function PositionFormFields({
   const initFunctie = initialValues?.functieId
     ? functies.find(f => f.id === initialValues.functieId)
     : undefined;
-  const initIsNB = initFunctie?.titel === NIET_BESCHIKBAAR_TITEL;
+  const initIsNB = isSentinel(initFunctie);
   const shouldLoadOnMount = !!(initialValues?.functieId && initFunctie && !initIsNB && initFunctie.schaalCode);
 
   const [selectedFunctieId, setSelectedFunctieId] = useState<string>(initialValues?.functieId ?? "");
@@ -98,7 +98,7 @@ export function PositionFormFields({
   const [functieError, setFunctieError] = useState<string | null>(null);
 
   const selectedFunctie = functies.find(f => f.id === selectedFunctieId) ?? null;
-  const isNietBeschikbaar = selectedFunctie?.titel === NIET_BESCHIKBAAR_TITEL;
+  const isNietBeschikbaar = isSentinel(selectedFunctie);
   const opfDef = getOPFType(selectedOpfType);
 
   async function lookupSchaalCost(code: string, dateStr: string) {
@@ -151,7 +151,7 @@ export function PositionFormFields({
     setSelectedFunctieId(id);
     setFunctieError(null);
     const functie = functies.find(f => f.id === id);
-    const nextIsNB = functie?.titel === NIET_BESCHIKBAAR_TITEL;
+    const nextIsNB = isSentinel(functie);
     setSchaalInfo(null);
     setAnnualCost("");
     if (!nextIsNB && functie?.schaalCode) {

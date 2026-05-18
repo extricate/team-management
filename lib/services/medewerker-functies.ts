@@ -12,6 +12,17 @@ function conflict(): Error {
   return Object.assign(new Error("Deze functie is al toegewezen aan deze medewerker."), { status: 409 });
 }
 
+async function clearPrimary(employeeId: string): Promise<void> {
+  await db
+    .update(medewerkerFuncties)
+    .set({ isPrimary: false, updatedAt: new Date() })
+    .where(and(
+      eq(medewerkerFuncties.employeeId, employeeId),
+      eq(medewerkerFuncties.isPrimary, true),
+      isNull(medewerkerFuncties.endDate),
+    ));
+}
+
 export async function assignFunctie(
   employeeId: string,
   functieId: string,
@@ -19,20 +30,7 @@ export async function assignFunctie(
   isPrimary: boolean,
   actor: Actor,
 ) {
-  // Clear existing primary before inserting the new one
-  if (isPrimary) {
-    const existing = await db
-      .select()
-      .from(medewerkerFuncties)
-      .where(and(eq(medewerkerFuncties.employeeId, employeeId), eq(medewerkerFuncties.isPrimary, true), isNull(medewerkerFuncties.endDate)));
-
-    if (existing.length > 0) {
-      await db
-        .update(medewerkerFuncties)
-        .set({ isPrimary: false, updatedAt: new Date() })
-        .where(eq(medewerkerFuncties.id, existing[0].id));
-    }
-  }
+  if (isPrimary) await clearPrimary(employeeId);
 
   let row: typeof medewerkerFuncties.$inferSelect;
   try {
@@ -65,19 +63,7 @@ export async function setPrimary(id: string, actor: Actor) {
   const [target] = await db.select().from(medewerkerFuncties).where(eq(medewerkerFuncties.id, id));
   if (!target || target.status === "ended") throw notFound();
 
-  // Clear existing primary for this employee
-  const existingPrimary = await db
-    .select()
-    .from(medewerkerFuncties)
-    .where(and(eq(medewerkerFuncties.employeeId, target.employeeId), eq(medewerkerFuncties.isPrimary, true)));
-
-  if (existingPrimary.length > 0) {
-    await db
-      .update(medewerkerFuncties)
-      .set({ isPrimary: false, updatedAt: new Date() })
-      .where(eq(medewerkerFuncties.id, existingPrimary[0].id));
-  }
-
+  await clearPrimary(target.employeeId);
   await db.update(medewerkerFuncties).set({ isPrimary: true, updatedAt: new Date() }).where(eq(medewerkerFuncties.id, id));
   await logAudit({ actorUserId: actor.userId, entityType: "medewerker_functie", entityId: id, action: "set_primary", before: target });
 }

@@ -231,13 +231,6 @@ export const MedewerkerFunctieSchema = z.object({
   reason: z.string().optional(),
 });
 
-export const MedewerkerFunctieUpdateSchema = z.object({
-  isPrimary: z.boolean().optional(),
-  endDate: nullableDatetime,
-  status: z.enum(["active", "ended"]).optional(),
-  reason: z.string().optional().nullable(),
-});
-
 // ── Salarisschaal ──────────────────────────────────────────────────────────────
 export const SalarisschaalSchema = z.object({
   schaalCode: z.string().min(1).max(20),

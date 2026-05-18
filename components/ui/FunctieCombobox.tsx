@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { filterFuncties } from "@/lib/functie-search";
-import { NIET_BESCHIKBAAR_TITEL } from "@/lib/functies";
+import { isSentinel } from "@/lib/functies";
 
 export interface FunctieOption {
   id: string;
@@ -19,8 +19,8 @@ interface Props {
 }
 
 function sortWithSentinelFirst(items: FunctieOption[]): FunctieOption[] {
-  const sentinel = items.find(f => f.titel === NIET_BESCHIKBAAR_TITEL);
-  const rest = items.filter(f => f.titel !== NIET_BESCHIKBAAR_TITEL);
+  const sentinel = items.find(f => isSentinel(f));
+  const rest = items.filter(f => !isSentinel(f));
   return sentinel ? [sentinel, ...rest] : rest;
 }
 
