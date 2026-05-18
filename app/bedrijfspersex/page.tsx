@@ -9,6 +9,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { summarizeCompanyPersex } from "@/lib/company-persex";
+import { getPositionTitel } from "@/lib/functies";
 import { BedrijfspersexBudgetEditor } from "./BedrijfspersexBudgetEditor";
 
 export const metadata: Metadata = { title: "Bedrijfspersex – Teambeheer" };
@@ -21,7 +22,7 @@ export default async function BedrijfspersexPage() {
     with: {
       allocations: {
         where: eq(fundingAllocations.status, "active"),
-        with: { position: { with: { teamCouplings: { with: { team: true } } } }, team: true },
+        with: { position: { with: { functie: { columns: { titel: true } }, teamCouplings: { with: { team: true } } } }, team: true },
       },
     },
     orderBy: (b, { asc }) => [asc(b.year)],
@@ -112,7 +113,7 @@ export default async function BedrijfspersexPage() {
                       <td className="utrecht-table__cell">{b.year}</td>
                       <td className="utrecht-table__cell">
                         {al.position
-                          ? <><strong>{al.position.type}</strong>{al.position.teamCouplings[0]?.team ? ` · ${al.position.teamCouplings[0].team.name}` : ""}</>
+                          ? <><strong>{getPositionTitel(al.position)}</strong>{al.position.teamCouplings[0]?.team ? ` · ${al.position.teamCouplings[0].team.name}` : ""}</>
                           : al.team
                           ? al.team.name
                           : "—"}

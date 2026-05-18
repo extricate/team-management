@@ -41,6 +41,7 @@ interface Position {
 
 interface Props {
   position: Position;
+  positieTitel: string;
   teamId: string;
   teamName: string;
   availableAmounts: SourceAmount[];
@@ -94,7 +95,7 @@ function CrossCategoryWarning({
   );
 }
 
-export function AllocatePositionForm({ position, teamId, teamName, availableAmounts, persexBudgets, alreadyAllocated }: Props) {
+export function AllocatePositionForm({ position, positieTitel, teamId, teamName, availableAmounts, persexBudgets, alreadyAllocated }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -172,7 +173,7 @@ export function AllocatePositionForm({ position, teamId, teamName, availableAmou
     }
   }
 
-  const positionLabel = `${position.type}${position.positionCode ? ` (${position.positionCode})` : ""}${position.schaal ? ` · Schaal ${position.schaal}` : ""}${opfDef ? ` · ${opfDef.label}` : ""}`;
+  const positionLabel = `${positieTitel}${position.positionCode ? ` (${position.positionCode})` : ""}${position.schaal ? ` · Schaal ${position.schaal}` : ""}${opfDef ? ` · ${opfDef.label}` : ""}`;
   const hasNoSources = availableAmounts.length === 0;
   const hasNoPersex = persexBudgets.length === 0;
 

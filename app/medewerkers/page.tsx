@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { employees, organisations } from "@/lib/db/schema";
 import { isNull, count, ilike, eq, asc, desc, and, or } from "drizzle-orm";
 import { formatFullName } from "@/lib/utils";
+import { getPositionTitel } from "@/lib/functies";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Pagination } from "@/components/ui/Pagination";
 import { SortHeader } from "@/components/ui/SortHeader";
@@ -63,7 +64,7 @@ export default async function MedewerkersPage({
       with: {
         organisation: true,
         memberships: { with: { team: true } },
-        positionAssignments: { with: { position: true } },
+        positionAssignments: { with: { position: { with: { functie: { columns: { titel: true } } } } } },
       },
       orderBy: orderByClause,
       limit,
@@ -152,8 +153,8 @@ export default async function MedewerkersPage({
                     ? <span style={{ color: "var(--rvo-color-grijs-500)" }}>Geen</span>
                     : activeTeams.map(m => m.team.name).join(", ")}
                 </td>
-                <td className="utrecht-table__cell" style={{ maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={activePos?.position.type ?? undefined}>
-                  {activePos ? activePos.position.type : <span style={{ color: "var(--rvo-color-grijs-500)" }}>Geen</span>}
+                <td className="utrecht-table__cell" style={{ maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={activePos ? getPositionTitel(activePos.position) : undefined}>
+                  {activePos ? getPositionTitel(activePos.position) : <span style={{ color: "var(--rvo-color-grijs-500)" }}>Geen</span>}
                 </td>
                 <td className="utrecht-table__cell" style={{ display: "flex", gap: "1rem", whiteSpace: "nowrap" }}>
                   <Link href={`/medewerkers/${emp.id}`} className="utrecht-link">Bekijken</Link>

@@ -12,11 +12,12 @@ import {
   organisations, teams, employees, positions,
   teamMemberships, positionAssignments, teamPositionCouplings,
   financialSources, financialTypes, financialSourceAmounts, fundingAllocations,
-  auditEvents, comments,
+  auditEvents, comments, functies,
 } from "../schema";
 import type { Organisation, Team, Employee } from "../schema";
 import { reindex } from "../../search/reindex";
 import { OPF_TYPES } from "../../opf-types";
+import { NIET_BESCHIKBAAR_TITEL } from "../../functies";
 
 // ── Static content ─────────────────────────────────────────────────────────────
 
@@ -244,6 +245,16 @@ function distribute<T>(arr: T[], buckets: number): T[][] {
   return Array.from({ length: buckets }, (_, i) =>
     shuffled.filter((_, j) => j % buckets === i),
   );
+}
+
+// ── Required functies ──────────────────────────────────────────────────────────
+
+async function seedRequiredFuncties() {
+  await db
+    .insert(functies)
+    .values({ titel: NIET_BESCHIKBAAR_TITEL, isActive: true })
+    .onConflictDoNothing();
+  console.log(`  ✓ "${NIET_BESCHIKBAAR_TITEL}" sentinel aanwezig`);
 }
 
 // ── Reset ──────────────────────────────────────────────────────────────────────
@@ -498,6 +509,9 @@ async function seedFinancialData(orgsWithTeams: { org: Organisation; teams: Team
 
 async function main() {
   const shouldReset = process.argv.includes("--reset");
+
+  console.log("Vereiste stamdata…");
+  await seedRequiredFuncties();
 
   const [existing] = await db.select().from(organisations).limit(1);
   if (existing && !shouldReset) {

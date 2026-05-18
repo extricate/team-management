@@ -19,6 +19,7 @@ export type UserRole = "admin" | "manager" | "viewer";
 export type OrganisationType = "OS1" | "OS2";
 export type PositionStatus = "gepland" | "gewenst" | "toegezegd" | "open" | "gevuld" | "gesloten";
 export type MembershipStatus = "active" | "ended";
+export type FunctieMembershipStatus = "active" | "ended";
 export type AllocationStatus = "active" | "reallocated" | "expired";
 export type AmountStatus = "concept" | "released";
 export type FinancialTypeCategory = "PERSEX" | "MATEX" | "Investeringen" | "geen";
@@ -162,8 +163,12 @@ export const positions = pgTable("positions", {
   id: uuid("id").primaryKey().defaultRandom(),
   organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   bestellingId: uuid("bestelling_id").references(() => bestellingen.id),
-  type: text("type").notNull(), // identifying name, e.g. "Product Owner", "Scrum Master"
-  opfType: text("opf_type"), // OPF classification key, e.g. "OPF1", "OPF9-inhuur"
+  functieId: uuid("functie_id").references(() => functies.id),
+  // type kept nullable as migration fallback for rows predating functies; see roltitel
+  type: text("type"),
+  // roltitel is free text used when functieId points to the "Niet beschikbaar" sentinel
+  roltitel: text("roltitel"),
+  opfType: text("opf_type"),
   positionCode: text("position_code"),
   schaal: text("schaal"),
   annualCost: numeric("annual_cost", { precision: 15, scale: 2 }),
@@ -215,6 +220,32 @@ export const positionAssignments = pgTable("position_assignments", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
+
+// ── Functies (ministry-wide job position catalog) ──────────────────────────────
+export const functies = pgTable("functies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  titel: text("titel").notNull(),
+  schaalCode: text("schaal_code"),
+  isActive: boolean("is_active").notNull().default(true),
+  deletedAt: timestamp("deleted_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+}, (t) => [uniqueIndex("functies_titel_idx").on(t.titel)]);
+
+// ── Medewerker ↔ Functie (temporal, M:N with primary flag) ────────────────────
+export const medewerkerFuncties = pgTable("medewerker_functies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  employeeId: uuid("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+  functieId: uuid("functie_id").notNull().references(() => functies.id),
+  isPrimary: boolean("is_primary").notNull().default(false),
+  startDate: timestamp("start_date", { mode: "date" }).notNull(),
+  endDate: timestamp("end_date", { mode: "date" }),
+  status: text("status").$type<FunctieMembershipStatus>().notNull().default("active"),
+  reason: text("reason"),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+}, (t) => [uniqueIndex("medewerker_functies_emp_functie_idx").on(t.employeeId, t.functieId)]);
 
 // ── Salarisschalen (default costs per grade per year) ─────────────────────────
 export const salarisschalen = pgTable("salarisschalen", {
@@ -324,6 +355,17 @@ export const loginRateLimits = pgTable("login_rate_limits", {
 });
 
 // ── Drizzle Relations ──────────────────────────────────────────────────────────
+export const functiesRelations = relations(functies, ({ many }) => ({
+  medewerkerFuncties: many(medewerkerFuncties),
+  positions: many(positions),
+}));
+
+export const medewerkerFunctiesRelations = relations(medewerkerFuncties, ({ one }) => ({
+  employee: one(employees, { fields: [medewerkerFuncties.employeeId], references: [employees.id] }),
+  functie: one(functies, { fields: [medewerkerFuncties.functieId], references: [functies.id] }),
+  createdByUser: one(users, { fields: [medewerkerFuncties.createdBy], references: [users.id] }),
+}));
+
 export const organisationsRelations = relations(organisations, ({ many }) => ({
   teams: many(teams),
   employees: many(employees),
@@ -344,11 +386,13 @@ export const employeesRelations = relations(employees, ({ one, many }) => ({
   organisation: one(organisations, { fields: [employees.organisationId], references: [organisations.id] }),
   memberships: many(teamMemberships),
   positionAssignments: many(positionAssignments),
+  medewerkerFuncties: many(medewerkerFuncties),
 }));
 
 export const positionsRelations = relations(positions, ({ one, many }) => ({
   organisation: one(organisations, { fields: [positions.organisationId], references: [organisations.id] }),
   bestelling: one(bestellingen, { fields: [positions.bestellingId], references: [bestellingen.id] }),
+  functie: one(functies, { fields: [positions.functieId], references: [functies.id] }),
   assignments: many(positionAssignments),
   fundingAllocations: many(fundingAllocations),
   teamCouplings: many(teamPositionCouplings),
@@ -462,3 +506,8 @@ export type FinancialTypeEnum = FinancialTypeCategory;
 
 export type Salarisschaal = typeof salarisschalen.$inferSelect;
 export type NewSalarisschaal = typeof salarisschalen.$inferInsert;
+
+export type Functie = typeof functies.$inferSelect;
+export type NewFunctie = typeof functies.$inferInsert;
+export type MedewerkerFunctie = typeof medewerkerFuncties.$inferSelect;
+export type NewMedewerkerFunctie = typeof medewerkerFuncties.$inferInsert;

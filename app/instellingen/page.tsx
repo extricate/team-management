@@ -50,6 +50,7 @@ export default async function SettingsPage() {
             <LinkList>
               <LinkListLink href="/beheer/gebruikers">Gebruikersbeheer</LinkListLink>
               <LinkListLink href="/beheer/salarisschalen">Salarisschalen</LinkListLink>
+              <LinkListLink href="/beheer/functies">Functies</LinkListLink>
             </LinkList>
           </LinkListCard>
         )}

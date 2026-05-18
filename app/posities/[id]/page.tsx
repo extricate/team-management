@@ -15,6 +15,7 @@ import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { formatDate, formatCurrency, buildEntityMetadata } from "@/lib/utils";
 import { getOPFType } from "@/lib/opf-types";
+import { getPositionTitel } from "@/lib/functies";
 
 const STATUS_LABELS: Record<string, string> = {
   gepland: "Gepland",
@@ -36,8 +37,11 @@ const STATUS_COLORS: Record<string, "green" | "orange" | "blue" | "grey"> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const row = await db.query.positions.findFirst({ where: eq(positions.id, id) });
-  return buildEntityMetadata(row?.type, "Positie");
+  const row = await db.query.positions.findFirst({
+    where: eq(positions.id, id),
+    with: { functie: { columns: { titel: true } } },
+  });
+  return buildEntityMetadata(row ? getPositionTitel(row) : undefined, "Positie");
 }
 
 export default async function PositieDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -48,6 +52,7 @@ export default async function PositieDetailPage({ params }: { params: Promise<{ 
   const row = await db.query.positions.findFirst({
     where: eq(positions.id, id),
     with: {
+      functie: { columns: { titel: true } },
       organisation: true,
       teamCouplings: {
         with: { team: { with: { organisation: true } } },
@@ -77,17 +82,18 @@ export default async function PositieDetailPage({ params }: { params: Promise<{ 
 
   const opfDef = getOPFType(row.opfType ?? "");
   const activeAssignment = row.assignments.find(a => a.status === "active");
+  const positieTitel = getPositionTitel(row);
 
   return (
     <div>
-      <Breadcrumbs crumbs={[{ label: "Posities", href: "/posities" }, { label: row.type }]} />
+      <Breadcrumbs crumbs={[{ label: "Posities", href: "/posities" }, { label: positieTitel }]} />
 
-      {isArchived && <ArchivedBanner deletedAt={row.deletedAt!} entityLabel={row.type} />}
+      {isArchived && <ArchivedBanner deletedAt={row.deletedAt!} entityLabel={positieTitel} />}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
-            <Heading level={1} style={{ margin: 0 }}>{row.type}</Heading>
+            <Heading level={1} style={{ margin: 0 }}>{positieTitel}</Heading>
             <StatusBadge label={STATUS_LABELS[row.status] ?? row.status} color={STATUS_COLORS[row.status] ?? "grey"} />
           </div>
           <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
@@ -100,7 +106,7 @@ export default async function PositieDetailPage({ params }: { params: Promise<{ 
         {!isArchived && (
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <Link href={`/posities/${id}/bewerken`} className="utrecht-button utrecht-button--secondary-action">Bewerken</Link>
-            <ArchiveButton entityName={row.type} apiPath={`/api/positions/${id}`} redirectTo="/posities" />
+            <ArchiveButton entityName={positieTitel} apiPath={`/api/positions/${id}`} redirectTo="/posities" />
           </div>
         )}
       </div>

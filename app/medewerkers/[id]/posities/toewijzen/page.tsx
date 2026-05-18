@@ -8,6 +8,7 @@ import { employees, positions, teamPositionCouplings } from "@/lib/db/schema";
 import { eq, isNull, and } from "drizzle-orm";
 import { AssignPositieForm } from "./AssignPositieForm";
 import { formatFullName } from "@/lib/utils";
+import { getPositionTitel } from "@/lib/functies";
 
 export default async function PositieToewijzenPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,6 +28,7 @@ export default async function PositieToewijzenPage({ params }: { params: Promise
       eq(positions.organisationId, emp.organisationId),
     ),
     with: {
+      functie: { columns: { titel: true } },
       teamCouplings: {
         where: isNull(teamPositionCouplings.endDate),
         with: { team: true },
@@ -39,7 +41,12 @@ export default async function PositieToewijzenPage({ params }: { params: Promise
     <AssignPositieForm
       employeeId={emp.id}
       employeeName={formatFullName(emp)}
-      positions={openPositions}
+      positions={openPositions.map(p => ({
+        id: p.id,
+        type: getPositionTitel(p),
+        positionCode: p.positionCode,
+        teamCouplings: p.teamCouplings.map(c => ({ team: { id: c.team.id, name: c.team.name } })),
+      }))}
     />
   );
 }

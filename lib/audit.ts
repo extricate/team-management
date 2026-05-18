@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { auditEvents } from "@/lib/db/schema";
 
-type AuditAction = "create" | "update" | "delete" | "archive" | "assign" | "reallocate";
+type AuditAction = "create" | "update" | "delete" | "archive" | "assign" | "reallocate" | "deactivate" | "reactivate";
 
 interface AuditParams {
   actorUserId?: string;

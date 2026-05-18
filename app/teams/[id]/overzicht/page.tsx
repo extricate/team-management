@@ -8,6 +8,7 @@ import { eq, isNull } from "drizzle-orm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PrintButton } from "@/components/ui/PrintButton";
 import { formatFullName, formatDate, buildEntityMetadata } from "@/lib/utils";
+import { getPositionTitel } from "@/lib/functies";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,7 +28,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
       positionCouplings: {
         where: isNull(teamPositionCouplings.endDate),
         with: {
-          position: { with: { assignments: { with: { employee: true } } } },
+          position: { with: { functie: { columns: { titel: true } }, assignments: { with: { employee: true } } } },
         },
       },
       memberships: { with: { employee: true } },
@@ -47,7 +48,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
   const sortedPositions = team.positionCouplings
     .filter(c => c.position && !c.position.deletedAt)
     .map(c => c.position!)
-    .sort((a, b) => a.type.localeCompare(b.type, "nl"));
+    .sort((a, b) => getPositionTitel(a).localeCompare(getPositionTitel(b), "nl"));
 
   const today = formatDate(new Date());
 
@@ -106,7 +107,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
                     <tr key={m.id} style={{ borderBottom: "1px solid var(--rvo-color-grijs-100)" }}>
                       <td style={{ padding: "0.5rem" }}><strong>{formatFullName(m.employee)}</strong></td>
                       <td style={{ padding: "0.5rem", color: pos ? "inherit" : "var(--rvo-color-grijs-500)" }}>
-                        {pos ? pos.type : "—"}
+                        {pos ? getPositionTitel(pos) : "—"}
                       </td>
                       <td style={{ padding: "0.5rem", whiteSpace: "nowrap", color: "var(--rvo-color-grijs-600)" }}>
                         {formatDate(m.startDate)}
@@ -141,7 +142,7 @@ export default async function TeamOverzichtPage({ params }: { params: Promise<{ 
                   return (
                     <tr key={pos.id} style={{ borderBottom: "1px solid var(--rvo-color-grijs-100)" }}>
                       <td style={{ padding: "0.5rem" }}>
-                        <strong>{pos.type}</strong>
+                        <strong>{getPositionTitel(pos)}</strong>
                         {pos.positionCode && <span style={{ marginLeft: "0.375rem", color: "var(--rvo-color-grijs-500)", fontSize: "0.8125rem" }}>{pos.positionCode}</span>}
                       </td>
                       <td style={{ padding: "0.5rem", color: activeAssignment ? "inherit" : "var(--rvo-color-grijs-500)" }}>

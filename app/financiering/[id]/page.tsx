@@ -16,6 +16,7 @@ import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { TransferButton } from "@/components/ui/TransferButton";
 import { BudgetGridEditor, type GridInitialEntry } from "@/components/ui/BudgetGridEditor";
 import { formatCurrency, formatDate, prorateCost, buildEntityMetadata } from "@/lib/utils";
+import { getPositionTitel } from "@/lib/functies";
 import { detectFinancialConflicts, type FinancialConflict as Conflict } from "@/lib/financial-conflicts";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -39,7 +40,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
           type: true,
           allocations: {
             with: {
-              position: { with: { teamCouplings: { with: { team: true } } } },
+              position: { with: { functie: { columns: { titel: true } }, teamCouplings: { with: { team: true } } } },
               team: true,
               bestelling: true,
               createdByUser: true,
@@ -264,7 +265,7 @@ export default async function FinancieringDetailPage({ params }: { params: Promi
                     <td className="utrecht-table__cell" style={{ maxWidth: "220px" }}>
                       <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {al.position
-                          ? <><strong>{al.position.type}</strong>{al.position.teamCouplings[0]?.team ? <> in <Link href={`/teams/${al.position.teamCouplings[0].team.id}`} className="utrecht-link">{al.position.teamCouplings[0].team.name}</Link></> : null}</>
+                          ? <><strong>{getPositionTitel(al.position)}</strong>{al.position.teamCouplings[0]?.team ? <> in <Link href={`/teams/${al.position.teamCouplings[0].team.id}`} className="utrecht-link">{al.position.teamCouplings[0].team.name}</Link></> : null}</>
                           : al.team
                           ? <><Link href={`/teams/${al.team.id}`} className="utrecht-link">{al.team.name}</Link> (team)</>
                           : al.bestelling

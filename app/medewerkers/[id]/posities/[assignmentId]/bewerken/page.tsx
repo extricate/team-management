@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { positionAssignments, employees } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { formatFullName } from "@/lib/utils";
+import { getPositionTitel } from "@/lib/functies";
 import { EditPositieForm } from "./EditPositieForm";
 
 export default async function EditPositiePage({ params }: { params: Promise<{ id: string; assignmentId: string }> }) {
@@ -21,7 +22,7 @@ export default async function EditPositiePage({ params }: { params: Promise<{ id
 
   const assignment = await db.query.positionAssignments.findFirst({
     where: eq(positionAssignments.id, assignmentId),
-    with: { position: { with: { teamCouplings: { with: { team: true } } } } },
+    with: { position: { with: { functie: { columns: { titel: true } }, teamCouplings: { with: { team: true } } } } },
   });
   if (!assignment || assignment.employeeId !== id) notFound();
 
@@ -30,7 +31,7 @@ export default async function EditPositiePage({ params }: { params: Promise<{ id
       assignment={assignment}
       employeeId={emp.id}
       employeeName={formatFullName(emp)}
-      positionLabel={`${assignment.position.type}${assignment.position.positionCode ? ` (${assignment.position.positionCode})` : ""}${assignment.position.teamCouplings[0]?.team ? ` — ${assignment.position.teamCouplings[0].team.name}` : ""}`}
+      positionLabel={`${getPositionTitel(assignment.position)}${assignment.position.positionCode ? ` (${assignment.position.positionCode})` : ""}${assignment.position.teamCouplings[0]?.team ? ` — ${assignment.position.teamCouplings[0].team.name}` : ""}`}
     />
   );
 }

@@ -9,6 +9,7 @@ import { isNull, count, ilike, eq, asc, desc, and, ne } from "drizzle-orm";
 import { paginate } from "@/lib/loaders/paginate";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { getPositionTitel } from "@/lib/functies";
 import { Pagination } from "@/components/ui/Pagination";
 import { SortHeader } from "@/components/ui/SortHeader";
 
@@ -78,6 +79,7 @@ export default async function PosistiesPage({
     fetch: (limit, offset) => db.query.positions.findMany({
       where: whereClause,
       with: {
+        functie: { columns: { titel: true } },
         organisation: true,
         teamCouplings: { where: isNull(teamPositionCouplings.endDate), with: { team: true } },
       },
@@ -182,7 +184,7 @@ export default async function PosistiesPage({
               return (
                 <tr key={row.id} className="utrecht-table__row">
                   <td className="utrecht-table__cell">
-                    <Link href={`/posities/${row.id}`} className="utrecht-link" style={{ fontWeight: 600 }}>{row.type}</Link>
+                    <Link href={`/posities/${row.id}`} className="utrecht-link" style={{ fontWeight: 600 }}>{getPositionTitel(row)}</Link>
                     {row.positionCode && <span style={{ marginLeft: "0.375rem", color: "var(--rvo-color-grijs-500)", fontSize: "0.8125rem" }}>{row.positionCode}</span>}
                   </td>
                   <td className="utrecht-table__cell" style={{ fontSize: "0.875rem" }}>{row.organisation.name}</td>

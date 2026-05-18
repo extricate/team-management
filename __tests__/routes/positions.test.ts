@@ -102,6 +102,71 @@ describe('POST /api/positions', () => {
     expect((await POST(req)).status).toBe(400)
   })
 
+  it('accepts null for optional date fields (form always sends null for empty dates)', async () => {
+    dbMock.set([POSITION])
+    const req = makeRequest('/api/positions', {
+      method: 'POST',
+      body: {
+        organisationId: ORG_ID,
+        functieId: null,
+        status: 'gepland',
+        expectedStart: null,
+        expectedEnd: null,
+        requiredBefore: null,
+      },
+    })
+    expect((await POST(req)).status).toBe(201)
+  })
+
+  it('accepts null for positionCode, schaal and annualCost', async () => {
+    dbMock.set([POSITION])
+    const req = makeRequest('/api/positions', {
+      method: 'POST',
+      body: {
+        organisationId: ORG_ID,
+        status: 'gepland',
+        positionCode: null,
+        schaal: null,
+        annualCost: null,
+      },
+    })
+    expect((await POST(req)).status).toBe(201)
+  })
+
+  it('accepts a functieId and returns 201', async () => {
+    const functieId = 'f1b2c3d4-0000-0000-0000-000000000001'
+    dbMock.set([{ ...POSITION, functieId }])
+    const req = makeRequest('/api/positions', {
+      method: 'POST',
+      body: { organisationId: ORG_ID, functieId, status: 'gepland' },
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    expect((await res.json()).data.functieId).toBe(functieId)
+  })
+
+  it('accepts the full form payload shape the client sends for a regular functie', async () => {
+    const functieId = 'f1b2c3d4-0000-0000-0000-000000000001'
+    dbMock.set([{ ...POSITION, functieId, schaal: '10', annualCost: '95000' }])
+    const req = makeRequest('/api/positions', {
+      method: 'POST',
+      body: {
+        organisationId: ORG_ID,
+        functieId,
+        roltitel: null,
+        opfType: null,
+        positionCode: null,
+        schaal: '10',
+        annualCost: 95000,
+        status: 'gepland',
+        expectedStart: null,
+        expectedEnd: null,
+        requiredBefore: null,
+      },
+    })
+    expect((await POST(req)).status).toBe(201)
+  })
+
   it('accepts all valid Dutch status values', async () => {
     const statuses = ['gepland', 'gewenst', 'toegezegd', 'open', 'gevuld', 'gesloten'] as const
     for (const status of statuses) {

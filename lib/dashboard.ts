@@ -1,4 +1,5 @@
 import type { Position, TeamMembership, PositionAssignment } from "@/lib/db/schema";
+import { getPositionTitel } from "@/lib/functies";
 
 export type ConflictType = "late_start" | "unfunded";
 
@@ -24,8 +25,9 @@ export interface UpcomingEvent {
 
 type PositionWithTeamAndAllocations = Pick<
   Position,
-  "id" | "type" | "status" | "expectedStart" | "expectedEnd" | "requiredBefore"
+  "id" | "type" | "roltitel" | "status" | "expectedStart" | "expectedEnd" | "requiredBefore"
 > & {
+  functie: { titel: string } | null;
   teamCouplings: Array<{ teamId: string; team: { name: string } }>;
   fundingAllocations: Array<{ status: string }>;
 };
@@ -42,7 +44,7 @@ type AssignmentWithPositionAndEmployee = Pick<
   PositionAssignment,
   "id" | "status" | "endDate"
 > & {
-  position: { type: string; teamCouplings: Array<{ team: { name: string } }> };
+  position: { type: string | null; roltitel: string | null; functie: { titel: string } | null; teamCouplings: Array<{ team: { name: string } }> };
   employee: { firstName: string; prefixName?: string | null; lastName: string };
 };
 
@@ -62,7 +64,7 @@ export function detectPositionConflicts(
       conflicts.push({
         type: "late_start",
         positionId: pos.id,
-        positionType: pos.type,
+        positionType: getPositionTitel(pos),
         teamId: activeTeamId,
         teamName: activeTeamName,
         requiredBefore: pos.requiredBefore,
@@ -77,7 +79,7 @@ export function detectPositionConflicts(
         conflicts.push({
           type: "unfunded",
           positionId: pos.id,
-          positionType: pos.type,
+          positionType: getPositionTitel(pos),
           teamId: activeTeamId,
           teamName: activeTeamName,
           requiredBefore: pos.requiredBefore ?? null,
@@ -123,7 +125,7 @@ export function collectUpcomingEvents(
     if (inRange(pos.expectedStart)) {
       events.push({
         kind: "position_start",
-        label: teamName ? `Positie "${pos.type}" (${teamName}) start` : `Positie "${pos.type}" start`,
+        label: teamName ? `Positie "${getPositionTitel(pos)}" (${teamName}) start` : `Positie "${getPositionTitel(pos)}" start`,
         entityId: pos.id,
         teamName,
         date: pos.expectedStart!,
@@ -133,7 +135,7 @@ export function collectUpcomingEvents(
     if (inRange(pos.expectedEnd)) {
       events.push({
         kind: "position_end",
-        label: teamName ? `Positie "${pos.type}" (${teamName}) eindigt` : `Positie "${pos.type}" eindigt`,
+        label: teamName ? `Positie "${getPositionTitel(pos)}" (${teamName}) eindigt` : `Positie "${getPositionTitel(pos)}" eindigt`,
         entityId: pos.id,
         teamName,
         date: pos.expectedEnd!,
@@ -162,7 +164,7 @@ export function collectUpcomingEvents(
     if (inRange(a.endDate)) {
       events.push({
         kind: "assignment_end",
-        label: `Toewijzing ${fullName(a.employee)} aan "${a.position.type}" eindigt`,
+        label: `Toewijzing ${fullName(a.employee)} aan "${getPositionTitel(a.position)}" eindigt`,
         entityId: a.id,
         teamName: a.position.teamCouplings[0]?.team?.name,
         employeeName: fullName(a.employee),

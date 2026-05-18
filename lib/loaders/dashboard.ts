@@ -36,7 +36,7 @@ export async function loadDashboardData(): Promise<DashboardData> {
     db.select({ id: employees.id }).from(employees).where(isNull(employees.deletedAt)),
     db.query.positions.findMany({
       where: isNull(positions.deletedAt),
-      with: { teamCouplings: { with: { team: true } }, fundingAllocations: true },
+      with: { functie: { columns: { titel: true } }, teamCouplings: { with: { team: true } }, fundingAllocations: true },
     }),
     db.select({ amount: financialSourceAmounts.amount, status: financialSourceAmounts.status }).from(financialSourceAmounts),
     db.query.auditEvents.findMany({
@@ -50,7 +50,7 @@ export async function loadDashboardData(): Promise<DashboardData> {
     }),
     db.query.positionAssignments.findMany({
       where: isNull(positionAssignments.endDate),
-      with: { employee: true, position: { with: { teamCouplings: { with: { team: true } } } } },
+      with: { employee: true, position: { with: { functie: { columns: { titel: true } }, teamCouplings: { with: { team: true } } } } },
     }),
   ]);
 

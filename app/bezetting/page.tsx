@@ -8,6 +8,7 @@ import { isNull, eq, asc, and, ne } from "drizzle-orm";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { DragDropPositionBuilder } from "@/components/ui/DragDropPositionBuilder";
 import { formatFullName } from "@/lib/utils";
+import { getPositionTitel } from "@/lib/functies";
 
 export const metadata: Metadata = { title: "Bezetting indelen – Teambeheer" };
 
@@ -49,7 +50,7 @@ export default async function BezettingPage({
   const [orgPositions, orgEmployees] = await Promise.all([
     db.query.positions.findMany({
       where: and(eq(positions.organisationId, selectedOrgId), isNull(positions.deletedAt), ne(positions.status, "gesloten")),
-      with: { teamCouplings: { where: isNull(teamPositionCouplings.endDate) } },
+      with: { functie: { columns: { titel: true } }, teamCouplings: { where: isNull(teamPositionCouplings.endDate) } },
       orderBy: (p, { asc: _asc }) => [_asc(p.type)],
     }),
     db.query.employees.findMany({
@@ -80,7 +81,7 @@ export default async function BezettingPage({
     const assignment = assignmentByPosition.get(pos.id) ?? null;
     return {
       id: pos.id,
-      type: pos.type,
+      type: getPositionTitel(pos),
       teamId: pos.teamCouplings[0]?.teamId ?? "",
       status: pos.status,
       activeAssignmentId: assignment?.id ?? null,

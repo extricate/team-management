@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { teams, positions, teamPositionCouplings } from "@/lib/db/schema";
 import { eq, isNull, and, ne } from "drizzle-orm";
 import { KoppelenPositieForm } from "./KoppelenPositieForm";
+import { getPositionTitel } from "@/lib/functies";
 
 export const metadata: Metadata = { title: "Positie koppelen – Teambeheer" };
 
@@ -27,6 +28,7 @@ export default async function KoppelenPositiePage({ params }: { params: Promise<
       ne(positions.status, "gesloten"),
     ),
     with: {
+      functie: { columns: { titel: true } },
       teamCouplings: {
         where: isNull(teamPositionCouplings.endDate),
       },
@@ -44,7 +46,7 @@ export default async function KoppelenPositiePage({ params }: { params: Promise<
       orgId={team.organisationId}
       availablePositions={availablePositions.map(p => ({
         id: p.id,
-        type: p.type,
+        type: getPositionTitel(p),
         opfType: p.opfType,
         positionCode: p.positionCode,
         schaal: p.schaal,

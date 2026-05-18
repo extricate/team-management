@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { Card, Heading, Paragraph } from "@rijkshuisstijl-community/components-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { employees } from "@/lib/db/schema";
+import { employees, medewerkerFuncties, functies } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { fetchDetailSidebar } from "@/lib/loaders/detail";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -13,7 +13,9 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableMembershipsTable } from "@/components/ui/FilterableMembershipsTable";
+import { MedewerkerFunctiesTable } from "@/components/ui/MedewerkerFunctiesTable";
 import { formatFullName, formatDate, buildEntityMetadata } from "@/lib/utils";
+import { getPositionTitel } from "@/lib/functies";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,14 +28,22 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
   const session = await auth();
   if (!session?.user) redirect("/inloggen");
 
-  const emp = await db.query.employees.findFirst({
-    where: eq(employees.id, id),
-    with: {
-      organisation: true,
-      memberships: { with: { team: true, createdByUser: true }, orderBy: (m, { desc }) => [desc(m.startDate)] },
-      positionAssignments: { with: { position: { with: { teamCouplings: { with: { team: true } } } }, createdByUser: true }, orderBy: (pa, { desc }) => [desc(pa.startDate)] },
-    },
-  });
+  const [emp, empFuncties] = await Promise.all([
+    db.query.employees.findFirst({
+      where: eq(employees.id, id),
+      with: {
+        organisation: true,
+        memberships: { with: { team: true, createdByUser: true }, orderBy: (m, { desc }) => [desc(m.startDate)] },
+        positionAssignments: { with: { position: { with: { functie: { columns: { titel: true } }, teamCouplings: { with: { team: true } } } }, createdByUser: true }, orderBy: (pa, { desc }) => [desc(pa.startDate)] },
+      },
+    }),
+    db
+      .select({ assignment: medewerkerFuncties, functie: functies })
+      .from(medewerkerFuncties)
+      .innerJoin(functies, eq(medewerkerFuncties.functieId, functies.id))
+      .where(eq(medewerkerFuncties.employeeId, id))
+      .orderBy(medewerkerFuncties.startDate),
+  ]);
 
   if (!emp) notFound();
 
@@ -44,6 +54,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
   const fullName      = formatFullName(emp);
   const activeTeams   = emp.memberships.filter(m => m.status === "active" && !m.endDate);
   const activePos     = emp.positionAssignments.find(a => a.status === "active");
+  const primaryFunctie = empFuncties.find(r => r.assignment.isPrimary && r.assignment.status === "active");
 
   return (
     <div>
@@ -55,7 +66,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
           <Paragraph style={{ margin: 0, color: "var(--rvo-color-grijs-600)" }}>
             {emp.organisation.name}
             {emp.personeelsnummer && <> · <span title="Personeelsnummer">{emp.personeelsnummer}</span></>}
-            {activePos && <> · Positie: <strong>{activePos.position.type}</strong></>}
+            {primaryFunctie && <> · <strong>{primaryFunctie.functie.titel}</strong></>}
           </Paragraph>
         </div>
         {!isArchived && (
@@ -88,7 +99,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
         <Card heading="Huidige positie" headingLevel={3} style={{ maxInlineSize: "none", width: "100%" }}>
           {activePos
             ? <div>
-                <strong>{activePos.position.type}</strong>
+                <strong>{getPositionTitel(activePos.position)}</strong>
                 {activePos.position.positionCode && <span style={{ marginLeft: "0.5rem", color: "var(--rvo-color-grijs-600)" }}>({activePos.position.positionCode})</span>}
                 <Paragraph style={{ margin: "0.25rem 0 0", fontSize: "0.8125rem", color: "var(--rvo-color-grijs-600)" }}>
                   Team: {activePos.position.teamCouplings[0]?.team?.name ?? "—"} · Sinds {formatDate(activePos.startDate)}
@@ -129,7 +140,7 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
             )}
             {emp.positionAssignments.map((pa) => (
               <tr key={pa.id} className="utrecht-table__row">
-                <td className="utrecht-table__cell"><strong>{pa.position.type}</strong></td>
+                <td className="utrecht-table__cell"><strong>{getPositionTitel(pa.position)}</strong></td>
                 <td className="utrecht-table__cell">
                   {pa.position.teamCouplings[0]?.team
                     ? <Link href={`/teams/${pa.position.teamCouplings[0].team.id}`} className="utrecht-link">{pa.position.teamCouplings[0].team.name}</Link>
@@ -147,6 +158,19 @@ export default async function MedewerkerDetailPage({ params }: { params: Promise
             ))}
           </tbody>
         </table>
+      </section>
+
+      {/* Functies */}
+      <section style={{ marginBottom: "2.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <Heading level={2}>Functies</Heading>
+          {!isArchived && (
+            <Link href={`/medewerkers/${emp.id}/functies/toevoegen`} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.875rem" }}>
+              Functie toevoegen
+            </Link>
+          )}
+        </div>
+        <MedewerkerFunctiesTable rows={empFuncties} employeeId={emp.id} isArchived={isArchived} />
       </section>
 
       {/* Team membership history */}

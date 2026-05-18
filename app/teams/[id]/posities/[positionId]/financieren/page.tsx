@@ -8,6 +8,7 @@ import { teams, positions, financialSourceAmounts, financialSources, fundingAllo
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { AllocatePositionForm } from "./AllocatePositionForm";
 import { getOPFType } from "@/lib/opf-types";
+import { getPositionTitel } from "@/lib/functies";
 
 export default async function FinancierPositiePage({ params }: { params: Promise<{ id: string; positionId: string }> }) {
   const { id, positionId } = await params;
@@ -23,6 +24,7 @@ export default async function FinancierPositiePage({ params }: { params: Promise
   const position = await db.query.positions.findFirst({
     where: and(eq(positions.id, positionId), isNull(positions.deletedAt)),
     with: {
+      functie: { columns: { titel: true } },
       fundingAllocations: {
         where: eq(fundingAllocations.status, "active"),
         with: {
@@ -77,9 +79,12 @@ export default async function FinancierPositiePage({ params }: { params: Promise
     0,
   );
 
+  const positieTitel = getPositionTitel(position);
+
   return (
     <AllocatePositionForm
       position={position}
+      positieTitel={positieTitel}
       teamId={team.id}
       teamName={team.name}
       availableAmounts={sortedAmounts}

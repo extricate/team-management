@@ -61,20 +61,25 @@ export const POSITION_STATUSES = ["gepland", "gewenst", "toegezegd", "open", "ge
 export const PositionSchema = z.object({
   organisationId: uuidField,
   bestellingId: z.string().uuid().optional().nullable(),
-  type: z.string().min(1),
+  functieId: z.string().uuid().optional().nullable(),
+  // type kept for legacy fallback; new positions use functieId
+  type: z.string().min(1).optional().nullable(),
+  roltitel: z.string().min(1).max(200).optional().nullable(),
   opfType: z.string().optional().nullable(),
-  positionCode: z.string().optional(),
-  schaal: z.string().optional(),
-  annualCost: z.number().positive().optional().transform(val => val != null ? String(val) : undefined),
+  positionCode: z.string().optional().nullable(),
+  schaal: z.string().optional().nullable(),
+  annualCost: z.number().positive().optional().nullable().transform(val => val != null ? String(val) : undefined),
   status: z.enum(POSITION_STATUSES).default("gepland"),
-  expectedStart: optionalDatetime,
-  expectedEnd: optionalDatetime,
-  requiredBefore: optionalDatetime,
+  expectedStart: nullableDatetime,
+  expectedEnd: nullableDatetime,
+  requiredBefore: nullableDatetime,
 });
 
 export const PositionUpdateSchema = z.object({
   bestellingId: z.string().uuid().optional().nullable(),
-  type: z.string().min(1).optional(),
+  functieId: z.string().uuid().optional().nullable(),
+  type: z.string().min(1).optional().nullable(),
+  roltitel: z.string().min(1).max(200).optional().nullable(),
   opfType: z.string().optional().nullable(),
   positionCode: z.string().optional().nullable(),
   schaal: z.string().optional().nullable(),
@@ -201,6 +206,35 @@ export const FundingAllocationUpdateSchema = z.object({
   startDate: nullableDatetime,
   endDate: nullableDatetime,
   status: z.enum(["active", "reallocated", "expired"]).optional(),
+  reason: z.string().optional().nullable(),
+});
+
+// ── Functie ────────────────────────────────────────────────────────────────────
+export const FunctieSchema = z.object({
+  titel: z.string().min(1).max(200),
+  schaalCode: z.string().min(1).max(20).optional().nullable(),
+  isActive: z.boolean().default(true),
+});
+
+export const FunctieUpdateSchema = z.object({
+  titel: z.string().min(1).max(200).optional(),
+  schaalCode: z.string().min(1).max(20).optional().nullable(),
+  isActive: z.boolean().optional(),
+});
+
+// ── MedewerkerFunctie ──────────────────────────────────────────────────────────
+export const MedewerkerFunctieSchema = z.object({
+  functieId: uuidField,
+  isPrimary: z.boolean().default(false),
+  startDate: requiredDatetime,
+  endDate: optionalDatetime,
+  reason: z.string().optional(),
+});
+
+export const MedewerkerFunctieUpdateSchema = z.object({
+  isPrimary: z.boolean().optional(),
+  endDate: nullableDatetime,
+  status: z.enum(["active", "ended"]).optional(),
   reason: z.string().optional().nullable(),
 });
 

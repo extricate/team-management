@@ -13,6 +13,7 @@ import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import { ArchiveButton } from "@/components/ui/ArchiveButton";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { formatDate, formatCurrency, buildEntityMetadata } from "@/lib/utils";
+import { getPositionTitel } from "@/lib/functies";
 import { detectBestellingConflicts, calculateBestellingAllocation } from "@/lib/bestellingen";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -39,7 +40,7 @@ export default async function BestellingDetailPage({ params }: { params: Promise
         orderBy: (al, { desc }) => [desc(al.createdAt)],
       },
       positions: {
-        with: { teamCouplings: { with: { team: true } }, assignments: { with: { employee: true } } },
+        with: { functie: { columns: { titel: true } }, teamCouplings: { with: { team: true } }, assignments: { with: { employee: true } } },
       },
     },
   });
@@ -189,8 +190,8 @@ export default async function BestellingDetailPage({ params }: { params: Promise
                   <tr key={pos.id} className="utrecht-table__row">
                     <td className="utrecht-table__cell">
                       {pos.teamCouplings[0]?.team
-                        ? <Link href={`/teams/${pos.teamCouplings[0].team.id}`} className="utrecht-link">{pos.type}</Link>
-                        : pos.type}
+                        ? <Link href={`/teams/${pos.teamCouplings[0].team.id}`} className="utrecht-link">{getPositionTitel(pos)}</Link>
+                        : getPositionTitel(pos)}
                     </td>
                     <td className="utrecht-table__cell">{pos.teamCouplings[0]?.team?.name ?? "—"}</td>
                     <td className="utrecht-table__cell"><code>{pos.opfType ?? "—"}</code></td>

@@ -18,6 +18,7 @@ import { PositionActionsMenu } from "@/components/ui/PositionActionsMenu";
 import { ArchivedBanner } from "@/components/ui/ArchivedBanner";
 import { FilterableTeamMembersTable } from "@/components/ui/FilterableTeamMembersTable";
 import { getOPFType, CATEGORY_LABELS, CATEGORY_BADGE_COLOR } from "@/lib/opf-types";
+import { getPositionTitel } from "@/lib/functies";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,6 +40,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
         with: {
           position: {
             with: {
+              functie: { columns: { titel: true } },
               assignments: { with: { employee: true } },
               bestelling: true,
               // Load allocations without nested source amount to avoid alias collision
@@ -174,7 +176,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                   {/* Position header */}
                   <div className="position-card__header">
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                      <strong>{pos.type}</strong>
+                      <strong>{getPositionTitel(pos)}</strong>
                       {pos.positionCode && (
                         <span className="field-label" style={{ marginBottom: 0 }}>{pos.positionCode}</span>
                       )}
@@ -201,7 +203,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
                     {!isArchived && (
                       <PositionActionsMenu
                         positionId={pos.id}
-                        positionType={pos.type}
+                        positionType={getPositionTitel(pos)}
                         teamId={team.id}
                         couplingId={coupling.id}
                         financierenHref={`/teams/${team.id}/posities/${pos.id}/financieren`}
